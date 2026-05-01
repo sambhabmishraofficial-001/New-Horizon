@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ShellGate } from "@/components/shell/ShellGate";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://newhorizon.dev";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://newhorizon.dev"),
+  metadataBase: new URL(siteUrl),
   title: "New Horizon — The first AI-native Virtual Research Institute",
   description:
     "AI-native Virtual Research Institute. Twins read the literature, propose experiments, run them, audit invariants, and draft the manuscript.",
@@ -11,9 +14,9 @@ export const metadata: Metadata = {
     title: "New Horizon — The first AI-native Virtual Research Institute",
     description:
       "AI-native Virtual Research Institute. Twins read the literature, propose experiments, run them, audit invariants, and draft the manuscript.",
-    url: "https://newhorizon.dev",
+    url: siteUrl,
     siteName: "New Horizon",
-    images: [{ url: "/og", width: 1200, height: 630 }],
+    images: [{ url: `${siteUrl}/images/scientific-cell-mosaic.png`, width: 1200, height: 630 }],
     locale: "en_US",
     type: "website",
   },
@@ -22,11 +25,10 @@ export const metadata: Metadata = {
     title: "New Horizon — The first AI-native Virtual Research Institute",
     description:
       "AI-native Virtual Research Institute. Twins read the literature, propose experiments, run them, audit invariants, and draft the manuscript.",
-    images: ["/og"],
+    images: [`${siteUrl}/images/scientific-cell-mosaic.png`],
   },
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/icon", type: "image/png", sizes: "32x32" }],
-    apple: [{ url: "/apple-icon", type: "image/png", sizes: "180x180" }],
+    icon: [{ url: `${basePath}/favicon.svg`, type: "image/svg+xml" }],
   },
 };
 

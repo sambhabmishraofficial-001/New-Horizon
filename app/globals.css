@@ -4,7 +4,7 @@
 
 @font-face {
   font-family: "Geist";
-  src: url("/fonts/GeistVF.woff2") format("woff2");
+  src: url("../public/fonts/GeistVF.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -12,7 +12,7 @@
 
 @font-face {
   font-family: "Exposure";
-  src: url("/fonts/205TF-Exposure--10.otf") format("opentype");
+  src: url("../public/fonts/205TF-Exposure--10.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -20,7 +20,7 @@
 
 @font-face {
   font-family: "Sentient";
-  src: url("/fonts/sentient-variable.woff2") format("woff2");
+  src: url("../public/fonts/sentient-variable.woff2") format("woff2");
   font-weight: 200 700;
   font-style: normal;
   font-display: swap;
@@ -28,7 +28,7 @@
 
 @font-face {
   font-family: "DM Serif Display";
-  src: url("/fonts/dm-serif-display.woff2") format("woff2");
+  src: url("../public/fonts/dm-serif-display.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -36,7 +36,7 @@
 
 @font-face {
   font-family: "DM Sans";
-  src: url("/fonts/dm-sans.woff2") format("woff2");
+  src: url("../public/fonts/dm-sans.woff2") format("woff2");
   font-weight: 300 700;
   font-style: normal;
   font-display: swap;
@@ -44,7 +44,7 @@
 
 @font-face {
   font-family: "Space Grotesk";
-  src: url("/fonts/space-grotesk.woff2") format("woff2");
+  src: url("../public/fonts/space-grotesk.woff2") format("woff2");
   font-weight: 300 700;
   font-style: normal;
   font-display: swap;
@@ -52,7 +52,7 @@
 
 @font-face {
   font-family: "DM Mono";
-  src: url("/fonts/dm-mono.woff2") format("woff2");
+  src: url("../public/fonts/dm-mono.woff2") format("woff2");
   font-weight: 300 500;
   font-style: normal;
   font-display: swap;

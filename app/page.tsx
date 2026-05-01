@@ -2,6 +2,7 @@
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { sitePath } from "@/lib/sitePath";
 
 function SphereField() {
   const meridians = Array.from({ length: 18 }, (_, index) => index * 10);
@@ -257,7 +258,12 @@ export default function HomePage() {
 }
 
 function AboutFoundersSection() {
-  const team = [
+  const team: Array<{
+    name: string;
+    role: string;
+    initials: string;
+    image?: string;
+  }> = [
     {
       name: "Sambhab Mishra",
       role: "CEO",
@@ -299,8 +305,8 @@ function AboutFoundersSection() {
         {team.map((member) => (
           <article className="about-founder-person" key={`${member.name}-${member.role}`}>
             <div className="about-founder-person__avatar" aria-hidden>
-              {"image" in member ? (
-                <img src={member.image} alt="" />
+              {member.image ? (
+                <img src={sitePath(member.image)} alt="" />
               ) : (
                 member.initials
               )}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { sitePath } from "@/lib/sitePath";
 
 const pillars = [
   {
@@ -169,7 +170,7 @@ export default function LandingPage() {
                   className="logo-tile flex h-[98px] w-[208px] shrink-0 items-center justify-center"
                 >
                   <img
-                    src={logo.src}
+                                src={sitePath(logo.src)}
                     alt={logo.name}
                     className={`${logo.className} object-contain`}
                   />
@@ -355,7 +356,7 @@ function RetroComputer({ onOpen }: { onOpen: () => void }) {
 
               <div className="retro-hand-cursor" aria-hidden>
                 <img
-                  src="/cursors/mac-hand-pointer.png"
+                              src={sitePath("/cursors/mac-hand-pointer.png")}
                   alt=""
                   className="h-12 w-12 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
                 />
@@ -409,7 +410,7 @@ function SimulationPreview() {
 
       <div className="relative aspect-[16/9] min-h-[700px] bg-[#0a0d11]">
         <iframe
-          src="/vri-simulation.html"
+          src={sitePath("/vri-simulation.html")}
           title="Virtual Research Institute simulation"
           className="absolute inset-0 h-full w-full border-0 bg-[#0a0d11]"
         />
@@ -451,7 +452,7 @@ function HeroPreview() {
 
       <div className="relative aspect-[16/9] min-h-[700px] bg-white">
         <iframe
-          src="/ire"
+          src={sitePath("/ire/")}
           title="Live IRE workspace demo"
           className="absolute left-1/2 top-1/2 h-[125%] w-[125%] origin-center -translate-x-1/2 -translate-y-1/2 scale-[0.8] border-0 bg-parchment-50"
         />
@@ -461,7 +462,7 @@ function HeroPreview() {
         />
         <div className="demo-cursor pointer-events-none absolute z-20">
           <img
-            src="/cursors/mac-hand-pointer.png"
+            src={sitePath("/cursors/mac-hand-pointer.png")}
             alt=""
             aria-hidden
             className="h-12 w-12 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
