@@ -1,0 +1,1082 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>New Horizon — Virtual Research Institute</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0a0d11;
+    font-family: ui-sans-serif, -apple-system, system-ui, sans-serif; color: #e6edf3; }
+  #ui { position: fixed; top: 22px; left: 26px; pointer-events: none; }
+  #ui h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 0.02em; color: #e6edf3; }
+  #ui p  { margin: 4px 0 0; font-size: 12px; color: #94a3b8; }
+  #legend { position: fixed; bottom: 18px; right: 22px; font-size: 11px; color: #cbd5e1; line-height: 1.7; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+  #hint { position: fixed; bottom: 18px; left: 22px; font-size: 11px; color: #64748b; }
+  .tag { position: absolute; transform: translate(-50%, -100%);
+    font-size: 10px; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 999px;
+    background: rgba(96,165,250,0.12); color: #cfe5ff; border: 1px solid rgba(96,165,250,0.25);
+    pointer-events: none; white-space: nowrap; }
+  .nameTag { position: absolute; transform: translate(-50%, -100%);
+    font-size: 10px; font-weight: 500; letter-spacing: 0.02em; padding: 2px 7px; border-radius: 6px;
+    background: rgba(15,20,28,0.78); color: #f1f5f9; border: 1px solid rgba(148,163,184,0.25);
+    pointer-events: none; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.35); }
+  .nameTag::after {
+    content: ''; position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%) rotate(45deg);
+    width: 6px; height: 6px; background: rgba(15,20,28,0.78);
+    border-right: 1px solid rgba(148,163,184,0.25); border-bottom: 1px solid rgba(148,163,184,0.25); }
+</style>
+</head>
+<body>
+<div id="hint">drag to orbit · scroll to zoom</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0d11);
+
+const aspect = window.innerWidth / window.innerHeight;
+const D = 19;
+const camera = new THREE.OrthographicCamera(-D*aspect, D*aspect, D, -D, 0.1, 300);
+camera.position.set(40, 40, 40);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableRotate = true;
+controls.enablePan = false;
+controls.minZoom = 0.6;
+controls.maxZoom = 2.5;
+controls.target.set(0, 0, 0);
+
+// ---- lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+const sun = new THREE.DirectionalLight(0xffffff, 1.15);
+sun.position.set(25, 45, 18);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -45; sun.shadow.camera.right = 45;
+sun.shadow.camera.top = 45;   sun.shadow.camera.bottom = -45;
+sun.shadow.camera.near = 1;   sun.shadow.camera.far = 120;
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+
+const rim = new THREE.DirectionalLight(0xbfd4ff, 0.4);
+rim.position.set(-20, 12, -20);
+scene.add(rim);
+
+// ---- ground
+const ground = new THREE.Mesh(
+  new THREE.BoxGeometry(64, 0.2, 64),
+  new THREE.MeshStandardMaterial({ color: 0xeef1f6, roughness: 0.95 })
+);
+ground.position.y = -0.1;
+ground.receiveShadow = true;
+scene.add(ground);
+
+const grid = new THREE.GridHelper(64, 32, 0xc7cfdb, 0xdde2ea);
+grid.position.y = 0.01;
+scene.add(grid);
+
+// ---- helpers
+const mat = (color, roughness=0.65, metalness=0.05) =>
+  new THREE.MeshStandardMaterial({ color, roughness, metalness });
+
+function box(w, h, d, m, x=0, y=0, z=0) {
+  const me = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+  me.position.set(x, y, z);
+  me.castShadow = true; me.receiveShadow = true;
+  return me;
+}
+function cyl(r, h, m, x=0, y=0, z=0, segs=24) {
+  const me = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, segs), m);
+  me.position.set(x, y, z);
+  me.castShadow = true; me.receiveShadow = true;
+  return me;
+}
+
+// ---- materials
+const matBenchTop = mat(0xfafbfd, 0.8);
+const matBenchBody = mat(0xb6bfcd, 0.7);
+const matStool = mat(0x334155, 0.6);
+const matMetal = mat(0xd5dae3, 0.4, 0.3);
+const matDark = mat(0x475569, 0.55);
+const matMonitor = mat(0x1e293b, 0.4);
+const matScreen = new THREE.MeshStandardMaterial({
+  color: 0x60a5fa, emissive: 0x3b82f6, emissiveIntensity: 0.7, roughness: 0.3
+});
+const matAmber = mat(0xf59e0b, 0.6);
+const matTube = mat(0x4ade80, 0.3);
+
+// procedural wood-plank texture (warm honey-oak look)
+function makeFloorTexture() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+  const plankH = 64; // 8 planks per tile
+  for (let i = 0; i < 8; i++) {
+    const y = i * plankH;
+    const r = 168 + Math.floor(Math.random() * 28);
+    const g = 122 + Math.floor(Math.random() * 24);
+    const b =  78 + Math.floor(Math.random() * 22);
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(0, y, 512, plankH);
+    // wood grain
+    ctx.strokeStyle = `rgba(${r-40},${g-30},${b-25},0.55)`;
+    ctx.lineWidth = 1;
+    for (let k = 0; k < 7; k++) {
+      ctx.beginPath();
+      const yy = y + Math.random() * plankH;
+      ctx.moveTo(0, yy);
+      ctx.bezierCurveTo(
+        128, yy + (Math.random() - 0.5) * 8,
+        256, yy + (Math.random() - 0.5) * 8,
+        512, yy + (Math.random() - 0.5) * 8
+      );
+      ctx.stroke();
+    }
+    // knots
+    if (Math.random() < 0.6) {
+      ctx.fillStyle = `rgba(${r-70},${g-55},${b-45},0.6)`;
+      ctx.beginPath();
+      ctx.ellipse(Math.random()*512, y + plankH/2, 5 + Math.random()*4, 3 + Math.random()*2, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+    // plank seams (top/bottom)
+    ctx.fillStyle = 'rgba(70,42,18,0.85)';
+    ctx.fillRect(0, y, 512, 1);
+    // a vertical seam where two planks butt together
+    const seamX = Math.floor(Math.random() * 4) * 128;
+    ctx.fillRect(seamX, y, 1, plankH);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(2, 2);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+const floorTex = makeFloorTexture();
+const matFloor = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.85 });
+
+const matTrim     = mat(0x3b82f6, 0.5);
+const matWall     = mat(0xf5f7fa, 0.95);
+const matWallTrim = mat(0xc7cdda, 0.85);
+const matDoor     = mat(0x6e8aa5, 0.6);
+const matDoorPanel= mat(0x5a7088, 0.5);
+const matKnob     = mat(0xfbbf24, 0.4, 0.6);
+const matBoard    = mat(0xf9fbfd, 0.4);
+const matBoardFrame = mat(0xa3a9b6);
+const matPot      = mat(0x9c6f4a, 0.7);
+const matLeaves   = mat(0x4ade80, 0.6);
+const matLeavesD  = mat(0x16a34a, 0.6);
+
+// ---- equipment
+function bench(parent, x, z, rot=0, len=5) {
+  const g = new THREE.Group();
+  g.add(box(len, 0.18, 1.6, matBenchTop, 0, 1.22, 0));
+  g.add(box(len*0.96, 1.1, 1.42, matBenchBody, 0, 0.55, 0));
+  g.add(box(len*0.97, 0.04, 1.45, matTrim, 0, 1.13, 0));
+  g.position.set(x, 0, z); g.rotation.y = rot;
+  parent.add(g);
+  return g;
+}
+function monitor(parent, x, z, rot=0) {
+  const g = new THREE.Group();
+  g.add(box(0.95, 0.6, 0.06, matMonitor, 0, 0.4, 0));
+  g.add(box(0.86, 0.52, 0.02, matScreen, 0, 0.4, 0.045));
+  g.add(box(0.22, 0.05, 0.22, matMonitor, 0, 0.06, 0));
+  g.add(cyl(0.04, 0.3, matMonitor, 0, 0.22, 0));
+  g.position.set(x, 1.31, z); g.rotation.y = rot;
+  parent.add(g);
+}
+function microscope(parent, x, z) {
+  const g = new THREE.Group();
+  g.add(box(0.65, 0.16, 0.65, matDark, 0, 0.08, 0));
+  g.add(cyl(0.08, 0.7, matDark, 0.18, 0.5, 0));
+  g.add(box(0.2, 0.2, 0.34, matDark, 0, 0.95, 0.06));
+  g.add(cyl(0.06, 0.28, matDark, 0, 0.7, 0.06));
+  g.add(cyl(0.04, 0.1, matMetal, 0, 0.5, 0.06));
+  g.position.set(x, 1.31, z);
+  parent.add(g);
+}
+function centrifuge(parent, x, z) {
+  const g = new THREE.Group();
+  g.add(cyl(0.5, 0.42, matMetal, 0, 0.21, 0));
+  const lid = cyl(0.46, 0.06, matAmber, 0, 0.45, 0);
+  g.add(lid);
+  g.userData.lid = lid;
+  g.position.set(x, 1.31, z);
+  parent.add(g);
+  return g;
+}
+function tubeRack(parent, x, z) {
+  const g = new THREE.Group();
+  g.add(box(0.7, 0.1, 0.45, matDark, 0, 0.05, 0));
+  for (let i = -2; i <= 2; i++) g.add(cyl(0.05, 0.32, matTube, i*0.12, 0.27, 0));
+  g.position.set(x, 1.31, z);
+  parent.add(g);
+}
+function pcr(parent, x, z) {
+  const g = new THREE.Group();
+  g.add(box(0.8, 0.45, 0.55, matDark, 0, 0.225, 0));
+  g.add(box(0.7, 0.06, 0.45, matScreen, 0, 0.48, 0));
+  g.position.set(x, 1.31, z);
+  parent.add(g);
+}
+function gpuRack(parent, x, z) {
+  const g = new THREE.Group();
+  g.add(box(0.9, 1.6, 0.7, matDark, 0, 0.8, 0));
+  for (let i = 0; i < 5; i++) {
+    g.add(box(0.78, 0.1, 0.05, matScreen, 0, 0.3 + i*0.22, 0.36));
+  }
+  g.position.set(x, 0, z);
+  parent.add(g);
+  return g;
+}
+function stool(parent, x, z) {
+  const g = new THREE.Group();
+  g.add(cyl(0.27, 0.06, matStool, 0, 0.62, 0));
+  g.add(cyl(0.04, 0.62, matStool, 0, 0.31, 0));
+  g.position.set(x, 0, z);
+  parent.add(g);
+}
+
+// fridge / freezer (-80 °C lab fridge feel)
+function fridge(parent, x, z, rot=0, label=0x60a5fa) {
+  const g = new THREE.Group();
+  const body = mat(0xeef1f6, 0.5, 0.15);
+  const seam = mat(0xc7cdda);
+  g.add(box(1.2, 2.2, 0.8, body, 0, 1.1, 0));
+  g.add(box(1.21, 0.04, 0.82, seam, 0, 1.3, 0));   // mid seam
+  g.add(box(0.04, 0.4, 0.04, mat(0x9ca3af), -0.55, 1.95, 0.41));   // top handle
+  g.add(box(0.04, 0.6, 0.04, mat(0x9ca3af), -0.55, 0.7, 0.41));    // bottom handle
+  g.add(box(0.42, 0.18, 0.005, mat(label), 0.15, 1.95, 0.41));     // label
+  g.add(box(0.34, 0.1, 0.005, matScreen,    0.15, 1.7, 0.41));     // small display
+  g.position.set(x, 0, z);
+  g.rotation.y = rot;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+// bookshelf with colored book spines
+function bookshelf(parent, x, z, rot=0) {
+  const g = new THREE.Group();
+  const W = 1.7, H = 2.4, D = 0.42;
+  const woodM = mat(0x6b3e20, 0.7);
+  const woodDark = mat(0x4a2614, 0.7);
+  g.add(box(W, H, D, woodM, 0, H/2, 0));
+  // backing
+  g.add(box(W*0.95, H*0.95, 0.04, woodDark, 0, H/2, -D/2 + 0.03));
+  // shelves
+  const shelves = 5;
+  for (let i = 0; i <= shelves; i++) {
+    g.add(box(W*0.94, 0.04, D-0.06, woodDark, 0, (i / shelves) * H, 0));
+  }
+  // books
+  const bookCols = [0xef4444, 0x10b981, 0x3b82f6, 0xf59e0b, 0x8b5cf6, 0xec4899, 0x14b8a6, 0x7c3aed, 0xfbbf24, 0x0ea5e9];
+  for (let s = 0; s < shelves; s++) {
+    let xC = -W*0.42;
+    while (xC < W*0.42) {
+      const bw = 0.05 + Math.random() * 0.06;
+      const bh = 0.32 + Math.random() * 0.06;
+      const c  = bookCols[Math.floor(Math.random() * bookCols.length)];
+      g.add(box(bw, bh, D*0.7, mat(c), xC + bw/2, (s / shelves) * H + bh/2 + 0.04, 0));
+      xC += bw + 0.005;
+      if (Math.random() < 0.08) xC += 0.04; // gap
+    }
+  }
+  g.position.set(x, 0, z);
+  g.rotation.y = rot;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+// fume hood (glass-front cabinet)
+function fumeHood(parent, x, z, rot=0) {
+  const g = new THREE.Group();
+  const body = mat(0xb6bfcd);
+  const trim = mat(0x6e7a8a);
+  const glass = new THREE.MeshStandardMaterial({
+    color: 0xc8e0f0, roughness: 0.25, metalness: 0.3, transparent: true, opacity: 0.5
+  });
+  g.add(box(1.8, 1.0, 0.8, trim, 0, 0.5, 0));    // base cabinet
+  g.add(box(1.8, 1.4, 0.8, body, 0, 1.7, 0));    // upper enclosure
+  g.add(box(1.7, 1.3, 0.04, glass, 0, 1.7, 0.4));// glass sash
+  g.add(box(1.85, 0.06, 0.85, trim, 0, 1.0, 0));
+  g.add(box(1.8, 0.4, 0.8, mat(0x8b97a8), 0, 2.6, 0)); // top vent
+  // contents inside
+  g.add(cyl(0.12, 0.3, mat(0xe5e7eb), -0.4, 1.15, 0));
+  g.add(cyl(0.12, 0.3, matAmber, 0, 1.15, 0));
+  g.add(cyl(0.12, 0.4, mat(0xa7f3d0), 0.4, 1.2, 0));
+  g.position.set(x, 0, z);
+  g.rotation.y = rot;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+// DNA sequencer / mass-spec — bigger benchtop unit
+function sequencer(parent, x, z) {
+  const g = new THREE.Group();
+  g.add(box(1.3, 0.65, 0.7, mat(0x2d3748), 0, 0.325, 0));
+  g.add(box(1.2, 0.4, 0.6, matScreen, 0, 0.55, 0.07));
+  g.add(box(1.0, 0.06, 0.55, mat(0x111827), 0, 0.04, 0));
+  // status leds
+  g.add(box(0.04, 0.04, 0.005, mat(0x10b981), -0.55, 0.55, 0.36));
+  g.add(box(0.04, 0.04, 0.005, mat(0xef4444), -0.5,  0.55, 0.36));
+  g.position.set(x, 1.31, z);
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+// tall storage cabinet (closed doors)
+function cabinet(parent, x, z, rot=0) {
+  const g = new THREE.Group();
+  g.add(box(1.2, 2.0, 0.5, mat(0xd5dae3), 0, 1.0, 0));
+  g.add(box(0.55, 1.95, 0.02, mat(0xe8ecf3), -0.3, 1.0, 0.26));
+  g.add(box(0.55, 1.95, 0.02, mat(0xe8ecf3),  0.3, 1.0, 0.26));
+  g.add(box(0.06, 0.18, 0.05, mat(0x111827), -0.05, 1.0, 0.27));
+  g.add(box(0.06, 0.18, 0.05, mat(0x111827),  0.05, 1.0, 0.27));
+  g.add(box(1.22, 0.04, 0.52, mat(0x9ca3af), 0, 2.0, 0));
+  g.position.set(x, 0, z);
+  g.rotation.y = rot;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+// complete desk computer (monitor + keyboard + mouse + papers)
+function deskComputer(parent, x, z, rot=0) {
+  const g = new THREE.Group();
+  g.add(box(0.95, 0.6, 0.06, matMonitor, 0, 0.4, -0.1));
+  g.add(box(0.86, 0.52, 0.02, matScreen, 0, 0.4, -0.07));
+  g.add(box(0.22, 0.05, 0.22, matMonitor, 0, 0.06, -0.1));
+  g.add(cyl(0.04, 0.3, matMonitor, 0, 0.22, -0.1));
+  g.add(box(0.55, 0.04, 0.18, mat(0x1f2937), 0, 0.04, 0.18));
+  for (let i = 0; i < 11; i++) {
+    g.add(box(0.04, 0.025, 0.025, mat(0x4a5563), -0.24 + i*0.048, 0.07, 0.18));
+  }
+  g.add(box(0.08, 0.03, 0.12, mat(0x4a5563), 0.32, 0.04, 0.18));
+  g.add(box(0.18, 0.005, 0.24, mat(0xfafafa), -0.32, 0.03, 0.18));
+  g.position.set(x, 1.31, z);
+  g.rotation.y = rot;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+// ---- room shell: walls, door, whiteboard, plants, office chair
+function wall(parent, x, z, length, rot=0, height=3.6) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(length, height, 0.18), matWall);
+  m.position.set(x, height/2, z);
+  m.rotation.y = rot;
+  m.castShadow = true; m.receiveShadow = true;
+  parent.add(m);
+  // baseboard
+  const bb = new THREE.Mesh(new THREE.BoxGeometry(length, 0.18, 0.22), matWallTrim);
+  bb.position.set(x, 0.09, z);
+  bb.rotation.y = rot;
+  bb.receiveShadow = true;
+  parent.add(bb);
+  // crown trim
+  const cr = new THREE.Mesh(new THREE.BoxGeometry(length, 0.06, 0.22), matWallTrim);
+  cr.position.set(x, height - 0.05, z);
+  cr.rotation.y = rot;
+  parent.add(cr);
+  return m;
+}
+
+function door(parent, x, z, rot=0) {
+  const g = new THREE.Group();
+  const w = 1.4, h = 2.4;
+  // frame (slightly proud of wall)
+  g.add(box(w + 0.18, 0.1, 0.24, matWallTrim, 0, h + 0.05, 0));
+  g.add(box(0.1, h + 0.1, 0.24, matWallTrim, -(w/2 + 0.04), h/2, 0));
+  g.add(box(0.1, h + 0.1, 0.24, matWallTrim,  (w/2 + 0.04), h/2, 0));
+  // door panel
+  g.add(box(w, h, 0.06, matDoor, 0, h/2, 0.06));
+  // decorative inset panels
+  g.add(box(w*0.72, h*0.36, 0.005, matDoorPanel, 0, h*0.7, 0.094));
+  g.add(box(w*0.72, h*0.36, 0.005, matDoorPanel, 0, h*0.3, 0.094));
+  // knob
+  const k = new THREE.Mesh(new THREE.SphereGeometry(0.05, 14, 14), matKnob);
+  k.position.set(w*0.34, h/2 - 0.05, 0.11);
+  g.add(k);
+  // small placard on the door
+  g.add(box(0.36, 0.18, 0.005, mat(0xe5e7eb), 0, h*0.92, 0.094));
+  g.position.set(x, 0, z);
+  g.rotation.y = rot;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+function whiteboard(parent, x, y, z, rot=0) {
+  const g = new THREE.Group();
+  g.add(box(2.6, 1.4, 0.04, matBoardFrame, 0, 0, 0));
+  g.add(box(2.5, 1.3, 0.05, matBoard, 0, 0, 0.005));
+  g.add(box(2.6, 0.05, 0.14, matBoardFrame, 0, -0.7, 0.06));
+  // marker squiggles
+  const cols = [0xef4444, 0x10b981, 0x3b82f6, 0xf59e0b, 0x8b5cf6];
+  for (let i = 0; i < 9; i++) {
+    const c = cols[i % cols.length];
+    const len = 0.25 + Math.random() * 0.5;
+    const px = -1.0 + (i % 5) * 0.45 + (Math.random()-0.5)*0.08;
+    const py = 0.4 - Math.floor(i / 5) * 0.4;
+    g.add(box(len, 0.04, 0.005, mat(c), px, py, 0.034));
+  }
+  // small "atom" cluster
+  for (let i = 0; i < 5; i++) {
+    g.add(box(0.06, 0.06, 0.005, mat(0x111827), 0.6 + i * 0.1, -0.35, 0.034));
+  }
+  // arrow
+  g.add(box(0.5, 0.04, 0.005, mat(0x111827), 0.5, -0.55, 0.034));
+  g.add(box(0.06, 0.06, 0.005, mat(0x111827), 0.74, -0.55, 0.034));
+  g.position.set(x, y, z);
+  g.rotation.y = rot;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+function poster(parent, x, y, z, rot=0, hue=0x60a5fa) {
+  const g = new THREE.Group();
+  g.add(box(1.1, 1.5, 0.04, matBoardFrame, 0, 0, 0));
+  g.add(box(1.0, 1.4, 0.05, mat(hue, 0.55), 0, 0, 0.005));
+  g.add(box(0.85, 0.06, 0.005, mat(0xffffff), 0, 0.45, 0.034));
+  for (let i = 0; i < 4; i++) {
+    g.add(box(0.1, 0.1, 0.005, mat(0xffffff), -0.3 + i * 0.2, 0.05, 0.034));
+    if (i < 3) g.add(box(0.18, 0.04, 0.005, mat(0xffffff), -0.2 + i*0.2, 0.05, 0.034));
+  }
+  g.add(box(0.55, 0.04, 0.005, mat(0xffffff), -0.1, -0.45, 0.034));
+  g.add(box(0.4,  0.04, 0.005, mat(0xffffff),  0.1, -0.55, 0.034));
+  g.position.set(x, y, z);
+  g.rotation.y = rot;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+function chair(parent, x, z, rot=0) {
+  const g = new THREE.Group();
+  const m1 = mat(0x222831, 0.55);
+  const m2 = mat(0x111418, 0.45);
+  // 5-spoke base + wheels
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.08), m2);
+    spoke.position.set(Math.cos(a) * 0.22, 0.06, Math.sin(a) * 0.22);
+    spoke.rotation.y = -a;
+    g.add(spoke);
+    const wheel = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 10), m2);
+    wheel.position.set(Math.cos(a) * 0.45, 0.06, Math.sin(a) * 0.45);
+    g.add(wheel);
+  }
+  g.add(cyl(0.04, 0.5, m2, 0, 0.35, 0));
+  // seat
+  g.add(box(0.5, 0.08, 0.5, m1, 0, 0.62, 0));
+  g.add(box(0.46, 0.05, 0.46, m1, 0, 0.67, 0));
+  // backrest at +z so the chair "front" (where a person sits looking) is -z
+  g.add(box(0.5, 0.7, 0.06, m1, 0, 1.0, 0.22));
+  g.add(box(0.4, 0.04, 0.07, m2, 0, 1.32, 0.22));
+  // armrests
+  g.add(box(0.06, 0.08, 0.42, m1, -0.28, 0.78, 0));
+  g.add(box(0.06, 0.08, 0.42, m1,  0.28, 0.78, 0));
+  g.add(box(0.06, 0.18, 0.06, m1, -0.28, 0.7, -0.18));
+  g.add(box(0.06, 0.18, 0.06, m1,  0.28, 0.7, -0.18));
+  g.position.set(x, 0, z);
+  g.rotation.y = rot;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+function plant(parent, x, z) {
+  const g = new THREE.Group();
+  // pot
+  g.add(cyl(0.28, 0.32, matPot, 0, 0.16, 0));
+  g.add(cyl(0.30, 0.04, mat(0x7a5538), 0, 0.34, 0));
+  g.add(cyl(0.26, 0.04, mat(0x4a2c1a), 0, 0.34, 0));
+  // foliage layers
+  for (let layer = 0; layer < 4; layer++) {
+    const y = 0.5 + layer * 0.18;
+    const r = 0.34 - layer * 0.05;
+    const leafM = layer % 2 === 0 ? matLeaves : matLeavesD;
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2 + layer * 0.4;
+      g.add(box(0.18, 0.18, 0.06, leafM, Math.cos(a) * r, y, Math.sin(a) * r));
+    }
+    g.add(cyl(0.04, 0.22, mat(0x166534), 0, y, 0));
+  }
+  g.position.set(x, 0, z);
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  parent.add(g);
+}
+
+// ---- scientist (pixel-style voxel human, randomized look)
+const SKIN  = [0xfcd9b4, 0xe6b89c, 0xc68863, 0x8d5524, 0xf4c2a1, 0xd5a978, 0xa56b3a];
+const HAIRC = [0x1c1c1c, 0x4a2e1a, 0x6b4423, 0xd4a350, 0xb45f3c, 0x8a8a8a, 0x8b3a3a, 0x2d3748, 0xff7ab6, 0x6b8eef];
+const COATC = [0xffffff, 0xf0f4f8, 0xe6f2ff, 0xfff5e6, 0xf3e8ff, 0xfee2e2, 0xe8f5e8];
+const SHIRTC = [0x3b82f6, 0xec4899, 0xfbbf24, 0x10b981, 0x8b5cf6, 0xef4444, 0x6b7280, 0x14b8a6];
+const PANTC = [0x334155, 0x1e293b, 0x475569, 0x713f12, 0x78716c, 0x111827, 0x4338ca];
+const SHOEC = [0x1f2937, 0x3f3f46, 0x713f12, 0x111111];
+const HAIR_STYLES = ['short','bowl','ponytail','bun','long','beanie','curly','parted','shaved'];
+const OUTFITS = ['coat','coat','coat','sweater','hoodie','scrubs'];
+const pick = a => a[Math.floor(Math.random() * a.length)];
+
+const FACE_DARK   = mat(0x1f2937);
+const MOUTH_DARK  = mat(0x7a1f1f);
+const SHEEN       = mat(0xf8f9fc, 0.9);
+
+const NAMES = [
+  'Dr. Chen','Dr. Rao','Dr. Park','Dr. Singh','Dr. Cohen','Dr. Patel','Dr. Yamada','Dr. Okafor',
+  'Dr. Müller','Dr. Lopez','Dr. Ahmed','Dr. Novak','Dr. Sato','Dr. Wang','Dr. Khan','Dr. Garcia',
+  'Maya','Aiden','Priya','Lucas','Noor','Ezra','Hana','Ravi','Imani','Nico','Yuki','Tariq',
+  'Elena','Sven','Aria','Kenji','Zara','Owen','Leila','Theo','Anika','Mateo','Sora','Sasha'
+];
+const usedNames = new Set();
+function pickName() {
+  for (let i = 0; i < 50; i++) {
+    const n = NAMES[Math.floor(Math.random() * NAMES.length)];
+    if (!usedNames.has(n)) { usedNames.add(n); return n; }
+  }
+  return NAMES[Math.floor(Math.random() * NAMES.length)];
+}
+
+function scientist(roleColor) {
+  const g = new THREE.Group();
+
+  const skinTone   = pick(SKIN);
+  const hairColor  = pick(HAIRC);
+  const hairStyle  = pick(HAIR_STYLES);
+  const coatColor  = pick(COATC);
+  const shirtColor = pick(SHIRTC);
+  const pantColor  = pick(PANTC);
+  const shoeColor  = pick(SHOEC);
+  const outfit     = pick(OUTFITS);
+  const glasses    = Math.random() < 0.4;
+
+  const skinM  = mat(skinTone);
+  const hairM  = mat(hairColor);
+  const coatM  = mat(coatColor);
+  const shirtM = mat(shirtColor);
+  const pantM  = mat(pantColor);
+  const shoeM  = mat(shoeColor);
+  const roleM  = mat(roleColor);
+
+  // shoes
+  g.add(box(0.2, 0.1, 0.26, shoeM, -0.12, 0.05, 0.02));
+  g.add(box(0.2, 0.1, 0.26, shoeM,  0.12, 0.05, 0.02));
+  // legs (pants)
+  g.add(box(0.19, 0.62, 0.19, pantM, -0.12, 0.41, 0));
+  g.add(box(0.19, 0.62, 0.19, pantM,  0.12, 0.41, 0));
+
+  // torso by outfit
+  if (outfit === 'coat') {
+    g.add(box(0.42, 0.18, 0.32, shirtM, 0, 1.32, 0));               // inner shirt at neck
+    g.add(box(0.6,  0.7,  0.36, coatM, 0, 1.05, 0));                // lab coat
+    g.add(box(0.005,0.7,  0.01, FACE_DARK, 0, 1.05, 0.181));         // coat seam
+    g.add(box(0.04, 0.04, 0.01, FACE_DARK, 0, 1.18, 0.181));         // button
+    g.add(box(0.04, 0.04, 0.01, FACE_DARK, 0, 1.05, 0.181));         // button
+    g.add(box(0.04, 0.04, 0.01, FACE_DARK, 0, 0.92, 0.181));         // button
+    g.add(box(0.18, 0.14, 0.005, mat(0xe5e7eb), -0.18, 0.95, 0.184));// pocket
+    g.add(box(0.5,  0.06, 0.34, roleM, 0, 1.35, 0));                 // role collar
+  } else if (outfit === 'sweater') {
+    g.add(box(0.62, 0.85, 0.36, shirtM, 0, 1.0, 0));
+    g.add(box(0.62, 0.05, 0.361, SHEEN,  0, 1.18, 0));               // stripe
+    g.add(box(0.62, 0.05, 0.361, SHEEN,  0, 1.06, 0));
+    g.add(box(0.5,  0.04, 0.36, roleM, 0, 1.36, 0));                 // role band
+  } else if (outfit === 'hoodie') {
+    g.add(box(0.62, 0.85, 0.38, shirtM, 0, 1.0, 0));
+    g.add(box(0.5,  0.2,  0.46, shirtM, 0, 1.42, -0.05));            // hood
+    g.add(box(0.32, 0.04, 0.36, roleM, 0, 1.30, 0));                 // drawstring
+    g.add(box(0.04, 0.18, 0.005, mat(0xffffff), -0.05, 1.22, 0.191));// string left
+    g.add(box(0.04, 0.18, 0.005, mat(0xffffff),  0.05, 1.22, 0.191));// string right
+  } else { // scrubs
+    g.add(box(0.6, 0.85, 0.36, shirtM, 0, 1.0, 0));
+    g.add(box(0.18, 0.14, 0.01, skinM, 0, 1.34, 0.181));             // V-neck
+    g.add(box(0.5,  0.05, 0.36, roleM, 0, 1.35, 0));
+    g.add(box(0.16, 0.14, 0.005, mat(0xffffff), 0.18, 1.08, 0.181)); // chest pocket
+  }
+
+  // arms (sleeves match outfit)
+  const sleeveM = (outfit === 'coat') ? coatM : shirtM;
+  g.add(box(0.14, 0.6, 0.2, sleeveM, -0.37, 1.08, 0));
+  g.add(box(0.14, 0.6, 0.2, sleeveM,  0.37, 1.08, 0));
+  // hands
+  g.add(box(0.14, 0.13, 0.18, skinM, -0.37, 0.74, 0));
+  g.add(box(0.14, 0.13, 0.18, skinM,  0.37, 0.74, 0));
+
+  // neck
+  g.add(box(0.16, 0.1, 0.16, skinM, 0, 1.43, 0));
+
+  // head
+  g.add(box(0.34, 0.32, 0.34, skinM, 0, 1.56, 0));
+
+  // ears
+  g.add(box(0.04, 0.1, 0.08, skinM, -0.18, 1.55, 0));
+  g.add(box(0.04, 0.1, 0.08, skinM,  0.18, 1.55, 0));
+
+  // face: eye whites, pupils, mouth, eyebrows
+  const fz = 0.171;
+  g.add(box(0.07, 0.06, 0.005, mat(0xffffff), -0.075, 1.6, fz));
+  g.add(box(0.07, 0.06, 0.005, mat(0xffffff),  0.075, 1.6, fz));
+  g.add(box(0.035,0.05, 0.006, FACE_DARK,     -0.075, 1.6, fz + 0.001));
+  g.add(box(0.035,0.05, 0.006, FACE_DARK,      0.075, 1.6, fz + 0.001));
+  g.add(box(0.012,0.012,0.007, mat(0xffffff), -0.083, 1.612, fz + 0.002)); // eye glint
+  g.add(box(0.012,0.012,0.007, mat(0xffffff),  0.067, 1.612, fz + 0.002));
+  g.add(box(0.085,0.022,0.005, hairM,         -0.075, 1.665, fz));         // brow L
+  g.add(box(0.085,0.022,0.005, hairM,          0.075, 1.665, fz));         // brow R
+  g.add(box(0.11, 0.025,0.005, MOUTH_DARK,     0,     1.495, fz));         // mouth
+
+  if (glasses) {
+    const fr = mat(0x111827);
+    // frames around each eye
+    g.add(box(0.1, 0.005, 0.005, fr, -0.075, 1.625, fz + 0.003));
+    g.add(box(0.1, 0.005, 0.005, fr, -0.075, 1.575, fz + 0.003));
+    g.add(box(0.005,0.05, 0.005, fr, -0.125, 1.6,   fz + 0.003));
+    g.add(box(0.005,0.05, 0.005, fr, -0.025, 1.6,   fz + 0.003));
+    g.add(box(0.1, 0.005, 0.005, fr,  0.075, 1.625, fz + 0.003));
+    g.add(box(0.1, 0.005, 0.005, fr,  0.075, 1.575, fz + 0.003));
+    g.add(box(0.005,0.05, 0.005, fr,  0.025, 1.6,   fz + 0.003));
+    g.add(box(0.005,0.05, 0.005, fr,  0.125, 1.6,   fz + 0.003));
+    // bridge
+    g.add(box(0.05, 0.005, 0.005, fr, 0, 1.6, fz + 0.003));
+  }
+
+  // hair styles
+  if (hairStyle === 'short') {
+    g.add(box(0.36, 0.08, 0.36, hairM, 0, 1.76, 0));
+    g.add(box(0.36, 0.16, 0.06, hairM, 0, 1.66, -0.16));
+  } else if (hairStyle === 'bowl') {
+    g.add(box(0.38, 0.12, 0.38, hairM, 0, 1.74, 0));
+    g.add(box(0.38, 0.22, 0.06, hairM, 0, 1.6, -0.18));
+    g.add(box(0.06, 0.22, 0.38, hairM, -0.20, 1.6, 0));
+    g.add(box(0.06, 0.22, 0.38, hairM,  0.20, 1.6, 0));
+  } else if (hairStyle === 'ponytail') {
+    g.add(box(0.36, 0.1, 0.36, hairM, 0, 1.75, 0));
+    g.add(box(0.36, 0.16, 0.06, hairM, 0, 1.66, -0.16));
+    g.add(box(0.12, 0.36, 0.12, hairM, 0, 1.45, -0.22));
+  } else if (hairStyle === 'bun') {
+    g.add(box(0.36, 0.08, 0.36, hairM, 0, 1.76, 0));
+    g.add(box(0.36, 0.16, 0.06, hairM, 0, 1.66, -0.16));
+    g.add(box(0.18, 0.18, 0.18, hairM, 0, 1.86, -0.04));
+  } else if (hairStyle === 'long') {
+    g.add(box(0.38, 0.1, 0.38, hairM, 0, 1.75, 0));
+    g.add(box(0.42, 0.45, 0.06, hairM, 0, 1.45, -0.18));
+    g.add(box(0.06, 0.45, 0.38, hairM, -0.21, 1.45, 0));
+    g.add(box(0.06, 0.45, 0.38, hairM,  0.21, 1.45, 0));
+  } else if (hairStyle === 'beanie') {
+    const beanieColor = pick([0x6366f1, 0xef4444, 0x10b981, 0x1f2937, 0xf59e0b]);
+    g.add(box(0.4, 0.2, 0.4, mat(beanieColor), 0, 1.74, 0));
+    g.add(box(0.42, 0.05, 0.42, mat(0xffffff), 0, 1.65, 0));
+    g.add(box(0.08, 0.08, 0.08, mat(beanieColor), 0, 1.86, 0));
+  } else if (hairStyle === 'curly') {
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        g.add(box(0.13, 0.11, 0.13, hairM, i*0.12, 1.78 + (Math.random()-0.5)*0.04, j*0.12));
+      }
+    }
+    g.add(box(0.36, 0.18, 0.06, hairM, 0, 1.66, -0.17));
+  } else if (hairStyle === 'parted') {
+    g.add(box(0.36, 0.08, 0.36, hairM, 0, 1.76, 0));
+    g.add(box(0.18, 0.06, 0.36, hairM, 0.1, 1.81, 0));
+    g.add(box(0.36, 0.16, 0.06, hairM, 0, 1.66, -0.16));
+  } else if (hairStyle === 'shaved') {
+    g.add(box(0.36, 0.02, 0.36, hairM, 0, 1.73, 0));
+  }
+
+  // role badge on chest (always visible)
+  g.add(box(0.1, 0.06, 0.005, roleM, -0.16, 1.18, 0.184));
+
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  return g;
+}
+
+// ---- build labs
+const LABS = [
+  { x: -10, z: -10, name: 'Lab 1' },
+  { x:  10, z: -10, name: 'Lab 2' },
+  { x: -10, z:  10, name: 'Lab 3' },
+  { x:  10, z:  10, name: 'Lab 4' },
+];
+
+const labGroups = [];
+const roleColors = [0x7dd3fc, 0xfca5a5, 0xfcd34d, 0xa7f3d0];
+
+function buildLab(i, lab) {
+  const root = new THREE.Group();
+  root.position.set(lab.x, 0, lab.z);
+  scene.add(root);
+
+  // tiled floor plate
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(14, 0.06, 14), matFloor);
+  plate.position.y = 0.04; plate.receiveShadow = true; root.add(plate);
+
+  // accent border around the floor
+  const border = new THREE.Mesh(new THREE.BoxGeometry(14.2, 0.02, 14.2), matTrim);
+  border.position.y = 0.05; root.add(border);
+
+  // walls: back (-z) + left (-x), forming an L away from the camera
+  wall(root, 0, -7.05, 14, 0);
+  wall(root, -7.05, 0, 14, Math.PI / 2);
+
+  // door at the front corner of the left wall (natural entrance, clear approach)
+  door(root, -6.93, 5.2, Math.PI / 2);
+  // doormat right inside the door
+  const dmat = new THREE.Mesh(
+    new THREE.BoxGeometry(0.55, 0.02, 1.3),
+    mat(0x3d2615, 0.95)
+  );
+  dmat.position.set(-5.95, 0.07, 5.2);
+  dmat.receiveShadow = true;
+  root.add(dmat);
+
+  // whiteboard + poster mounted on the back wall
+  whiteboard(root, -1.5, 2.0, -6.94, 0);
+  const hues = [0x60a5fa, 0xf472b6, 0x34d399, 0xfbbf24];
+  poster(root, 4.5, 2.0, -6.94, 0, hues[i]);
+
+  // benches: along back wall + a parallel island bench
+  bench(root, 0, -5.5, 0, 9);
+  bench(root, 5.5, 0, Math.PI / 2, 9);
+
+  // equipment per lab — each lab has a visibly different identity
+  if (i === 0) {
+    // Lab α — target ID (dry lab heavy: lots of monitors + GPU + library)
+    deskComputer(root, -3.4, -5.5, Math.PI);
+    deskComputer(root, -2.0, -5.5, Math.PI);
+    deskComputer(root, -0.5, -5.5, Math.PI);
+    deskComputer(root,  1.2, -5.5, Math.PI);
+    monitor(root, 5.5, -2.5, -Math.PI/2);
+    monitor(root, 5.5, -1,   -Math.PI/2);
+    monitor(root, 5.5,  0.6, -Math.PI/2);
+    gpuRack(root, -6.3, 1);
+    gpuRack(root, -6.3, 2.5);
+    bookshelf(root, -6.3, -2, Math.PI/2);
+  } else if (i === 1) {
+    // Lab β — in silico assay (sequencer + fridge + screens)
+    sequencer(root, -3, -5.5);
+    deskComputer(root, -1, -5.5, Math.PI);
+    pcr(root, 1, -5.5);
+    centrifuge(root, 2.7, -5.5);
+    microscope(root, 5.5, -2.5);
+    deskComputer(root, 5.5, -0.5, -Math.PI/2);
+    tubeRack(root, 5.5, 1.2);
+    fridge(root, -6.3, -3, Math.PI/2, 0x60a5fa);
+    fridge(root, -6.3, -1, Math.PI/2, 0xfbbf24);
+    bookshelf(root, -6.3, 2, Math.PI/2);
+  } else if (i === 2) {
+    // Lab γ — replication / wet lab (microscopes, fume hood, fridges, centrifuges)
+    microscope(root, -3.5, -5.5);
+    microscope(root, -2,   -5.5);
+    centrifuge(root, -0.4, -5.5);
+    pcr(root, 1.4, -5.5);
+    tubeRack(root, 3, -5.5);
+    fumeHood(root, 5.5, -3.0, -Math.PI/2);
+    centrifuge(root, 5.5, -0.5);
+    microscope(root, 5.5, 1);
+    fridge(root, -6.3, 1, Math.PI/2, 0x10b981);
+    cabinet(root, -6.3, 3, Math.PI/2);
+  } else {
+    // Lab δ — safety / red team (cabinets, fume hood, monitors)
+    fumeHood(root, -3, -5.5, 0);
+    cabinet(root, -1, -5.5, 0);
+    deskComputer(root, 1.2, -5.5, Math.PI);
+    monitor(root, 2.6, -5.5, Math.PI);
+    pcr(root, 4, -5.5);
+    deskComputer(root, 5.5, -2.5, -Math.PI/2);
+    deskComputer(root, 5.5, -0.5, -Math.PI/2);
+    monitor(root, 5.5, 1.2, -Math.PI/2);
+    cabinet(root, -6.3, -2, Math.PI/2);
+    bookshelf(root, -6.3, 0.5, Math.PI/2);
+    fridge(root, -6.3, 3, Math.PI/2, 0xef4444);
+  }
+
+  // office chairs at the benches (front of chair = -z by default)
+  // bench at -z (north): chairs sit south of the bench, default orientation works
+  chair(root, -3, -3.8, 0);
+  chair(root,  0, -3.8, 0);
+  chair(root,  3, -3.8, 0);
+  // bench at +x (east): chairs sit west of bench, rotated to face +x
+  chair(root, 3.8, -2.5, -Math.PI / 2);
+  chair(root, 3.8,  0,   -Math.PI / 2);
+  chair(root, 3.8,  2.5, -Math.PI / 2);
+
+  // plants — keep clear of the door at (-6.93, 5.2)
+  plant(root,  5.7,  5.7);   // front-right corner
+  plant(root, -3.2,  5.6);   // front-center, away from door
+
+  // small rug-like floor accent in the center
+  const rug = new THREE.Mesh(
+    new THREE.BoxGeometry(3.2, 0.02, 2.4),
+    mat([0xfbbf24, 0x60a5fa, 0x34d399, 0xa78bfa][i] || 0x60a5fa, 0.9)
+  );
+  rug.position.set(0, 0.07, 3);
+  rug.receiveShadow = true;
+  root.add(rug);
+
+  // stations: position the scientist stands on, direction they face, and what they're doing.
+  // face: rotation.y in radians (0=+z default, π=-z, π/2=+x, -π/2=-x)
+  const stations = [
+    { p: new THREE.Vector3(-3, 0, -3.8), face: Math.PI,    type: 'scope' },
+    { p: new THREE.Vector3( 0, 0, -3.8), face: Math.PI,    type: 'type'  },
+    { p: new THREE.Vector3( 3, 0, -3.8), face: Math.PI,    type: 'mix'   },
+    { p: new THREE.Vector3( 3.8, 0, -2.5), face: Math.PI/2, type: 'scope' },
+    { p: new THREE.Vector3( 3.8, 0,  0),   face: Math.PI/2, type: 'type'  },
+    { p: new THREE.Vector3( 3.8, 0,  2.5), face: Math.PI/2, type: 'mix'   },
+    { p: new THREE.Vector3(-1.5, 0,  2.6), face: Math.PI,   type: 'write' },
+    { p: new THREE.Vector3(-4,   0,  1.5), face: -Math.PI/2,type: 'idle'  },
+  ];
+
+  const scientists = [];
+  for (let s = 0; s < 4; s++) {
+    const sci = scientist(roleColors[s]);
+    sci.userData.stations = stations;
+    // give each scientist a unique starting target so they spread out
+    sci.userData.target = (s * 2) % stations.length;
+    sci.userData.speed = 0.85 + Math.random() * 0.45;
+    sci.userData.bob = Math.random() * Math.PI * 2;
+    sci.userData.state = 'walking';
+    sci.userData.idleTimer = 0;
+    sci.userData.headPhase = Math.random() * Math.PI * 2;
+    sci.userData.name = pickName();
+    // start at a different station to avoid spawn overlap
+    sci.position.copy(stations[(s * 3) % stations.length].p);
+    root.add(sci);
+    scientists.push(sci);
+  }
+  root.userData.scientists = scientists;
+  root.userData.centrifuges = root.children.filter(c => c.userData.lid);
+
+  return root;
+}
+
+LABS.forEach((lab, i) => labGroups.push(buildLab(i, lab)));
+
+// ---- HTML labels above each lab
+const tagEls = LABS.map(lab => {
+  const el = document.createElement('div');
+  el.className = 'tag';
+  el.textContent = lab.name;
+  document.body.appendChild(el);
+  return el;
+});
+const tagPos = LABS.map(lab => new THREE.Vector3(lab.x, 4.2, lab.z));
+
+// per-scientist name tags
+const nameTags = [];
+for (const lab of labGroups) {
+  for (const sci of lab.userData.scientists) {
+    const el = document.createElement('div');
+    el.className = 'nameTag';
+    el.textContent = sci.userData.name;
+    document.body.appendChild(el);
+    nameTags.push({ el, sci, lab });
+  }
+}
+const nameTmp = new THREE.Vector3();
+
+// ---- animate
+const tmp = new THREE.Vector3();
+const clock = new THREE.Clock();
+
+function animate() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t  = clock.getElapsedTime();
+
+  // scientists: walk → work-at-station → walk, with separation so they don't overlap
+  for (const lab of labGroups) {
+    const sciList = lab.userData.scientists;
+
+    // pre-build a "claimed" set of station indices so two scientists don't pile on the same one
+    const claimed = new Set();
+    for (const s of sciList) claimed.add(s.userData.target);
+
+    for (const sci of sciList) {
+      const station = sci.userData.stations[sci.userData.target];
+      const goal = station.p;
+
+      if (sci.userData.state === 'idle') {
+        sci.userData.idleTimer -= dt;
+
+        // turn to face the station's working direction
+        let dRot = station.face - sci.rotation.y;
+        while (dRot >  Math.PI) dRot -= Math.PI * 2;
+        while (dRot < -Math.PI) dRot += Math.PI * 2;
+        sci.rotation.y += dRot * Math.min(1, dt * 6);
+
+        // visible "working" body language by station type
+        const bp = sci.userData.bob;
+        if (station.type === 'scope') {
+          // leaning into a microscope
+          sci.rotation.x = -0.28 + Math.sin(t * 3 + bp) * 0.02;
+          sci.rotation.z = 0;
+          sci.position.y = -0.06;
+        } else if (station.type === 'type') {
+          // typing: slight forward lean + tiny side sway
+          sci.rotation.x = -0.12;
+          sci.rotation.z = Math.sin(t * 5 + bp) * 0.02;
+          sci.position.y = 0;
+        } else if (station.type === 'mix') {
+          // mixing/handling samples: side-to-side sway, hands at bench
+          sci.rotation.x = -0.08;
+          sci.rotation.z = Math.sin(t * 3 + bp) * 0.09;
+          sci.position.y = 0;
+        } else if (station.type === 'write') {
+          // writing on whiteboard: arm up, swaying
+          sci.rotation.x = 0.04;
+          sci.rotation.z = Math.sin(t * 2.2 + bp) * 0.06;
+          sci.position.y = 0;
+        } else {
+          // idle: light bob
+          sci.rotation.x *= Math.max(0, 1 - dt * 4);
+          sci.rotation.z *= Math.max(0, 1 - dt * 4);
+          sci.position.y = Math.sin(t * 1.6 + bp) * 0.012;
+        }
+
+        if (sci.userData.idleTimer <= 0) {
+          // pick a fresh station that isn't claimed by anyone else
+          const N = sci.userData.stations.length;
+          let next = (sci.userData.target + 1 + Math.floor(Math.random() * (N - 1))) % N;
+          let tries = 0;
+          while (claimed.has(next) && tries < N) { next = (next + 1) % N; tries++; }
+          claimed.delete(sci.userData.target);
+          claimed.add(next);
+          sci.userData.target = next;
+          sci.userData.state = 'walking';
+        }
+      } else {
+        // ease the lean off while walking
+        sci.rotation.x *= Math.max(0, 1 - dt * 6);
+        sci.rotation.z *= Math.max(0, 1 - dt * 6);
+
+        tmp.set(goal.x - sci.position.x, 0, goal.z - sci.position.z);
+        const dist = tmp.length();
+
+        // separation: push away from any other scientist within 1.1 units
+        let sepX = 0, sepZ = 0;
+        for (const other of sciList) {
+          if (other === sci) continue;
+          const dx = sci.position.x - other.position.x;
+          const dz = sci.position.z - other.position.z;
+          const d = Math.hypot(dx, dz);
+          if (d > 0.001 && d < 1.1) {
+            const k = (1.1 - d) * 4.0;
+            sepX += (dx / d) * k;
+            sepZ += (dz / d) * k;
+          }
+        }
+
+        if (dist < 0.12) {
+          sci.userData.state = 'idle';
+          sci.userData.idleTimer = 3 + Math.random() * 5;
+          // snap exactly to station position
+          sci.position.x = goal.x;
+          sci.position.z = goal.z;
+        } else {
+          tmp.normalize();
+          const vx = tmp.x * sci.userData.speed + sepX;
+          const vz = tmp.z * sci.userData.speed + sepZ;
+          sci.position.x += vx * dt;
+          sci.position.z += vz * dt;
+          const targetRot = Math.atan2(vx, vz);
+          let dRot = targetRot - sci.rotation.y;
+          while (dRot >  Math.PI) dRot -= Math.PI * 2;
+          while (dRot < -Math.PI) dRot += Math.PI * 2;
+          sci.rotation.y += dRot * Math.min(1, dt * 9);
+          sci.position.y = Math.abs(Math.sin(t * 8 + sci.userData.bob)) * 0.045;
+        }
+      }
+    }
+
+    // hard collision resolution: enforce a minimum distance between any two scientists.
+    // walkers absorb the push so idle scientists stay anchored at their station.
+    const minDist = 0.95;
+    for (let pass = 0; pass < 3; pass++) {
+      for (let i = 0; i < sciList.length; i++) {
+        for (let j = i + 1; j < sciList.length; j++) {
+          const a = sciList[i], b = sciList[j];
+          const dx = b.position.x - a.position.x;
+          const dz = b.position.z - a.position.z;
+          const d = Math.hypot(dx, dz);
+          if (d > 0.0001 && d < minDist) {
+            const overlap = minDist - d;
+            const nx = dx / d, nz = dz / d;
+            const aIdle = a.userData.state === 'idle';
+            const bIdle = b.userData.state === 'idle';
+            if (aIdle && !bIdle) {
+              b.position.x += nx * overlap;
+              b.position.z += nz * overlap;
+            } else if (bIdle && !aIdle) {
+              a.position.x -= nx * overlap;
+              a.position.z -= nz * overlap;
+            } else {
+              a.position.x -= nx * overlap * 0.5;
+              a.position.z -= nz * overlap * 0.5;
+              b.position.x += nx * overlap * 0.5;
+              b.position.z += nz * overlap * 0.5;
+            }
+          }
+        }
+      }
+    }
+
+    // spin centrifuge lids
+    for (const c of (lab.userData.centrifuges || [])) {
+      if (c.userData.lid) c.userData.lid.rotation.y += dt * 8;
+    }
+  }
+
+  // project lab tags to screen
+  for (let i = 0; i < tagEls.length; i++) {
+    const v = tagPos[i].clone().project(camera);
+    const x = (v.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+    tagEls[i].style.left = x + 'px';
+    tagEls[i].style.top  = y + 'px';
+    tagEls[i].style.opacity = v.z < 1 ? '1' : '0';
+  }
+
+  // project name tags above each scientist's head
+  for (const nt of nameTags) {
+    nameTmp.set(
+      nt.sci.position.x + nt.lab.position.x,
+      nt.sci.position.y + 2.15,
+      nt.sci.position.z + nt.lab.position.z
+    );
+    nameTmp.project(camera);
+    const x = (nameTmp.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-nameTmp.y * 0.5 + 0.5) * window.innerHeight;
+    nt.el.style.left = x + 'px';
+    nt.el.style.top  = (y - 6) + 'px';
+    nt.el.style.opacity = nameTmp.z < 1 ? '1' : '0';
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ---- resize
+window.addEventListener('resize', () => {
+  const a = window.innerWidth / window.innerHeight;
+  camera.left = -D*a; camera.right = D*a;
+  camera.top = D; camera.bottom = -D;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
