@@ -257,26 +257,58 @@ export default function HomePage() {
 }
 
 function AboutFoundersSection() {
+  const team = [
+    {
+      name: "Sambhab Mishra",
+      role: "CEO",
+      initials: "SM",
+      image: "/images/about/sambhab-mishra-avatar.png",
+    },
+    { name: "Anonymous", role: "CTO", initials: "A" },
+    { name: "Anonymous", role: "CMO", initials: "A" },
+  ];
+
   return (
-    <section className="about-founder-strip" aria-label="Mission and co-founders">
-      <div className="about-founder-strip__copy">
-        <h2 className="home-section-subtitle">
-          We want to build the{" "}
-          <span className="text-[#ee9d94]">infrastructure</span> for the next
-          scientific revolution.
-        </h2>
+    <section className="about-founder-strip" aria-label="Who we are">
+      <div className="about-founder-strip__intro">
+        <div>
+          <div className="font-mono text-[10.5px] uppercase tracking-[0.24em] text-ink-400">
+            Who We Are
+          </div>
+          <h2 className="mt-4 font-editorial text-[46px] leading-none text-ink-900 sm:text-[58px]">
+            Team
+          </h2>
+        </div>
         <div className="about-founder-strip__body">
-          <p className="home-content-copy">Science Is Winning. But Not Fast Enough.</p>
           <p className="home-content-copy">
-            AI can now handle, process and analyse more data than any human team
-            ever, but we still don't have systems that can safely explore the
-            unknown, formalize new invariants, find unnamed entities, and
-            question established theories when necessary. This is the most
-            meaningful contribution we can make - turning artificial
-            intelligence into genuine artificial scientists and superintelligent
-            systems that expand humanity's understanding of the universe.
+            We are building the infrastructure for a new kind of science.
+          </p>
+          <p className="home-content-copy">
+            We are building the conditions under which human scientists -
+            curious, creative, intuitive, irreplaceable - can work at a scale
+            and speed that was previously impossible. Where a researcher's best
+            idea is not limited by how many papers they can read, or how many
+            experiments they can run, or whether their institution can afford
+            the tools they need. Where the distance between a question and an
+            answer is measured in days, not years.
           </p>
         </div>
+      </div>
+
+      <div className="about-founder-strip__team">
+        {team.map((member) => (
+          <article className="about-founder-person" key={`${member.name}-${member.role}`}>
+            <div className="about-founder-person__avatar" aria-hidden>
+              {"image" in member ? (
+                <img src={member.image} alt="" />
+              ) : (
+                member.initials
+              )}
+            </div>
+            <h3>{member.name}</h3>
+            <p>{member.role}</p>
+          </article>
+        ))}
       </div>
     </section>
   );

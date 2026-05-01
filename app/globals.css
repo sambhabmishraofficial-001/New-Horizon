@@ -673,18 +673,17 @@ a.btn-soft *,
   padding: 0 0 1rem;
 }
 
-.about-founder-strip__copy {
-  max-width: 100%;
-  text-align: left;
-}
-
-.about-founder-strip__copy h2 {
-  max-width: 22ch;
-  color: rgb(var(--ink));
+.about-founder-strip__intro {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.75fr) minmax(0, 1.25fr);
+  gap: clamp(2.5rem, 8vw, 8rem);
+  align-items: start;
+  border-bottom: 1px solid rgba(17, 17, 16, 0.1);
+  padding-bottom: 3.6rem;
 }
 
 .about-founder-strip__body {
-  margin-top: 2.75rem;
+  margin-top: 0;
 }
 
 .about-founder-strip__body .home-content-copy {
@@ -696,6 +695,69 @@ a.btn-soft *,
 
 .about-founder-strip__body p + p {
   margin-top: 1.25rem;
+}
+
+.about-founder-strip__team {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid rgba(17, 17, 16, 0.1);
+  border-top: 0;
+}
+
+.about-founder-person {
+  min-height: 260px;
+  border-right: 1px solid rgba(17, 17, 16, 0.1);
+  padding: clamp(1.75rem, 4vw, 3.2rem);
+}
+
+.about-founder-person:last-child {
+  border-right: 0;
+}
+
+.about-founder-person__avatar {
+  display: flex;
+  height: 5.2rem;
+  width: 5.2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.34), transparent 35%),
+    linear-gradient(135deg, #1f2937, #56606d);
+  color: #fff;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.about-founder-person__avatar img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: 50% 28%;
+}
+
+.about-founder-person h3 {
+  margin-top: 1.25rem;
+  color: rgb(var(--ink));
+  font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.about-founder-person p {
+  margin-top: 0.35rem;
+  color: rgba(17, 17, 16, 0.48);
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-style: normal !important;
+  font-weight: 300;
+  line-height: 1.45;
 }
 
 .about-founder-strip__cards {
@@ -750,8 +812,14 @@ a.btn-soft *,
 }
 
 @media (max-width: 900px) {
-  .about-founder-strip {
+  .about-founder-strip__intro,
+  .about-founder-strip__team {
     grid-template-columns: 1fr;
+  }
+
+  .about-founder-person {
+    border-right: 0;
+    border-top: 1px solid rgba(17, 17, 16, 0.1);
   }
 
   .about-founder-strip__cards {
