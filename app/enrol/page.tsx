@@ -42,7 +42,7 @@ export default function EnrolPage() {
           <div className="lg:pt-12">
             <form
               className="rounded-2xl border border-ink-900/10 bg-white p-7 shadow-editorial"
-              action="mailto:hello@newhorizon.dev?subject=Access%20Request"
+              action="mailto:contact@newhorizon.dev?subject=Access%20Request"
               method="post"
               encType="text/plain"
             >

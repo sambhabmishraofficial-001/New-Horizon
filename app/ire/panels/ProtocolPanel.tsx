@@ -4,7 +4,8 @@ import * as React from "react";
 import { Plus, Share2, Play, Clock, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PanelShell, PanelGroup, IconBtn } from "./PanelChrome";
-import { PROTOCOLS, type ProtocolRecord, type FileKind } from "../data";
+import type { ProtocolRecord, FileKind } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
 
 export function ProtocolPanel({
   onOpen,
@@ -13,7 +14,8 @@ export function ProtocolPanel({
 }) {
   const [q, setQ] = React.useState("");
   const [tab, setTab] = React.useState<"mine" | "community">("mine");
-  const filtered = PROTOCOLS.filter(
+  const { protocols } = useWorkspaceBundle();
+  const filtered = protocols.filter(
     (p) => p.owner === tab && (!q || p.name.toLowerCase().includes(q.toLowerCase()))
   );
 

@@ -2,14 +2,23 @@
 
 import { Quote, Link2, ShieldCheck, Sparkles, FlaskConical, Download } from "lucide-react";
 import { DocShell, SectionLabel } from "./DocChrome";
-import { PAPERS, type PaperRecord } from "../data";
+import type { PaperRecord } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
+
+function crumbsForPaper(p: PaperRecord): string[] {
+  const parts = p.path.split("/").filter(Boolean);
+  const leaf = `${p.id}.paper`;
+  if (parts.length >= 2) return [parts[parts.length - 2]!, parts[parts.length - 1]!, leaf];
+  return ["literature", leaf];
+}
 
 export function PaperDoc({ path }: { path: string }) {
-  const p = PAPERS.find((x) => x.path === path) ?? PAPERS[0];
+  const { papers } = useWorkspaceBundle();
+  const p = papers.find((x) => x.path === path) ?? papers[0];
 
   return (
     <DocShell
-      crumbs={["egfr", "literature", `${p.id}.paper`]}
+      crumbs={crumbsForPaper(p)}
       right={
         <div className="flex items-center gap-1 text-[10.5px] font-mono">
           <span className="text-beacon-700">relevance {Math.round(p.relevance * 100)}%</span>
@@ -136,7 +145,7 @@ export function PaperDoc({ path }: { path: string }) {
           <div>
             <SectionLabel>Related papers</SectionLabel>
             <ul className="mt-2 space-y-1.5 text-[11.5px]">
-              {PAPERS.filter((x) => x.id !== p.id)
+              {papers.filter((x) => x.id !== p.id)
                 .slice(0, 4)
                 .map((o) => (
                   <li key={o.id} className="text-ink-700 truncate">

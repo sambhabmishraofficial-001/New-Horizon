@@ -4,15 +4,10 @@ import * as React from "react";
 import { PanelShell } from "./PanelChrome";
 import { cn } from "@/lib/cn";
 import {
-  RESEARCH_TREE,
-  HYPOTHESES,
-  EXPERIMENTS,
-  DATASETS,
-  PAPERS,
-  PROTOCOLS,
   FILE_META,
   type FileKind,
 } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
 
 type Hit = {
   path: string;
@@ -28,24 +23,24 @@ export function SearchPanel({
   onOpen: (path: string, name: string, kind: FileKind) => void;
 }) {
   const [q, setQ] = React.useState("");
+  const bundle = useWorkspaceBundle();
 
   const index = React.useMemo<Hit[]>(() => {
     const hits: Hit[] = [];
-    // walk tree
-    const walk = (ns: any[]) => {
+    const walk = (ns: typeof bundle.tree) => {
       ns.forEach((n) => {
         if (n.kind) hits.push({ path: n.path, name: n.name, kind: n.kind, preview: n.meta ?? "", group: "Files" });
-        n.children && walk(n.children);
+        if (n.children) walk(n.children);
       });
     };
-    walk(RESEARCH_TREE);
-    HYPOTHESES.forEach((h) => hits.push({ path: h.path, name: h.id, kind: "hyp", preview: h.title, group: "Hypotheses" }));
-    EXPERIMENTS.forEach((e) => hits.push({ path: e.path, name: e.id, kind: "exp", preview: e.title, group: "Experiments" }));
-    DATASETS.forEach((d) => hits.push({ path: d.path, name: d.name, kind: "dataset", preview: `${d.rows} × ${d.cols}`, group: "Datasets" }));
-    PAPERS.forEach((p) => hits.push({ path: p.path, name: p.id, kind: "paper", preview: p.title, group: "Literature" }));
-    PROTOCOLS.forEach((p) => hits.push({ path: p.path, name: p.name, kind: "protocol", preview: `v${p.version} · ${p.steps} steps`, group: "Protocols" }));
+    walk(bundle.tree);
+    bundle.hypotheses.forEach((h) => hits.push({ path: h.path, name: h.id, kind: "hyp", preview: h.title, group: "Hypotheses" }));
+    bundle.experiments.forEach((e) => hits.push({ path: e.path, name: e.id, kind: "exp", preview: e.title, group: "Experiments" }));
+    bundle.datasets.forEach((d) => hits.push({ path: d.path, name: d.name, kind: "dataset", preview: `${d.rows} × ${d.cols}`, group: "Datasets" }));
+    bundle.papers.forEach((p) => hits.push({ path: p.path, name: p.id, kind: "paper", preview: p.title, group: "Literature" }));
+    bundle.protocols.forEach((p) => hits.push({ path: p.path, name: p.name, kind: "protocol", preview: `v${p.version} · ${p.steps} steps`, group: "Protocols" }));
     return hits;
-  }, []);
+  }, [bundle]);
 
   const filtered = q
     ? index.filter(
@@ -77,14 +72,14 @@ export function SearchPanel({
           <div className="font-medium text-ink-700 mb-2">Queries you might try</div>
           <ul className="space-y-1.5 font-mono text-[11.5px]">
             {[
-              "T790M",
-              "contradicts H-001",
-              "FAIR < 80",
-              "running experiments",
-              "osimertinib resistance",
-              "IC50 nM",
-              "BSA blocking buffer",
-              "failed lot",
+              "replication design",
+              "FAIR metadata",
+              "contradictions",
+              "protocol versioning",
+              "negative controls",
+              "power analysis",
+              "mixed-effects model",
+              "open data deposit",
             ].map((e) => (
               <li
                 key={e}

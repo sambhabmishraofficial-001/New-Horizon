@@ -4,7 +4,8 @@ import * as React from "react";
 import { Plus, RefreshCcw, Pin, Flame, AlertTriangle, Link2, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PanelShell, PanelGroup, IconBtn } from "./PanelChrome";
-import { PAPERS, type PaperRecord, type FileKind } from "../data";
+import type { PaperRecord, FileKind } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
 
 export function LiteraturePanel({
   onOpen,
@@ -12,7 +13,8 @@ export function LiteraturePanel({
   onOpen: (path: string, name: string, kind: FileKind) => void;
 }) {
   const [q, setQ] = React.useState("");
-  const filtered = PAPERS.filter(
+  const { papers } = useWorkspaceBundle();
+  const filtered = papers.filter(
     (p) =>
       !q ||
       p.title.toLowerCase().includes(q.toLowerCase()) ||
@@ -34,7 +36,7 @@ export function LiteraturePanel({
       }
       footer={
         <>
-          <span>{filtered.length} / 67 in library</span>
+          <span>{filtered.length} / {papers.length} in workspace</span>
           <span>watcher · idle</span>
         </>
       }
@@ -44,11 +46,11 @@ export function LiteraturePanel({
           Smart collections
         </div>
         <ul className="space-y-1.5 font-mono">
-          <SmartRow icon={Pin} tone="ink">Directly cited · 23</SmartRow>
-          <SmartRow icon={Flame} tone="amber">Trending this week · 8</SmartRow>
-          <SmartRow icon={AlertTriangle} tone="rose">Contradicts H-001 · 2</SmartRow>
-          <SmartRow icon={Link2} tone="beacon">Cited by competitors · 14</SmartRow>
-          <SmartRow icon={Lightbulb} tone="violet">Suggested by agent · 12</SmartRow>
+          <SmartRow icon={Pin} tone="ink">Directly cited · {byTag("directly-cited").length}</SmartRow>
+          <SmartRow icon={Flame} tone="amber">Trending · {byTag("trending").length}</SmartRow>
+          <SmartRow icon={AlertTriangle} tone="rose">Contradictions · {byTag("contradicts").length}</SmartRow>
+          <SmartRow icon={Link2} tone="beacon">Competitor mentions · {byTag("competitor").length}</SmartRow>
+          <SmartRow icon={Lightbulb} tone="violet">Agent suggested · {byTag("suggested").length}</SmartRow>
         </ul>
       </div>
 

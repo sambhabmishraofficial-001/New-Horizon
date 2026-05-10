@@ -4,7 +4,32 @@ import * as React from "react";
 import { ChevronRight, Folder, FolderOpen, Plus, RefreshCcw, FolderTree } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PanelShell, IconBtn } from "./PanelChrome";
-import { RESEARCH_TREE, FILE_META, type TreeNode, type FileKind } from "../data";
+import { FILE_META, type TreeNode, type FileKind } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
+
+function expandDefaultsForTree(tree: TreeNode[]): Record<string, boolean> {
+  const r: Record<string, boolean> = {};
+  const walk = (nodes: TreeNode[], depth: number) => {
+    for (const n of nodes) {
+      r[n.id] = depth <= 1;
+      if (n.children) walk(n.children, depth + 1);
+    }
+  };
+  walk(tree, 0);
+  return r;
+}
+
+function countArtifactNodes(nodes: TreeNode[]): number {
+  let n = 0;
+  const walk = (xs: TreeNode[]) => {
+    xs.forEach((node) => {
+      if (node.kind) n++;
+      if (node.children) walk(node.children);
+    });
+  };
+  walk(nodes);
+  return n;
+}
 
 export function ExplorerPanel({
   activePath,
@@ -13,16 +38,8 @@ export function ExplorerPanel({
   activePath: string;
   onOpen: (path: string, name: string, kind: FileKind) => void;
 }) {
-  const [expanded, setExpanded] = React.useState<Record<string, boolean>>({
-    egfr: true,
-    "egfr-hyp": true,
-    "egfr-exp": true,
-    "egfr-nb": true,
-    "egfr-ms": true,
-    "egfr-lit": true,
-    k11: false,
-    twins: false,
-  });
+  const { tree, chrome } = useWorkspaceBundle();
+  const [expanded, setExpanded] = React.useState(() => expandDefaultsForTree(tree));
   const [q, setQ] = React.useState("");
 
   const toggle = (id: string) =>
@@ -54,7 +71,7 @@ export function ExplorerPanel({
       }
     >
       <div className="py-1.5 font-mono">
-        {RESEARCH_TREE.filter(matches).map((node) => (
+        {tree.filter(matches).map((node) => (
           <TreeBranch
             key={node.id}
             node={node}

@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
@@ -28,16 +28,14 @@ function SphereField() {
     >
       <defs>
         <linearGradient id="sphereHeatBands" x1="0" y1="40" x2="0" y2="560">
-          <stop offset="0%" stopColor="#f03016" stopOpacity="0.42" />
-          <stop offset="10%" stopColor="#ff5a1f" stopOpacity="0.42" />
-          <stop offset="20%" stopColor="#ff9900" stopOpacity="0.42" />
-          <stop offset="31%" stopColor="#ffe21d" stopOpacity="0.42" />
-          <stop offset="42%" stopColor="#c8ff31" stopOpacity="0.42" />
-          <stop offset="53%" stopColor="#4fe85f" stopOpacity="0.42" />
-          <stop offset="64%" stopColor="#39e6b4" stopOpacity="0.42" />
-          <stop offset="75%" stopColor="#25c7ff" stopOpacity="0.42" />
-          <stop offset="87%" stopColor="#2368ff" stopOpacity="0.42" />
-          <stop offset="100%" stopColor="#152fff" stopOpacity="0.42" />
+          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.82" />
+          <stop offset="14%" stopColor="#2563eb" stopOpacity="0.8" />
+          <stop offset="28%" stopColor="#2563eb" stopOpacity="0.78" />
+          <stop offset="42%" stopColor="#2563eb" stopOpacity="0.74" />
+          <stop offset="56%" stopColor="#2563eb" stopOpacity="0.7" />
+          <stop offset="72%" stopColor="#2563eb" stopOpacity="0.66" />
+          <stop offset="86%" stopColor="#2563eb" stopOpacity="0.62" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0.58" />
         </linearGradient>
         <clipPath id="sphereClip">
           <circle cx="300" cy="300" r={radius} />
@@ -60,8 +58,8 @@ function SphereField() {
               cy={300 + (offset / 50) * 260}
               rx={260 * radius}
               ry={Math.max(2.5, 260 * radius * 0.115)}
-              stroke="#111110"
-              strokeOpacity="0.52"
+              stroke="#ffffff"
+              strokeOpacity="0.62"
               strokeWidth="0.35"
             />
           );
@@ -76,8 +74,8 @@ function SphereField() {
             cy="300"
             rx={Math.max(2, Math.abs(Math.cos((phase * Math.PI) / 180)) * radius)}
             ry={radius}
-            stroke="#111110"
-            strokeOpacity="0.56"
+            stroke="#ffffff"
+            strokeOpacity="0.66"
             strokeWidth="0.35"
           >
             <animate
@@ -90,8 +88,8 @@ function SphereField() {
         ))}
       </g>
 
-      <ellipse cx="300" cy="300" rx={radius} ry="30" stroke="#111110" strokeOpacity="0.58" strokeWidth="0.35" />
-      <circle cx="300" cy="300" r={radius} stroke="#111110" strokeOpacity="0.72" strokeWidth="0.5" />
+      <ellipse cx="300" cy="300" rx={radius} ry="30" stroke="#ffffff" strokeOpacity="0.68" strokeWidth="0.35" />
+      <circle cx="300" cy="300" r={radius} stroke="#ffffff" strokeOpacity="0.78" strokeWidth="0.5" />
     </svg>
   );
 }
@@ -184,7 +182,7 @@ export default function HomePage() {
           </div>
           <h2 className="home-section-subtitle mt-4 max-w-[16ch] font-editorial text-ink-900">
             Systematizing{" "}
-            <span className="text-[#ee9d94]">Serendipity</span>
+            <span className="text-[#2563eb]">Serendipity</span>
           </h2>
 
           <div className="mt-12 space-y-6 border-b border-ink-900/8 pb-12">
@@ -213,8 +211,8 @@ export default function HomePage() {
           <div className="mt-12">
             <h3 className="home-section-subtitle max-w-[22ch] font-editorial text-ink-900">
               Relationship Between{" "}
-              <span className="text-[#ee9d94]">Human</span> And{" "}
-              <span className="text-[#ee9d94]">Machine Intelligence</span>.
+              <span className="text-[#2563eb]">Human</span> And{" "}
+              <span className="text-[#2563eb]">Machine Intelligence</span>.
             </h3>
             <div className="mt-7 space-y-6">
               <p className="home-content-copy max-w-[72ch] font-marketing text-ink-600">

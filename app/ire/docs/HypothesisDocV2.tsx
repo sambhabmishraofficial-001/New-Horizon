@@ -14,23 +14,51 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { DocShell, SectionLabel } from "./DocChrome";
-import { HYPOTHESES } from "../data";
+import type { HypothesisRecord } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
+
+function clamp(v: number) {
+  return Math.max(0, Math.min(1, v));
+}
+
+function crumbsForHypothesis(h: HypothesisRecord): string[] {
+  const seg = h.path.split("/").filter(Boolean);
+  const leaf = `${h.id}.hyp`;
+  if (seg.length < 2) return [leaf];
+  const parents = seg.slice(0, -1).slice(-2);
+  return [...parents, leaf];
+}
+
+function buildPosteriorSeries(h: HypothesisRecord): { label: string; v: number }[] {
+  const steps: { label: string; v: number }[] = [{ label: "prior", v: h.prior }];
+  let v = h.prior;
+  if (h.evidence.papers > 0) {
+    v = clamp(v + 0.03 * Math.min(h.evidence.papers, 6));
+    steps.push({ label: "+ literature", v });
+  }
+  if (h.evidence.experiments > 0) {
+    v = clamp(v + 0.05 * Math.min(h.evidence.experiments, 5));
+    steps.push({ label: "+ experiments", v });
+  }
+  if (h.evidence.datasets > 0) {
+    v = clamp(v + 0.04 * Math.min(h.evidence.datasets, 5));
+    steps.push({ label: "+ datasets", v });
+  }
+  steps.push({ label: "posterior", v: h.posterior });
+  if (steps.length < 2) steps.push({ label: "posterior", v: h.posterior });
+  return steps;
+}
 
 export function HypothesisDocV2({ path }: { path: string }) {
   const [view, setView] = React.useState<"rendered" | "source">("rendered");
-  const h = HYPOTHESES.find((x) => x.path === path) ?? HYPOTHESES[0];
-
-  const posteriorSeries = [
-    { label: "prior", v: h.prior },
-    { label: "+ lit (×3)", v: clamp(h.prior + 0.06) },
-    { label: "+ EXP-001", v: clamp(h.prior + 0.14) },
-    { label: "+ DS-003", v: clamp(h.prior + 0.22) },
-    { label: "+ EXP-002 (partial)", v: h.posterior },
-  ];
+  const { hypotheses } = useWorkspaceBundle();
+  const h = hypotheses.find((x) => x.path === path) ?? hypotheses[0];
+  const posteriorSeries = React.useMemo(() => buildPosteriorSeries(h), [h]);
+  const isScaffold = h.path.startsWith("/sci/");
 
   return (
     <DocShell
-      crumbs={["egfr", "hypotheses", `${h.id}.hyp`]}
+      crumbs={crumbsForHypothesis(h)}
       right={
         <div className="flex items-center gap-1">
           <span
@@ -58,7 +86,7 @@ export function HypothesisDocV2({ path }: { path: string }) {
       }
     >
       {view === "rendered" ? (
-        <Rendered h={h} series={posteriorSeries} />
+        <Rendered h={h} series={posteriorSeries} isScaffold={isScaffold} />
       ) : (
         <Source h={h} />
       )}
@@ -66,16 +94,14 @@ export function HypothesisDocV2({ path }: { path: string }) {
   );
 }
 
-function clamp(v: number) {
-  return Math.max(0, Math.min(1, v));
-}
-
 function Rendered({
   h,
   series,
+  isScaffold,
 }: {
-  h: (typeof HYPOTHESES)[number];
+  h: HypothesisRecord;
   series: { label: string; v: number }[];
+  isScaffold: boolean;
 }) {
   return (
     <article className="px-10 py-10 max-w-[880px]">
@@ -102,43 +128,87 @@ function Rendered({
       <section className="mt-10">
         <SectionLabel>Arguments for</SectionLabel>
         <ul className="mt-3 space-y-2.5">
-          <ArgFor>
-            <b>Smith '24</b> — T790M induces a 2.1 Å conformational shift that
-            favors ATP binding over osimertinib. [Cryo-EM, MD]
-          </ArgFor>
-          <ArgFor>
-            <b>TCGA LUAD (DS-003)</b> — T790M enriched in post-osimertinib
-            cohort (n = 567; p &lt; 10⁻⁶).
-          </ArgFor>
-          <ArgFor>
-            <b>EXP-001 (IC50)</b> — 12.3-fold shift in IC50 across 4 cell lines
-            (p &lt; 0.001).
-          </ArgFor>
+          {isScaffold ? (
+            <>
+              <ArgFor>
+                <b>Evidence ledger</b> — Citations, datasets, and experiment outcomes attached here become
+                structured arguments instead of static prose.
+              </ArgFor>
+              <ArgFor>
+                <b>Domain language</b> — State quantities, units, regimes, and populations using terminology native
+                to your field so reviewers map claims to observations cleanly.
+              </ArgFor>
+              <ArgFor>
+                <b>Positive controls</b> — Record which manipulations should increase signal if the mechanism class
+                holds; pin instrument settings and batch IDs.
+              </ArgFor>
+            </>
+          ) : (
+            <>
+              <ArgFor>
+                <b>Smith &apos;24</b> — T790M induces a 2.1 Å conformational shift that
+                favors ATP binding over osimertinib. [Cryo-EM, MD]
+              </ArgFor>
+              <ArgFor>
+                <b>TCGA LUAD (DS-003)</b> — T790M enriched in post-osimertinib
+                cohort (n = 567; p &lt; 10⁻⁶).
+              </ArgFor>
+              <ArgFor>
+                <b>EXP-001 (IC50)</b> — 12.3-fold shift in IC50 across 4 cell lines
+                (p &lt; 0.001).
+              </ArgFor>
+            </>
+          )}
         </ul>
       </section>
 
       <section className="mt-10">
         <SectionLabel>Arguments against · contradictions flagged</SectionLabel>
         <ul className="mt-3 space-y-2.5">
-          <ArgAgainst>
-            <b>Tran '24</b> — T790M frequency falls below 30% in ≥3rd-line
-            samples; MET amplification rises. Challenges primacy in late-stage.
-          </ArgAgainst>
-          <ArgAgainst>
-            <b>Internal lot 70c</b> — outlier assay behavior; under
-            investigation by Aletheia.
-          </ArgAgainst>
+          {isScaffold ? (
+            <>
+              <ArgAgainst>
+                <b>No contradictions indexed yet</b> — Import conflicting findings or mark internal outliers so the
+                ledger stays balanced.
+              </ArgAgainst>
+              <ArgAgainst>
+                <b>Scope checks</b> — Document conditions where the claim should fail fast (wrong organism, regime,
+                or measurement modality).
+              </ArgAgainst>
+            </>
+          ) : (
+            <>
+              <ArgAgainst>
+                <b>Tran &apos;24</b> — T790M frequency falls below 30% in ≥3rd-line
+                samples; MET amplification rises. Challenges primacy in late-stage.
+              </ArgAgainst>
+              <ArgAgainst>
+                <b>Internal lot 70c</b> — outlier assay behavior; under
+                investigation by Aletheia.
+              </ArgAgainst>
+            </>
+          )}
         </ul>
       </section>
 
       <section className="mt-10">
         <SectionLabel>Falsifier</SectionLabel>
         <div className="mt-2 rounded-md border border-ink-900/8 bg-parchment-50 p-4 text-[13.5px] text-ink-800 leading-relaxed">
-          Time-course western blot (0, 2, 6, 24 h) under osimertinib in WT vs
-          T790M cell lines. If pEGFR dynamics do not diverge within 24 h at
-          clinically achievable drug concentrations (100 nM), H-001 is
-          refuted. Expected information gain:{" "}
-          <b>0.38 bits</b>. (EXP-002, running.)
+          {isScaffold ? (
+            <>
+              Write one observable prediction that should move in a defined direction if the hypothesis class is
+              correct, with explicit tolerances and negative controls. Tie it to an experiment ID and analysis
+              registry entry before collecting data.
+            </>
+          ) : (
+            <>
+              Time-course western blot (0, 2, 6, 24 h) under osimertinib in WT vs
+              T790M cell lines. If pEGFR dynamics do not diverge within 24 h at
+              clinically achievable drug concentrations (100 nM), H-001 is
+              refuted. Expected information gain:{" "}
+              <b>0.38 bits</b>. (EXP-002, running.)
+            </>
+          )}
         </div>
       </section>
 
@@ -155,7 +225,8 @@ function Rendered({
   );
 }
 
-function ConfidenceBlock({ h }: { h: (typeof HYPOTHESES)[number] }) {
+function ConfidenceBlock({ h }: { h: HypothesisRecord }) {
+  const deltaPct = Math.round((h.posterior - h.prior) * 100);
   return (
     <div>
       <SectionLabel>Confidence</SectionLabel>
@@ -163,9 +234,15 @@ function ConfidenceBlock({ h }: { h: (typeof HYPOTHESES)[number] }) {
         <span className="text-[28px] text-ink-900 font-medium tabular-nums">
           {Math.round(h.confidence * 100)}%
         </span>
-        <span className="text-[11.5px] text-beacon-700 inline-flex items-center gap-0.5">
-          <TrendingUp className="h-3 w-3" /> +4%
-        </span>
+        {deltaPct !== 0 ? (
+          <span className="text-[11.5px] text-beacon-700 inline-flex items-center gap-0.5">
+            <TrendingUp className="h-3 w-3" />
+            {deltaPct > 0 ? "+" : ""}
+            {deltaPct}% vs prior
+          </span>
+        ) : (
+          <span className="text-[11.5px] text-ink-400">aligned with prior</span>
+        )}
       </div>
       <div className="mt-2 h-1.5 rounded-full bg-ink-900/8 overflow-hidden">
         <div
@@ -184,7 +261,7 @@ function ConfidenceBlock({ h }: { h: (typeof HYPOTHESES)[number] }) {
   );
 }
 
-function EvidenceBlock({ h }: { h: (typeof HYPOTHESES)[number] }) {
+function EvidenceBlock({ h }: { h: HypothesisRecord }) {
   return (
     <div>
       <SectionLabel>Evidence</SectionLabel>
@@ -216,7 +293,7 @@ function Row({ k, v, tone }: { k: string; v: number; tone: "beacon" | "rose" | "
   );
 }
 
-function GenealogyBlock({ h }: { h: (typeof HYPOTHESES)[number] }) {
+function GenealogyBlock({ h }: { h: HypothesisRecord }) {
   return (
     <div>
       <SectionLabel>Genealogy</SectionLabel>
@@ -290,7 +367,10 @@ function PosteriorChart({
           </g>
         ))}
       </svg>
-      <div className="grid grid-cols-5 gap-2 mt-1 text-[10.5px] font-mono text-ink-500">
+      <div
+        className="grid gap-2 mt-1 text-[10.5px] font-mono text-ink-500"
+        style={{ gridTemplateColumns: `repeat(${series.length}, minmax(0, 1fr))` }}
+      >
         {series.map((s) => (
           <div key={s.label} className="text-center truncate">
             {s.label}
@@ -333,7 +413,7 @@ function ViewToggle({
   );
 }
 
-function Source({ h }: { h: (typeof HYPOTHESES)[number] }) {
+function Source({ h }: { h: HypothesisRecord }) {
   const lines: React.ReactNode[] = [
     <span key="c1" className="text-ink-400"># {h.id} · {h.project}</span>,
     <span key="c2" className="text-ink-400"># bayesian posterior updated automatically as evidence arrives</span>,

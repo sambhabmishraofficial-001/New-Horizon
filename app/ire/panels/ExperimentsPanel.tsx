@@ -4,7 +4,18 @@ import * as React from "react";
 import { Plus, LayoutGrid, Play, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PanelShell, PanelGroup, IconBtn } from "./PanelChrome";
-import { EXPERIMENTS, type ExperimentRecord, type FileKind } from "../data";
+import type { ExperimentRecord, FileKind, TreeNode } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
+
+function findPlannerNode(nodes: TreeNode[]): TreeNode | undefined {
+  for (const n of nodes) {
+    if (n.kind === "planner") return n;
+    if (n.children) {
+      const inner = findPlannerNode(n.children);
+      if (inner) return inner;
+    }
+  }
+}
 
 export function ExperimentsPanel({
   onOpen,
@@ -12,7 +23,9 @@ export function ExperimentsPanel({
   onOpen: (path: string, name: string, kind: FileKind) => void;
 }) {
   const [q, setQ] = React.useState("");
-  const groups = EXPERIMENTS.reduce<Record<string, ExperimentRecord[]>>((acc, e) => {
+  const { experiments, hypotheses, tree } = useWorkspaceBundle();
+  const planner = React.useMemo(() => findPlannerNode(tree), [tree]);
+  const groups = experiments.reduce<Record<string, ExperimentRecord[]>>((acc, e) => {
     if (!q || e.id.toLowerCase().includes(q.toLowerCase()) || e.title.toLowerCase().includes(q.toLowerCase())) {
       (acc[e.status] ||= []).push(e);
     }
@@ -28,7 +41,10 @@ export function ExperimentsPanel({
         <>
           <IconBtn title="New experiment"><Plus className="h-3 w-3" /></IconBtn>
           <IconBtn title="Open planner"
-            onClick={() => onOpen("/egfr/exp/board", "experiment-board", "planner")}
+            onClick={() =>
+              planner &&
+              onOpen(planner.path, planner.name.replace(/\.[^.]+$/, ""), "planner")
+            }
           >
             <LayoutGrid className="h-3 w-3" />
           </IconBtn>
@@ -36,7 +52,11 @@ export function ExperimentsPanel({
       }
       footer={
         <>
-          <span>2 running · 2 designed · 2 backlog</span>
+          <span>
+            {experiments.filter((e) => e.status === "running").length} running ·{" "}
+            {experiments.filter((e) => e.status === "designed").length} designed ·{" "}
+            {experiments.filter((e) => e.status === "backlog").length} backlog
+          </span>
           <span>auto-power · pre-reg</span>
         </>
       }
@@ -53,10 +73,18 @@ export function ExperimentsPanel({
       <div className="p-3 border-t border-ink-900/8">
         <div className="text-[11px] text-ink-500 mb-2">Design assistant</div>
         <div className="rounded-md border border-beacon-500/20 bg-beacon-50 px-2.5 py-2 text-[11.5px] text-beacon-900 leading-relaxed">
-          For <span className="font-mono">H-001</span>, power analysis suggests
-          <b> n = 5 </b>replicates at α = 0.05. Consider adding a time-course arm.
-          <button className="mt-1.5 block text-beacon-700 hover:underline">
-            Draft EXP-008 →
+          Link each experiment to a hypothesis, protocol version, and instrument profile before scaling
+          replicate counts
+          {hypotheses[0] ? (
+            <>
+              {" "}
+              for <span className="font-mono">{hypotheses[0].id}</span>.
+            </>
+          ) : (
+            "."
+          )}
+          <button type="button" className="mt-1.5 block text-beacon-700 hover:underline">
+            Open planner →
           </button>
         </div>
       </div>

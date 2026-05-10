@@ -4,7 +4,8 @@ import * as React from "react";
 import { Database, Upload, ShieldCheck, GitCommit } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PanelShell, PanelGroup, IconBtn } from "./PanelChrome";
-import { DATASETS, type DatasetRecord, type FileKind } from "../data";
+import type { DatasetRecord, FileKind } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
 
 export function DataPanel({
   onOpen,
@@ -12,7 +13,11 @@ export function DataPanel({
   onOpen: (path: string, name: string, kind: FileKind) => void;
 }) {
   const [q, setQ] = React.useState("");
-  const groups = DATASETS.reduce<Record<string, DatasetRecord[]>>((acc, d) => {
+  const { datasets } = useWorkspaceBundle();
+  const fairVals = datasets.map((d) => d.fair).filter((f) => f > 0);
+  const fairAvg =
+    fairVals.length > 0 ? Math.round(fairVals.reduce((a, b) => a + b, 0) / fairVals.length) : null;
+  const groups = datasets.reduce<Record<string, DatasetRecord[]>>((acc, d) => {
     if (!q || d.name.toLowerCase().includes(q.toLowerCase())) {
       (acc[d.kind] ||= []).push(d);
     }
@@ -31,7 +36,10 @@ export function DataPanel({
       }
       footer={
         <>
-          <span>{DATASETS.length} datasets · avg FAIR 94</span>
+          <span>
+            {datasets.length} datasets
+            {fairAvg != null ? ` · avg FAIR ${fairAvg}` : " · FAIR not rated"}
+          </span>
           <span>signed · lineage ✓</span>
         </>
       }

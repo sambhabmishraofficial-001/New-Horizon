@@ -4,11 +4,13 @@
   "private": true,
   "description": "New Horizon — the world's first Virtual Research Institute for life sciences.",
   "scripts": {
-    "dev": "next dev -H localhost -p 4000",
+    "dev": "node scripts/print-dev-url.js && node scripts/free-port.js 4000 && node scripts/clean-next.js && next dev -p 4000",
+    "dev:fresh": "node scripts/print-dev-url.js && node scripts/free-port.js 4000 && node scripts/clean-next.js && next dev -p 4000",
+    "dev:clean": "node scripts/print-dev-url.js && node scripts/free-port.js 4000 && node scripts/clean-next.js && next dev -p 4000",
     "dev:alt": "next dev -H localhost -p 4001",
     "dev:ipv4": "next dev -H 127.0.0.1 -p 4000",
     "build": "next build",
-    "start": "next start",
+    "start": "npx --yes serve@14 out -p 4000",
     "lint": "next lint"
   },
   "dependencies": {

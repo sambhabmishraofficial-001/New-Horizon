@@ -30,7 +30,7 @@ const columns = [
       ["X / Twitter", "#"],
       ["GitHub", "#"],
       ["Discord", "#"],
-      ["Contact", "mailto:hello@newhorizon.dev"],
+      ["Contact", "mailto:contact@newhorizon.dev"],
     ],
   },
 ];
@@ -56,10 +56,10 @@ export function MarketingFooter() {
               </span>
             </Link>
             <a
-              href="mailto:hello@newhorizon.dev"
+              href="mailto:contact@newhorizon.dev"
               className="mt-3 block text-[13.5px] text-ink-700 hover:text-ink-900"
             >
-              hello@newhorizon.dev →
+              contact@newhorizon.dev →
             </a>
           </div>
 

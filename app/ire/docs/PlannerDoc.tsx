@@ -14,13 +14,20 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { DocShell } from "./DocChrome";
-import { EXPERIMENTS, type ExperimentRecord } from "../data";
+import type { ExperimentRecord } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
 
 export function PlannerDoc() {
   const [view, setView] = React.useState<"kanban" | "timeline" | "resources">("kanban");
+  const { chrome } = useWorkspaceBundle();
+  const rootLabel =
+    chrome.projectDropdownTitle.length > 28
+      ? `${chrome.projectDropdownTitle.slice(0, 25)}…`
+      : chrome.projectDropdownTitle;
+
   return (
     <DocShell
-      crumbs={["egfr", "experiments", "experiment-board.plan"]}
+      crumbs={[rootLabel, "experiments", "experiment-board.plan"]}
       right={
         <div className="flex items-center gap-1 rounded border border-ink-900/10 bg-white">
           {(
@@ -54,6 +61,7 @@ export function PlannerDoc() {
 }
 
 function Kanban() {
+  const { experiments } = useWorkspaceBundle();
   const cols: {
     key: ExperimentRecord["status"];
     label: string;
@@ -67,7 +75,7 @@ function Kanban() {
   return (
     <div className="grid grid-cols-4 gap-4">
       {cols.map((c) => {
-        const items = EXPERIMENTS.filter((e) => e.status === c.key);
+        const items = experiments.filter((e) => e.status === c.key);
         return (
           <div key={c.key} className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 h-7 px-1 border-b border-ink-900/8 mb-3">
@@ -145,9 +153,9 @@ function KanbanCard({ e }: { e: ExperimentRecord }) {
 }
 
 function Timeline() {
-  // 28-day window
+  const { experiments } = useWorkspaceBundle();
   const days = 28;
-  const items = EXPERIMENTS.filter((e) => e.status !== "backlog").map((e, i) => ({
+  const items = experiments.filter((e) => e.status !== "backlog").map((e, i) => ({
     id: e.id,
     title: e.title,
     start: [0, 4, 6, 9, 14, 17][i % 6],
@@ -200,14 +208,13 @@ function Timeline() {
 }
 
 function Resources() {
+  const { experiments } = useWorkspaceBundle();
+  const bookedExps = experiments.map((e) => e.id).join(" · ") || "(none)";
   const rows = [
-    { r: "Tecan i-D3", used: 0.62, booked: "EXP-001 · EXP-007" },
-    { r: "ChemiDoc MP", used: 0.9, booked: "EXP-002 · EXP-005" },
-    { r: "NovaSeq X", used: 0.15, booked: "EXP-004" },
-    { r: "BD FACSymphony", used: 0.3, booked: "EXP-005" },
-    { r: "Hamilton STAR", used: 0.0, booked: "(free)" },
-    { r: "HPC · 128 cores", used: 0.72, booked: "2 jobs" },
-    { r: "Cloud · A100 (x4)", used: 0.28, booked: "1 job" },
+    { r: "Instruments · configure", used: 0, booked: "(connect)" },
+    { r: "Automation / robotics", used: 0, booked: "(optional)" },
+    { r: "HPC / cloud quota", used: 0, booked: bookedExps },
+    { r: "Storage · cold tier", used: 0, booked: "(datasets)" },
   ];
   return (
     <div className="space-y-2">

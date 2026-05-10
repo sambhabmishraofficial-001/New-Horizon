@@ -2,11 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Search, ChevronDown } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown } from "lucide-react";
 import { BRAND } from "@/lib/nav";
 import { Kbd } from "@/components/ui/Primitives";
+import { AvatarMenu } from "@/components/shell/AvatarMenu";
+import { useSession } from "@/lib/store/auth";
 
 export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
+  const { user } = useSession();
   return (
     <header className="h-14 shrink-0 bg-parchment-50/90 backdrop-blur-md border-b border-ink-900/8 flex items-center px-5 gap-5 sticky top-0 z-40 font-marketing not-italic">
       {/* Brand */}
@@ -54,21 +57,23 @@ export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
           <ArrowLeft className="h-3.5 w-3.5" />
           Home
         </Link>
-        <button className="font-marketing text-[13px] not-italic text-ink-600 hover:text-ink-900">
-          Docs
-        </button>
         <Link
-          href="/enrol"
-          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-4 text-[13px] font-medium not-italic text-parchment-50 transition-colors hover:bg-ink-800"
+          href="/help"
+          className="font-marketing text-[13px] not-italic text-ink-600 hover:text-ink-900"
         >
-          Request Access <ArrowRight className="h-3.5 w-3.5" />
+          Docs
         </Link>
         <div className="h-5 w-px bg-ink-900/10" />
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-beacon-500 to-signal-violet text-white grid place-items-center text-[11px] font-semibold">
-            JR
-          </div>
-        </div>
+        {user ? (
+          <AvatarMenu />
+        ) : (
+          <Link
+            href="/login"
+            className="inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-4 text-[13px] font-medium not-italic text-parchment-50 transition-colors hover:bg-ink-800"
+          >
+            Sign in
+          </Link>
+        )}
       </div>
     </header>
   );

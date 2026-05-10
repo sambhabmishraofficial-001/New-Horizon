@@ -12,6 +12,13 @@ const nextConfig = {
   },
   reactStrictMode: true,
   trailingSlash: true,
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Avoid recurring Windows dev-cache corruption that leaves missing chunk files in .next.
+      config.cache = false;
+    }
+    return config;
+  },
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
     NEXT_PUBLIC_SITE_URL: isGithubPages

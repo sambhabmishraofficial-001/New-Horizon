@@ -19,7 +19,9 @@ import {
   SigmaSquare,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { AGENTS, INSIGHTS, type AgentRecord, type InsightRecord } from "./data";
+import type { AgentRecord, InsightRecord } from "./data";
+import { useWorkspaceBundle } from "./workspace-context";
+import { EnhancedComposer } from "./composer/EnhancedComposer";
 
 const AGENT_ICONS: Record<AgentRecord["icon"], any> = {
   orchestrator: Compass,
@@ -47,8 +49,12 @@ export function AgentRail({
 }: {
   activeContext: string;
 }) {
+  const { agents, insights } = useWorkspaceBundle();
   return (
-    <aside className="h-full w-[340px] shrink-0 flex flex-col bg-parchment-100 border-l border-ink-900/8 font-marketing not-italic">
+    <aside
+      data-tour="agent-rail"
+      className="h-full w-[340px] shrink-0 flex flex-col bg-parchment-100 border-l border-ink-900/8 font-marketing not-italic"
+    >
       <div className="h-8 shrink-0 px-3 flex items-center justify-between border-b border-ink-900/8">
         <div className="inline-flex items-center gap-1.5 font-marketing text-[10.5px] font-medium uppercase not-italic tracking-[0.16em] text-ink-500">
           <Sparkles className="h-3 w-3 text-beacon-600" /> research agent
@@ -61,7 +67,7 @@ export function AgentRail({
       <div className="flex-1 min-h-0 overflow-y-auto">
         <Section title="active agents">
           <div className="px-3 pb-2 space-y-1.5">
-            {AGENTS.map((a) => (
+            {agents.map((a) => (
               <AgentRow key={a.id} a={a} />
             ))}
           </div>
@@ -95,7 +101,7 @@ export function AgentRail({
 
         <Section title="recent insights">
           <div className="divide-y divide-ink-900/6">
-            {INSIGHTS.map((i) => (
+            {insights.map((i) => (
               <InsightCard key={i.id} i={i} />
             ))}
           </div>
@@ -131,7 +137,7 @@ export function AgentRail({
               </button>
             ))}
           </div>
-          <Composer />
+          <EnhancedComposer />
         </div>
       </div>
     </aside>
@@ -283,23 +289,3 @@ function LoopDiagram() {
   );
 }
 
-function Composer() {
-  return (
-    <div className="rounded-md border border-ink-900/10 bg-white font-marketing not-italic transition-colors focus-within:border-ink-900/30">
-      <textarea
-        rows={2}
-        placeholder="Ask anything about your research — context includes 67 papers, 7 experiments, the knowledge graph, and all your notebooks."
-        className="w-full resize-none bg-transparent outline-none px-2.5 py-2 font-marketing text-[12px] leading-snug not-italic text-ink-900 placeholder:text-ink-400"
-      />
-      <div className="flex items-center justify-between px-2 py-1 border-t border-ink-900/6 font-marketing text-[10.5px] not-italic text-ink-500">
-        <span className="inline-flex items-center gap-1">
-          <Lightbulb className="h-3 w-3 text-amber-600" />
-          local context: H-001 · EXP-002 · Jänne '26
-        </span>
-        <button className="h-5 rounded bg-ink-900 px-2 font-marketing not-italic text-parchment-50 inline-flex items-center gap-1">
-          <Send className="h-2.5 w-2.5" /> send
-        </button>
-      </div>
-    </div>
-  );
-}

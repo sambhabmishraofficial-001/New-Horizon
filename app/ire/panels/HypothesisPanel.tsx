@@ -4,7 +4,8 @@ import * as React from "react";
 import { Plus, GitBranch, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PanelShell, PanelGroup, IconBtn } from "./PanelChrome";
-import { HYPOTHESES, type HypothesisRecord, type FileKind } from "../data";
+import type { HypothesisRecord, FileKind } from "../data";
+import { useWorkspaceBundle } from "../workspace-context";
 
 export function HypothesisPanel({
   onOpen,
@@ -12,7 +13,9 @@ export function HypothesisPanel({
   onOpen: (path: string, name: string, kind: FileKind) => void;
 }) {
   const [q, setQ] = React.useState("");
-  const groups = HYPOTHESES.reduce<Record<string, HypothesisRecord[]>>((acc, h) => {
+  const { hypotheses } = useWorkspaceBundle();
+  const refuted = hypotheses.filter((h) => h.status === "refuted").length;
+  const groups = hypotheses.reduce<Record<string, HypothesisRecord[]>>((acc, h) => {
     if (!q || h.id.toLowerCase().includes(q.toLowerCase()) || h.title.toLowerCase().includes(q.toLowerCase())) {
       (acc[h.status] ||= []).push(h);
     }
@@ -32,7 +35,7 @@ export function HypothesisPanel({
       }
       footer={
         <>
-          <span>{HYPOTHESES.length} hypotheses · 2 refuted</span>
+          <span>{hypotheses.length} hypotheses · {refuted} refuted</span>
           <span>bayesian · live</span>
         </>
       }

@@ -15,6 +15,8 @@ import {
   LineChart,
   ScrollText,
   Map,
+  Home,
+  Plug,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,7 +37,12 @@ export type FileKind =
   | "protocol"
   | "planner"
   | "viz"
-  | "map";
+  | "map"
+  | "home"
+  | "embed"
+  | "latex"
+  | "word"
+  | "tool";
 
 export const FILE_META: Record<
   FileKind,
@@ -58,6 +65,11 @@ export const FILE_META: Record<
   planner: { ext: ".plan", icon: LayoutGrid, color: "#5B3FB0", bg: "#F1EDFB", label: "Planner" },
   viz: { ext: ".viz", icon: LineChart, color: "#12785A", bg: "#EAF7F1", label: "Viz" },
   map: { ext: ".hmap", icon: Map, color: "#5B3FB0", bg: "#F1EDFB", label: "Hypothesis map" },
+  home: { ext: "", icon: Home, color: "#34342E", bg: "#F5F2EA", label: "Project home" },
+  embed: { ext: "", icon: Plug, color: "#34342E", bg: "#F5F2EA", label: "External tool" },
+  latex: { ext: ".tex", icon: ScrollText, color: "#1F1F1B", bg: "#F7F7F5", label: "LaTeX" },
+  word: { ext: ".docx", icon: ScrollText, color: "#2A58BE", bg: "#EEF1FA", label: "Word document" },
+  tool: { ext: "", icon: Plug, color: "#34342E", bg: "#F5F2EA", label: "Tool" },
 };
 
 export type TreeNode = {
@@ -265,6 +277,9 @@ export type OpenDoc = {
   name: string;
   kind: FileKind;
   dirty?: boolean;
+  url?: string;
+  toolId?: string;
+  meta?: Record<string, string>;
 };
 
 export const INITIAL_OPEN: OpenDoc[] = [
