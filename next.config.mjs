@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const siteUrl = "https://thenewhorizon.dev";
+const siteUrl = "https://newhorizon.dev";
 
 const nextConfig = {
   output: "export",
