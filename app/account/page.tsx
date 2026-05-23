@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Save, ShieldAlert, ExternalLink, Trash2 } from "lucide-react";
+import { VriIdCardSection } from "@/components/account/VriIdCardSection";
 import { useSession, updateProfile, signOut, deleteAccount } from "@/lib/store/auth";
 import type { UserProfile } from "@/lib/store/auth";
 import { cn } from "@/lib/cn";
@@ -21,7 +22,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="font-marketing not-italic text-ink-900 bg-parchment-50">
+    <div className="font-marketing not-italic text-ink-900 bg-[var(--ire-bg)]">
       <div className="mx-auto max-w-[1100px] px-6 py-12 sm:px-10">
         <Header user={user} />
         <Tabs tab={tab} setTab={setTab} />
@@ -140,7 +141,10 @@ function ProfileTab({ user }: { user: UserProfile }) {
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[280px_1fr]">
+    <div className="space-y-10">
+      <VriIdCardSection user={user} />
+
+      <div className="grid gap-10 lg:grid-cols-[280px_1fr]">
       <aside className="space-y-4">
         <div className="rounded-xl border border-ink-900/10 bg-white p-5">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-400">
@@ -238,7 +242,7 @@ function ProfileTab({ user }: { user: UserProfile }) {
               label="h-index"
               value={draft.hIndex != null ? String(draft.hIndex) : ""}
               onChange={(v) => field("hIndex", v ? Number(v) : undefined)}
-              placeholder="—"
+              placeholder="-"
             />
           </Grid>
         </Section>
@@ -264,6 +268,7 @@ function ProfileTab({ user }: { user: UserProfile }) {
             <Save className="h-3.5 w-3.5" /> Save changes
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

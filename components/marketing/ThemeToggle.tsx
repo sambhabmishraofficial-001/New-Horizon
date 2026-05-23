@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
+import { hasCategoryConsent } from "@/lib/cookie-consent";
 
 type Theme = "light" | "dark";
 
@@ -30,7 +31,9 @@ export function ThemeToggle({ variant = "light" }: { variant?: "light" | "dark" 
       }
     }
     try {
-      localStorage.setItem("theme", next);
+      if (hasCategoryConsent("functional")) {
+        localStorage.setItem("theme", next);
+      }
     } catch {}
   };
 

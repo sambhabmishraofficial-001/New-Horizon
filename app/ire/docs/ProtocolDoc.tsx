@@ -9,7 +9,7 @@ const STEPS = [
   { n: 1, title: "Sample prep", duration: "30 min", done: true, note: "Lyse cells in RIPA buffer. Quantify by BCA." },
   { n: 2, title: "SDS-PAGE", duration: "90 min", done: true, note: "4-12% bis-tris gel, 120 V · 1h 15m." },
   { n: 3, title: "Transfer", duration: "80 min", done: true, note: "PVDF, 100 V · 75 min in transfer buffer with 20% MeOH." },
-  { n: 4, title: "Blocking", duration: "60 min", done: false, running: true, note: "5% BSA in TBST at RT with gentle agitation.", alts: ["5% non-fat milk (community variant)"], recommended: "BSA — 12% better S/N (community · 41 runs)" },
+  { n: 4, title: "Blocking", duration: "60 min", done: false, running: true, note: "5% BSA in TBST at RT with gentle agitation.", alts: ["5% non-fat milk (community variant)"], recommended: "BSA - 12% better S/N (community · 41 runs)" },
   { n: 5, title: "Primary antibody", duration: "overnight", done: false, note: "Anti-pEGFR (Y1068) 1:1000 in 5% BSA-TBST at 4 °C." },
   { n: 6, title: "Wash", duration: "30 min", done: false, note: "3 × 10 min TBST." },
   { n: 7, title: "Secondary + ECL", duration: "90 min", done: false, note: "HRP-conjugated secondary 1:5000 · ECL substrate." },
@@ -82,7 +82,7 @@ export function ProtocolDoc() {
                 <span className="text-amber-700">+15 min</span>
               </div>
               <div className="text-ink-500 mt-0.5">
-                extended blocking — logged by Marcus
+                extended blocking - logged by Marcus
               </div>
             </div>
           </div>

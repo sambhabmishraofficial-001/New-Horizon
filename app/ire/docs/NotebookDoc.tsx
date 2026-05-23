@@ -128,7 +128,7 @@ function MarkdownCell() {
     <CellFrame kindLabel="markdown" kindTone="ink" number="[1]">
       <div className="px-4 py-4 prose-sm">
         <h2 className="font-display text-[22px] text-ink-900 leading-tight">
-          Western blot analysis — EGFR phosphorylation
+          Western blot analysis - EGFR phosphorylation
         </h2>
         <p className="mt-2 text-[13.5px] text-ink-700 leading-relaxed">
           Testing <span className="font-mono text-beacon-700">H-001</span>:
@@ -169,7 +169,7 @@ function CodeCell() {
           <Id>link_hypothesis</Id>
         </Line>
         <Line n={3}>
-          <Cmt># auto-resolves by experiment id — provenance is recorded</Cmt>
+          <Cmt># auto-resolves by experiment id - provenance is recorded</Cmt>
         </Line>
         <Line n={4}>
           df <Op>=</Op>{" "}

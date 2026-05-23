@@ -55,7 +55,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 font-marketing text-[11px] not-italic leading-relaxed text-ink-400">
-        New Horizon · 0.9 Atrium
+        New Horizon · 0.9 Lattice
       </div>
     </aside>
   );

@@ -297,7 +297,7 @@ export const INITIAL_OPEN: OpenDoc[] = [
 export const INITIAL_ACTIVE = "/egfr/hyp/H-001";
 
 /* =====================================================================
-   Hypotheses — full records
+   Hypotheses - full records
    ===================================================================== */
 
 export type HypothesisRecord = {
@@ -332,7 +332,7 @@ export const HYPOTHESES: HypothesisRecord[] = [
     contradictions: 2,
     linked: ["EXP-001", "EXP-002", "DS-003"],
     children: ["H-002", "H-004"],
-    agentNote: "Supported by TCGA data but mechanism unclear — suggest proteomics follow-up",
+    agentNote: "Supported by TCGA data but mechanism unclear - suggest proteomics follow-up",
   },
   {
     id: "H-002",
@@ -361,7 +361,7 @@ export const HYPOTHESES: HypothesisRecord[] = [
     evidence: { papers: 8, experiments: 0, datasets: 0 },
     contradictions: 0,
     linked: [],
-    agentNote: "Literature suggests feasibility — need structural modeling before experimental phase",
+    agentNote: "Literature suggests feasibility - need structural modeling before experimental phase",
   },
   {
     id: "H-004",
@@ -411,7 +411,7 @@ export const EXPERIMENTS: ExperimentRecord[] = [
   },
   {
     id: "EXP-002",
-    title: "Western Blot — EGFR phosphorylation dynamics",
+    title: "Western Blot - EGFR phosphorylation dynamics",
     path: "/egfr/exp/EXP-002",
     hypothesis: "H-001",
     protocol: "Western_blot_EGFR v3.2",
@@ -423,7 +423,7 @@ export const EXPERIMENTS: ExperimentRecord[] = [
   },
   {
     id: "EXP-003",
-    title: "Mouse xenograft — combination Rx in vivo",
+    title: "Mouse xenograft - combination Rx in vivo",
     path: "/egfr/exp/EXP-003",
     hypothesis: "H-002",
     protocol: "Xeno_LUAD v2",
@@ -434,7 +434,7 @@ export const EXPERIMENTS: ExperimentRecord[] = [
   },
   {
     id: "EXP-004",
-    title: "RNA-seq — resistance signature discovery",
+    title: "RNA-seq - resistance signature discovery",
     path: "/egfr/exp/EXP-004",
     hypothesis: "H-001",
     protocol: "RNA-seq bulk v4",
@@ -445,7 +445,7 @@ export const EXPERIMENTS: ExperimentRecord[] = [
   },
   {
     id: "EXP-005",
-    title: "Flow cytometry — apoptosis time-course",
+    title: "Flow cytometry - apoptosis time-course",
     path: "/egfr/exp/EXP-005",
     hypothesis: "H-002",
     protocol: "Flow_apoptosis v2",
@@ -455,7 +455,7 @@ export const EXPERIMENTS: ExperimentRecord[] = [
   },
   {
     id: "EXP-006",
-    title: "Proteomics — resistance pathway mapping",
+    title: "Proteomics - resistance pathway mapping",
     path: "/egfr/exp/EXP-006",
     hypothesis: "H-003",
     protocol: "TMT_proteomics v1",
@@ -464,7 +464,7 @@ export const EXPERIMENTS: ExperimentRecord[] = [
   },
   {
     id: "EXP-007",
-    title: "CRISPR knockout — validate vulnerability hits",
+    title: "CRISPR knockout - validate vulnerability hits",
     path: "/egfr/exp/EXP-007",
     hypothesis: "H-001",
     protocol: "CRISPR_KO v2",
@@ -646,7 +646,7 @@ export const PAPERS: PaperRecord[] = [
     methods: ["ctDNA", "IHC panel", "single-cell RNA-seq"],
     linkedHypothesis: "H-001",
     summary:
-      "Challenges the primacy of T790M in late-stage resistance — suggests shifting mechanism landscape.",
+      "Challenges the primacy of T790M in late-stage resistance - suggests shifting mechanism landscape.",
   },
   {
     id: "okonkwo-2024",
@@ -657,7 +657,7 @@ export const PAPERS: PaperRecord[] = [
     path: "/egfr/lit/okonkwo-2024",
     relevance: 0.66,
     tag: "directly-cited",
-    keyClaim: "ATP binding admits residual curvature at high [Mg²⁺] — implication for kinase assays",
+    keyClaim: "ATP binding admits residual curvature at high [Mg²⁺] - implication for kinase assays",
     methods: ["Stopped-flow", "ITC"],
     summary: "Background biophysics underpinning T790M binding models.",
   },
@@ -730,7 +730,7 @@ export const AGENTS: AgentRecord[] = [
 ];
 
 /* =====================================================================
-   Insights — the stream shown in the right rail
+   Insights - the stream shown in the right rail
    ===================================================================== */
 
 export type InsightRecord = {
@@ -810,7 +810,7 @@ export const INSIGHTS: InsightRecord[] = [
 ];
 
 /* =====================================================================
-   Team — collaborators
+   Team - collaborators
    ===================================================================== */
 
 export type TeamMember = {

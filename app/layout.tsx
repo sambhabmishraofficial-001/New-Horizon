@@ -1,17 +1,34 @@
 import type { Metadata } from "next";
+import { Source_Serif_4 } from "next/font/google";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import { ShellGate } from "@/components/shell/ShellGate";
+
+/** Primary UI sans - Geist (x.ai / Vercel design system) */
+const geistSans = GeistSans;
+
+/** Mono for labels, code, and UI eyebrows */
+const geistMono = GeistMono;
+
+/** Serif reserved for long-form document content inside the workspace */
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  weight: "variable",
+  display: "swap",
+  variable: "--font-source-serif",
+});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://newhorizon.dev";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "New Horizon — The first AI-native Virtual Research Institute",
+  title: "New Horizon - Building infrastructure for Human-AI co-science",
   description:
     "AI-native Virtual Research Institute. Twins read the literature, propose experiments, run them, audit invariants, and draft the manuscript.",
   openGraph: {
-    title: "New Horizon — The first AI-native Virtual Research Institute",
+    title: "New Horizon - Building infrastructure for Human-AI co-science",
     description:
       "AI-native Virtual Research Institute. Twins read the literature, propose experiments, run them, audit invariants, and draft the manuscript.",
     url: siteUrl,
@@ -22,7 +39,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "New Horizon — The first AI-native Virtual Research Institute",
+    title: "New Horizon - Building infrastructure for Human-AI co-science",
     description:
       "AI-native Virtual Research Institute. Twins read the literature, propose experiments, run them, audit invariants, and draft the manuscript.",
     images: [`${siteUrl}/images/scientific-cell-mosaic.png`],
@@ -38,8 +55,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable}`}
+    >
+      <body className={`${geistSans.className} antialiased`}>
         <script
           dangerouslySetInnerHTML={{
             __html: `

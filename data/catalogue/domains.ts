@@ -144,7 +144,7 @@ export const METHODS: { id: string; label: string; description: string }[] = [
   { id: "theoretical", label: "Theoretical", description: "Derivation, proof, or formal modelling." },
   { id: "wet-lab", label: "Wet lab", description: "Bench work involving biological or chemical material." },
   { id: "clinical", label: "Clinical", description: "Studies involving patients or human subjects under protocol." },
-  { id: "fieldwork", label: "Fieldwork", description: "Data gathered outside the lab — sites, populations, environments." },
+  { id: "fieldwork", label: "Fieldwork", description: "Data gathered outside the lab - sites, populations, environments." },
   { id: "qualitative", label: "Qualitative", description: "Interviews, ethnography, archival, discourse analysis." },
   { id: "review", label: "Review / synthesis", description: "Systematic review, meta-analysis, or theoretical synthesis." },
   { id: "engineering", label: "Engineering / build", description: "Designing and constructing artifacts, hardware, or systems." },

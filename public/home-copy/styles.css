@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   FONT FACES — Leap Labs exact fonts
+   FONT FACES - Leap Labs exact fonts
    ═══════════════════════════════════════ */
 @font-face {
   font-family: 'Sentient';
@@ -53,7 +53,7 @@
   --stroke-dark: rgba(15, 23, 42, 0.12);
   --stroke-dim: rgba(255, 255, 255, 0.1);
 
-  /* Typography — exact Leap Labs font stack */
+  /* Typography - exact Leap Labs font stack */
   --font-sentient: 'Sentient', Georgia, 'Times New Roman', serif;
   --font-suisse: 'Suisse Intl', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   --font-mono: 'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
@@ -66,7 +66,7 @@
 
   --ease: cubic-bezier(0.4, 0, 0.2, 1); /* Smoother, more professional ease */
 
-  /* Home hero wireframe rings — start neutral (not accent orange) */
+  /* Home hero wireframe rings - start neutral (not accent orange) */
   --hero-sphere-stroke: rgba(18, 18, 18, 0.88);
   --hero-sphere-shadow: rgba(0, 0, 0, 0.08);
   --hero-sphere-shadow-inset: rgba(0, 0, 0, 0.05);
@@ -111,7 +111,7 @@ html {
   color-scheme: light;
 }
 
-/* View Transitions — circular reveal from theme toggle (Thesis Labs–style) */
+/* View Transitions - circular reveal from theme toggle (Thesis Labs–style) */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -855,7 +855,7 @@ html[data-theme="dark"] .hero-circle {
 }
 
 /* ═══════════════════════════════════════
-   MISSION ESSAY — ABOUT SECTION
+   MISSION ESSAY - ABOUT SECTION
    ═══════════════════════════════════════ */
 .mission-essay {
   max-width: 850px;
@@ -1040,7 +1040,7 @@ html[data-theme="dark"] .hero-circle {
   margin: 2.6rem 0 1rem;
 }
 /* ═══════════════════════════════════════
-   STATS — PERFORMANCE GRAPH
+   STATS - PERFORMANCE GRAPH
    ═══════════════════════════════════════ */
 .stats-graph-container {
   display: flex;
@@ -1282,7 +1282,7 @@ html[data-theme="dark"] .hero-circle {
 }
 
 /* ═══════════════════════════════════════
-   CAROUSEL — BIG CIRCLE
+   CAROUSEL - BIG CIRCLE
    ═══════════════════════════════════════ */
 .carousel-section {
   display: flex;

@@ -14,9 +14,14 @@ export default function AppearanceSettings() {
   const { prefs, setPrefs } = useUserPrefs();
 
   React.useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.dataset.theme = prefs.appearance.theme;
+    if (typeof document === "undefined") return;
+    const theme = prefs.appearance.theme === "sepia" ? "sepia" : "light";
+    if (theme === "light") {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      document.documentElement.setAttribute("data-theme", theme);
     }
+    document.documentElement.style.colorScheme = "light";
   }, [prefs.appearance.theme]);
 
   return (
@@ -27,15 +32,13 @@ export default function AppearanceSettings() {
       />
 
       <SettingsSection title="Theme">
-        <Row label="Color theme" description="Sepia softens the parchment a touch; dark uses obsidian.">
+        <Row label="Color theme" description="Sepia softens the parchment a touch.">
           <Segment
-            value={prefs.appearance.theme}
+            value={prefs.appearance.theme === "sepia" ? "sepia" : "light"}
             onChange={(v) => setPrefs({ appearance: { ...prefs.appearance, theme: v } })}
             options={[
               { value: "light", label: "Light" },
               { value: "sepia", label: "Sepia" },
-              { value: "dark", label: "Dark" },
-              { value: "system", label: "System" },
             ]}
           />
         </Row>

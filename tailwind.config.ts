@@ -10,37 +10,41 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: [
+          "var(--font-geist-sans)",
           "Geist",
-          "system-ui",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
           "sans-serif",
         ],
         display: [
-          "Exposure",
-          "Georgia",
-          "serif",
-        ],
-        editorial: [
-          "Exposure",
-          "Georgia",
-          "serif",
-        ],
-        marketing: [
+          "var(--font-geist-sans)",
           "Geist",
-          "system-ui",
           "-apple-system",
           "BlinkMacSystemFont",
-          "Segoe UI",
+          "sans-serif",
+        ],
+        editorial: [
+          "var(--font-geist-sans)",
+          "Geist",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "sans-serif",
+        ],
+        marketing: [
+          "var(--font-geist-sans)",
+          "Geist",
+          "-apple-system",
+          "BlinkMacSystemFont",
           "sans-serif",
         ],
         mono: [
+          "var(--font-geist-mono)",
+          "Geist Mono",
           "SFMono-Regular",
           "SF Mono",
           "Menlo",
           "Consolas",
-          "Liberation Mono",
           "monospace",
         ],
       },
@@ -59,9 +63,9 @@ const config: Config = {
           950: "#0A0A09",
         },
         parchment: {
-          50: "#FBFAF6",
-          100: "#F5F2EA",
-          200: "#EAE4D3",
+          50: "#FAF8F4",
+          100: "#F3EFE6",
+          200: "#E8E2D4",
         },
         bone: {
           50: "#FBF9F4",
@@ -122,11 +126,36 @@ const config: Config = {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        shimmer2: {
+          "0%": { backgroundPosition: "0% 0%" },
+          "100%": { backgroundPosition: "-200% 0%" },
+        },
+        drawStroke: {
+          "0%": {
+            strokeDashoffset: "var(--path-length)",
+            animationTimingFunction: "ease-in-out",
+          },
+          "50%": {
+            strokeDashoffset: "0",
+            animationTimingFunction: "ease-in-out",
+          },
+          "100%": { strokeDashoffset: "calc(var(--path-length) * -1)" },
+        },
+        textShimmerBreadcrumb: {
+          "0%": { backgroundPosition: "-100% center" },
+          "100%": { backgroundPosition: "100% center" },
+        },
       },
       animation: {
         pulseSoft: "pulseSoft 2.4s ease-in-out infinite",
         scan: "scan 6s linear infinite",
         shimmer: "shimmer 2.8s linear infinite",
+        shimmer2: "shimmer2 2s infinite linear",
+        drawStroke: "drawStroke 2.5s infinite",
+        textShimmerBreadcrumb: "textShimmerBreadcrumb 2s ease-in-out infinite",
+      },
+      backgroundSize: {
+        "shimmer-flow": "200% 100%",
       },
     },
   },

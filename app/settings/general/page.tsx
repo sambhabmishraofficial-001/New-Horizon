@@ -72,7 +72,7 @@ export default function GeneralSettings() {
               })
             }
             options={[
-              { value: "/atrium", label: "Atrium (overview)" },
+              { value: "/lattice", label: "Lattice (overview)" },
               { value: "/ire", label: "IRE workspace" },
               { value: "/library", label: "Library" },
             ]}

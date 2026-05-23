@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { getVriIdCredentials } from "@/lib/vriId";
 import { getJSON, setJSON, removeKey, subscribe } from "./persist";
 
 const SESSION_KEY = "nh.session";
@@ -39,6 +40,10 @@ export type UserProfile = {
   secondaryDomains?: string[];
   subfield?: string;
   methods?: string[];
+  /** Deterministic institute member ID (e.g. VRI-AB12-CD34). */
+  vriId?: string;
+  /** Unix ms when the virtual VRI ID card was activated. */
+  vriIdActivatedAt?: number;
 };
 
 type UsersMap = Record<string, UserProfile>;
@@ -100,14 +105,17 @@ export async function signUp(
   }
   const passwordHash = await hashPassword(input.password);
   const id = newId();
+  const preferredName = input.preferredName?.trim() || email.split("@")[0];
+  const vri = getVriIdCredentials(id, preferredName);
   const user: UserProfile = {
     id,
     email,
     passwordHash,
     createdAt: Date.now(),
-    preferredName: input.preferredName?.trim() || email.split("@")[0],
+    preferredName,
     fullName: input.fullName?.trim() || input.preferredName?.trim() || "",
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    vriId: vri.memberId,
   };
   users[id] = user;
   writeUsers(users);

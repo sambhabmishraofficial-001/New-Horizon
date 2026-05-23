@@ -47,7 +47,15 @@ const MENTION_ORDER: Mention["category"][] = [
   "team",
 ];
 
-export function EnhancedComposer() {
+export function EnhancedComposer({
+  onSubmit,
+  disabled = false,
+  placeholder = "Ask anything. Type / for actions, @ to reference an artifact.",
+}: {
+  onSubmit?: (text: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
+}) {
   const bundle = useWorkspaceBundle();
   const taRef = React.useRef<HTMLTextAreaElement>(null);
   const [value, setValue] = React.useState("");
@@ -67,7 +75,7 @@ export function EnhancedComposer() {
     for (const e of bundle.experiments)
       out.push({ id: e.id, category: "experiment", label: e.id, hint: e.title, token: `@exp:${e.id}` });
     for (const d of bundle.datasets)
-      out.push({ id: d.id, category: "dataset", label: d.name, hint: `${d.rows ?? "—"} rows`, token: `@data:${d.id}` });
+      out.push({ id: d.id, category: "dataset", label: d.name, hint: `${d.rows ?? "-"} rows`, token: `@data:${d.id}` });
     for (const p of bundle.papers)
       out.push({ id: p.id, category: "paper", label: p.title.slice(0, 64), hint: p.authors ?? "", token: `@paper:${p.id}` });
     for (const pr of bundle.protocols)
@@ -169,10 +177,23 @@ export function EnhancedComposer() {
     });
   };
 
+  const submit = () => {
+    const trimmed = value.trim();
+    if (!trimmed || disabled) return;
+    onSubmit?.(trimmed);
+    setValue("");
+    closeMenu();
+  };
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Escape" && menu) {
       e.preventDefault();
       closeMenu();
+      return;
+    }
+    if (!menu && e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submit();
       return;
     }
     if (!menu) return;
@@ -200,16 +221,17 @@ export function EnhancedComposer() {
   return (
     <div
       data-tour="composer"
-      className="rounded-md border border-ink-900/10 bg-white font-marketing not-italic transition-colors focus-within:border-ink-900/30 relative"
+      className="rounded-xl border border-[var(--ire-border)] bg-[var(--ire-surface-elevated)] transition-colors focus-within:border-[var(--ire-border-strong)] focus-within:shadow-[0_0_0_3px_rgba(43,82,176,0.08)] relative"
     >
       <textarea
         ref={taRef}
         rows={2}
         value={value}
+        disabled={disabled}
         onChange={handleChange}
         onKeyDown={onKeyDown}
-        placeholder="Ask anything. Type / for actions, @ to reference an artifact."
-        className="w-full resize-none bg-transparent outline-none px-2.5 py-2 font-marketing text-[12px] leading-snug not-italic text-ink-900 placeholder:text-ink-400"
+        placeholder={placeholder}
+        className="w-full resize-none bg-transparent outline-none px-2.5 py-2.5 text-[12.5px] leading-snug text-ink-900 placeholder:text-ink-400 disabled:opacity-50"
       />
 
       {menu && menu.kind === "slash" && slashGroups.length > 0 && (
@@ -251,12 +273,9 @@ export function EnhancedComposer() {
           </span>
         </div>
         <button
-          onClick={() => {
-            // Submit no-op for now: clear
-            setValue("");
-            closeMenu();
-          }}
-          disabled={!value.trim()}
+          type="button"
+          onClick={submit}
+          disabled={!value.trim() || disabled}
           className="h-5 rounded bg-ink-900 px-2 font-marketing not-italic text-parchment-50 inline-flex items-center gap-1 disabled:opacity-40"
         >
           <Send className="h-2.5 w-2.5" /> send

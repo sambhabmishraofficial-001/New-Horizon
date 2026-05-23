@@ -36,8 +36,11 @@ export function StartAnimation({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="font-display text-[22px] sm:text-2xl text-ink-900 tracking-tight">
-                New Horizon
+              <div
+                className="font-marketing text-[26px] sm:text-[28px] font-light text-ink-900 tracking-[0.14em]"
+                aria-label="New Horizon"
+              >
+                [NH]
               </div>
               <motion.div
                 className="mt-2.5 mx-auto h-px w-10 origin-center bg-ink-900/12"

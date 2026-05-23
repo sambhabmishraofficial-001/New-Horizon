@@ -11,12 +11,12 @@ import {
 import { useUserPrefs } from "@/lib/store/preferences";
 
 const AUTO_SPAWNABLE: { id: string; label: string; description: string }[] = [
-  { id: "orchestrator", label: "Compass — orchestrator", description: "Routes work to the right specialist agent." },
-  { id: "literature", label: "Halo-A — literature", description: "Synthesises related work and contradictions." },
-  { id: "analyst", label: "Sigma — analyst", description: "Runs statistics and produces figures." },
-  { id: "writer", label: "Scroll — writer", description: "Drafts manuscripts, abstracts, and grant prose." },
-  { id: "auditor", label: "Witness — auditor", description: "Reproducibility checks and provenance audits." },
-  { id: "anomaly", label: "Radar — anomaly hunter", description: "Surfaces breaks and silent failures." },
+  { id: "orchestrator", label: "Compass - orchestrator", description: "Routes work to the right specialist agent." },
+  { id: "literature", label: "Halo-A - literature", description: "Synthesises related work and contradictions." },
+  { id: "analyst", label: "Sigma - analyst", description: "Runs statistics and produces figures." },
+  { id: "writer", label: "Scroll - writer", description: "Drafts manuscripts, abstracts, and grant prose." },
+  { id: "auditor", label: "Witness - auditor", description: "Reproducibility checks and provenance audits." },
+  { id: "anomaly", label: "Radar - anomaly hunter", description: "Surfaces breaks and silent failures." },
 ];
 
 const APPROVAL_GATES: { id: string; label: string; description: string }[] = [

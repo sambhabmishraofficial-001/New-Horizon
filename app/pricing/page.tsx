@@ -105,7 +105,7 @@ const plans: Plan[] = [
 const faq = [
   {
     q: "Is BYO compute supported?",
-    a: "Yes — bring AWS, GCP, on-prem, or your university cluster. We orchestrate.",
+    a: "Yes - bring AWS, GCP, on-prem, or your university cluster. We orchestrate.",
   },
   {
     q: "Where does my data live?",
@@ -222,17 +222,14 @@ export default function PricingPage() {
     <div className="marketing-site min-h-screen bg-white font-marketing text-ink-900">
       <MarketingNav variant="light" />
 
-      <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+      <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-6 sm:px-8 sm:pt-10 lg:px-10">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-400">
-            Pricing
-          </div>
-          <h1 className="mt-4 font-editorial text-[44px] leading-[1.05] tracking-tight text-ink-900 sm:text-[56px] lg:text-[64px]">
+          <h1 className="font-editorial text-[44px] leading-[1.05] tracking-tight text-ink-900 sm:text-[56px] lg:text-[64px]">
             Choose your institute.
           </h1>
-          <p className="mx-auto mt-5 max-w-[52ch] text-[16px] leading-[1.65] text-ink-600 sm:text-[17px]">
+          <p className="mx-auto mt-5 max-w-[52ch] !font-light font-marketing text-[16px] leading-[1.65] text-ink-600 sm:text-[17px]">
             Free for verified researchers. Scale from solo programs to full lab
-            collaboration — pricing that grows with your science, not surprise
+            collaboration - pricing that grows with your science, not surprise
             seat taxes.
           </p>
 
@@ -271,7 +268,7 @@ export default function PricingPage() {
             <p className="text-center font-mono text-[10px] uppercase tracking-[0.18em] text-ink-400 sm:text-left">
               {billing === "yearly"
                 ? `Annual billing saves about ${YEARLY_SAVE_PERCENT}% on Solo & Lab.`
-                : "Pay month to month — cancel anytime."}
+                : "Pay month to month - cancel anytime."}
             </p>
           </div>
         </div>
@@ -288,10 +285,10 @@ export default function PricingPage() {
           </p>
           <p className="mx-auto mt-3 max-w-[56ch] text-[14.5px] leading-relaxed text-ink-600">
             We work with cohorts, departments, and industry R&D. Tell us your
-            timeline and compliance needs — we&apos;ll propose a clear package.
+            timeline and compliance needs - we&apos;ll propose a clear package.
           </p>
           <Link
-            href="mailto:contact@newhorizon.dev?subject=Pricing%20—%20pilot%20or%20enterprise"
+            href="mailto:contact@newhorizon.dev?subject=Pricing%20-%20pilot%20or%20enterprise"
             className="btn-soft mt-6 inline-flex h-11 items-center gap-2 rounded-xl border border-ink-900/15 bg-white px-6 text-[13px] font-medium not-italic text-ink-900 hover:bg-ink-50"
           >
             Email contact@newhorizon.dev

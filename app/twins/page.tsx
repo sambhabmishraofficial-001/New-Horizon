@@ -22,7 +22,7 @@ export default function TwinsPage() {
       <PageHeader
         eyebrow="Faculty"
         title="Summon a co-scientist. Argue with it until it breaks."
-        lede="Each twin is a scoped AI investigator with instruments, invariants, and a lineage. Twins don't answer — they argue, cite, and propose falsifiable experiments."
+        lede="Each twin is a scoped AI investigator with instruments, invariants, and a lineage. Twins don't answer - they argue, cite, and propose falsifiable experiments."
         right={
           <div className="flex items-center gap-2">
             <Button variant="outline">Twin codex</Button>

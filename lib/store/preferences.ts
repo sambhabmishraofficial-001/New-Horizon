@@ -4,7 +4,7 @@ import * as React from "react";
 import { getJSON, setJSON, subscribe } from "./persist";
 import { useSession } from "./auth";
 
-export type Theme = "light" | "dark" | "sepia" | "system";
+export type Theme = "light" | "sepia";
 export type Density = "compact" | "comfortable";
 export type FontSize = "sm" | "md" | "lg";
 export type Autonomy = "suggest" | "semi-auto" | "full-auto";
@@ -26,7 +26,7 @@ export type UserPrefs = {
     displayName: string;
     language: string;
     timezone: string;
-    defaultLanding: "/atrium" | "/ire" | "/library";
+    defaultLanding: "/lattice" | "/ire" | "/library";
   };
   appearance: {
     theme: Theme;
@@ -67,7 +67,7 @@ export const DEFAULT_PREFS: UserPrefs = {
       typeof Intl !== "undefined"
         ? Intl.DateTimeFormat().resolvedOptions().timeZone
         : "UTC",
-    defaultLanding: "/atrium",
+    defaultLanding: "/lattice",
   },
   appearance: {
     theme: "light",

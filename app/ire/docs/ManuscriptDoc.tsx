@@ -171,12 +171,12 @@ function Write() {
 
       <h2 className="font-display text-[20px] text-ink-900 mt-8">Results</h2>
       <p className="text-[14px] text-ink-800 leading-relaxed mt-2">
-        The T790M mutation significantly reduced osimertinib sensitivity —{" "}
+        The T790M mutation significantly reduced osimertinib sensitivity -{" "}
         <span className="inline-flex items-baseline gap-1 text-beacon-700">
           IC50 shift 12.3-fold, <i>p</i> &lt; 0.001{" "}
           <FigRef>Fig. 2A</FigRef>
         </span>{" "}
-        — consistent with prior reports <CiteRef n={14}>Smith '24</CiteRef>
+        - consistent with prior reports <CiteRef n={14}>Smith '24</CiteRef>
         <CiteRef n={22}>Chen '23</CiteRef>. Phospho-EGFR dynamics in dose- and
         time-resolved western blot analysis revealed{" "}
         <HighlightClaim tone="beacon">
@@ -219,11 +219,11 @@ function Review() {
       </div>
       {[
         { tone: "ok", line: 12, msg: "IC50 shift 12.3× verified against EXP-001 · p < 0.001 matches fit" },
-        { tone: "ok", line: 18, msg: "Citation count 34 — all formatted for Nature" },
+        { tone: "ok", line: 18, msg: "Citation count 34 - all formatted for Nature" },
         { tone: "warn", line: 47, msg: "Claim 'dose-dependent reduction in pEGFR' supported by EXP-002 arm 1-3 only. Add EXP-005 time-course to strengthen." },
         { tone: "ok", line: 58, msg: "Methods consistent with protocol logs (WB_EGFR v3.2, no deviation)" },
         { tone: "warn", line: 73, msg: "Figure 4 panel C: caption exceeds Nature limit (58 → 45 words)" },
-        { tone: "ok", line: "—", msg: "Reproducibility package hash verified · 9c4d1e…" },
+        { tone: "ok", line: "-", msg: "Reproducibility package hash verified · 9c4d1e…" },
       ].map((r, i) => (
         <div
           key={i}
@@ -304,7 +304,7 @@ function WritingAssistant() {
         <li className="flex gap-2">
           <Lightbulb className="h-3.5 w-3.5 text-amber-700 mt-0.5 shrink-0" />
           <span>
-            3 recent papers (2026) report similar findings — cite them to
+            3 recent papers (2026) report similar findings - cite them to
             strengthen this claim.
           </span>
         </li>

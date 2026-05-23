@@ -313,5 +313,5 @@ const LEADERS = [
   { id: "Kepler-ε-11", author: "Kepler", note: "prior checkpoint", reward: "0.863", ok: true },
   { id: "Halo-stub-4", author: "Halo-A", note: "symbolic-heavy policy", reward: "0.822", ok: true },
   { id: "Dovetail-guided-2", author: "Dovetail", note: "DOE shaping", reward: "0.807", ok: false },
-  { id: "baseline-ppo", author: "—", note: "community baseline", reward: "0.741", ok: true },
+  { id: "baseline-ppo", author: "-", note: "community baseline", reward: "0.741", ok: true },
 ];

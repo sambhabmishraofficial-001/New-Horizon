@@ -71,7 +71,7 @@ export default function LabsSettings() {
 
       <div className="mt-6 rounded-xl border border-amber-200/60 bg-amber-50/60 p-4 text-[12.5px] text-amber-900">
         These features may change, break, or disappear without notice. Send feedback to{" "}
-        <span className="font-mono text-[12px]">labs@newhorizon.dev</span>.
+        <span className="font-mono text-[12px]">contact@newhorizon.dev</span>.
       </div>
     </div>
   );

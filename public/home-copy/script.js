@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   New Horizon — Main Script
+   New Horizon - Main Script
    Matches Edison Scientific interactions
    ═══════════════════════════════════════ */
 
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ═══════════════════════════════════════
-   TEXT SELECTION — binary (0/1) overlay
+   TEXT SELECTION - binary (0/1) overlay
    (same technique as tetsuwan.com: semi-transparent canvas over selection bbox)
    ═══════════════════════════════════════ */
 const BINARY_OVERLAY_CHARS = '01';
@@ -337,7 +337,7 @@ function initCarousel() {
 }
 
 /* ═══════════════════════════════════════
-   STATS — PERFORMANCE GRAPH
+   STATS - PERFORMANCE GRAPH
    ═══════════════════════════════════════ */
 function initStatsGraph() {
   const bars = {

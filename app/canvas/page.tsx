@@ -81,7 +81,7 @@ export default function CanvasPage() {
           <PageHeader
             eyebrow="Canvas · branch mg-sweep"
             title="The research graph"
-            lede="Nodes are hypotheses, experiments, datasets, models, and invariants. Edges are arguments. Run a node, and the institute answers — with citations."
+            lede="Nodes are hypotheses, experiments, datasets, models, and invariants. Edges are arguments. Run a node, and the institute answers - with citations."
             right={
               <div className="flex items-center gap-2">
                 <Button variant="outline">Share read-only</Button>
@@ -105,7 +105,7 @@ export default function CanvasPage() {
             </div>
           </PageHeader>
 
-          {/* Tab bar — ink (not Scratch purple) */}
+          {/* Tab bar - ink (not Scratch purple) */}
           <div className="flex items-end px-6" style={{ background: canvasUi.tabBar }}>
             <ScratchTab label="Nodes" icon={Code2} active />
             <ScratchTab label="Edges" icon={Link2} />
@@ -186,7 +186,7 @@ export default function CanvasPage() {
         {/* ▌ Right: inspector (sprite pane) */}
         {!full && (
         <aside className="w-[290px] shrink-0 border-l border-ink-900/10 flex flex-col bg-white overflow-hidden">
-          {/* Selected-node header — ink, not day-glo blue */}
+          {/* Selected-node header - ink, not day-glo blue */}
           <div className="px-4 py-3 flex items-center gap-3 border-b border-ink-900/8 bg-ink-800">
             <div className="h-10 w-10 rounded-xl bg-ink-950/30 ring-1 ring-white/10 grid place-items-center">
               <Sparkles className="h-4.5 w-4.5 text-parchment-100" />
@@ -297,7 +297,7 @@ function ScratchTab({ label, icon: Icon, active }: { label: string; icon: React.
   );
 }
 
-/* ── Canvas toolbar — monochrome tools, soft run/stop tints */
+/* ── Canvas toolbar - monochrome tools, soft run/stop tints */
 function CanvasToolbar({ full, onToggleFull }: { full: boolean; onToggleFull: () => void }) {
   return (
     <div

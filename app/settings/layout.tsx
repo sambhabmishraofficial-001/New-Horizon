@@ -30,7 +30,7 @@ const ITEMS: Item[] = [
   { href: "/settings/keyboard", label: "Keyboard", icon: Keyboard, description: "Layout and shortcut overrides." },
   { href: "/settings/agents", label: "Agents", icon: Sparkles, description: "Default autonomy and approvals." },
   { href: "/settings/integrations", label: "Integrations", icon: Plug, description: "Connect external services." },
-  { href: "/settings/billing", label: "Billing", icon: CreditCard, description: "Plan, usage, invoices." },
+  { href: "/settings/billing", label: "Billing & credits", icon: CreditCard, description: "Credits, plans, usage, and invoices." },
   { href: "/settings/security", label: "Security", icon: Shield, description: "Password, sessions, API tokens." },
   { href: "/settings/labs", label: "Labs", icon: FlaskConical, description: "Early-access feature flags." },
 ];
@@ -38,7 +38,7 @@ const ITEMS: Item[] = [
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   return (
-    <div className="font-marketing not-italic text-ink-900 bg-parchment-50">
+    <div className="font-marketing not-italic text-ink-900 bg-[var(--ire-bg)]">
       <div className="mx-auto max-w-[1100px] px-6 py-12 sm:px-10">
         <div className="border-b border-ink-900/8 pb-7">
           <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-400">

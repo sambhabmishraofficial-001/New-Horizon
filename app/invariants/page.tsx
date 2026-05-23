@@ -30,7 +30,7 @@ export default function InvariantsPage() {
       <PageHeader
         eyebrow="Discovery lens"
         title="Invariants are what refuses to change. Anomalies are what should."
-        lede="Every run, across every program, is audited against a living registry of invariants. When the world says something different, Aletheia surfaces it — with a cone of explanations and a ranked decision value."
+        lede="Every run, across every program, is audited against a living registry of invariants. When the world says something different, Aletheia surfaces it - with a cone of explanations and a ranked decision value."
         right={
           <div className="flex items-center gap-2">
             <Button variant="outline">Compare programs</Button>
@@ -146,7 +146,7 @@ export default function InvariantsPage() {
                     </div>
                     <div className="mt-1 text-[12.5px] text-ink-600 leading-relaxed">
                       Violated <span className="font-mono text-ink-900">{a.invariant}</span>{" "}
-                      — {a.violation}
+                      - {a.violation}
                     </div>
 
                     <div className="mt-3 rounded-md border border-ink-900/8 bg-parchment-50 p-3">
@@ -307,7 +307,7 @@ const ANOMALIES = [
         p: "0.19",
       },
       {
-        text: "Buffer age — supports candidate invariant I-07.",
+        text: "Buffer age - supports candidate invariant I-07.",
         p: "0.28",
       },
     ],
@@ -326,7 +326,7 @@ const ANOMALIES = [
         p: "0.52",
       },
       {
-        text: "Temperature miscalibration — routine fix with recalibration pass.",
+        text: "Temperature miscalibration - routine fix with recalibration pass.",
         p: "0.31",
       },
     ],

@@ -260,7 +260,7 @@ const CHAIN: Turn[] = [
     who: "you",
     kind: "note",
     text:
-      "Tighten the DOE — give me an arm that would separate a cofactor artifact from a true site.",
+      "Tighten the DOE - give me an arm that would separate a cofactor artifact from a true site.",
   },
   {
     who: "dovetail",
@@ -364,7 +364,7 @@ function Composer() {
           </div>
         </div>
         <textarea
-          placeholder="Ask, challenge, or propose. Twins cite, argue, and falsify — they don't answer."
+          placeholder="Ask, challenge, or propose. Twins cite, argue, and falsify - they don't answer."
           className="w-full px-3 py-2.5 bg-transparent outline-none text-[13.5px] placeholder:text-ink-400 resize-none"
           rows={2}
         />

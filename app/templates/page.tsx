@@ -31,7 +31,7 @@ const PROJECT_TEMPLATES: Template[] = [
     id: "blank",
     title: "Blank scientific program",
     domain: "Any field",
-    hint: "Empty workspace with the standard surfaces — start from a question.",
+    hint: "Empty workspace with the standard surfaces - start from a question.",
     tags: ["scaffold", "neutral"],
     artifacts: 4,
   },
@@ -176,9 +176,9 @@ const PROTOCOL_TEMPLATES: Protocol[] = [
   { id: "synth", title: "Two-step organic synthesis", field: "Chemistry", duration: "2–3 days", hint: "Reflux, work-up, column, NMR, yield reporting." },
   { id: "behav", title: "Behavioural assay (Morris water maze)", field: "Neuroscience", duration: "5 days", hint: "Cohort spec, training schedule, probe trial, ethics gate." },
   { id: "irb", title: "IRB-style human-subjects flow", field: "Public health · social", duration: "weeks", hint: "Protocol, consent, recruitment, data-handling, debriefing." },
-  { id: "rct", title: "RCT statistical analysis plan", field: "Clinical", duration: "—", hint: "Endpoints, sample size, analysis populations, multiplicity." },
-  { id: "prereg", title: "Pre-registration (OSF style)", field: "Any", duration: "—", hint: "Hypothesis, design, analysis plan, frozen before data." },
-  { id: "repro", title: "Computational reproducibility checklist", field: "Computational", duration: "—", hint: "Environment pin, seed pin, data hash, output verification." },
+  { id: "rct", title: "RCT statistical analysis plan", field: "Clinical", duration: "-", hint: "Endpoints, sample size, analysis populations, multiplicity." },
+  { id: "prereg", title: "Pre-registration (OSF style)", field: "Any", duration: "-", hint: "Hypothesis, design, analysis plan, frozen before data." },
+  { id: "repro", title: "Computational reproducibility checklist", field: "Computational", duration: "-", hint: "Environment pin, seed pin, data hash, output verification." },
   { id: "fmri-pre", title: "fMRI preprocessing protocol", field: "Neuroscience", duration: "automated", hint: "fMRIPrep config, motion thresholds, susceptibility correction." },
   { id: "field", title: "Field ecology survey", field: "Ecology", duration: "season", hint: "Site selection, transects, sampling scheme, weather log." },
 ];
@@ -193,7 +193,7 @@ export default function TemplatesPage() {
   return (
     <div className="min-h-screen bg-white text-ink-900">
       <MarketingNav />
-      <main className="mx-auto max-w-[1180px] px-6 sm:px-10 pt-16 pb-28">
+      <main className="mx-auto max-w-[1180px] px-6 pb-28 pt-6 sm:px-10">
         <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-400">
           Templates
         </div>
@@ -202,7 +202,7 @@ export default function TemplatesPage() {
         </h1>
         <p className="mt-3 max-w-[60ch] text-[15px] leading-relaxed text-ink-600">
           Project scaffolds with seeded hypotheses, journal-ready manuscript
-          templates, and step-by-step protocols. Pick one — the workspace,
+          templates, and step-by-step protocols. Pick one - the workspace,
           the rules file, and the default agents come pre-configured.
         </p>
 

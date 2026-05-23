@@ -75,7 +75,7 @@ export const CATEGORY_ICON: Record<Category, LucideIcon> = {
 };
 
 export const CATALOG: CatalogEntry[] = [
-  // Skills — domain-neutral methodological capabilities
+  // Skills - domain-neutral methodological capabilities
   { id: "synthesize", category: "skill", label: "Synthesize literature", hint: "Read across sources, produce a structured review", icon: BookOpen, keywords: ["review", "lit", "summary"] },
   { id: "find-contradictions", category: "skill", label: "Find contradictions", hint: "Surface conflicting claims across cited work", icon: AlertCircle, keywords: ["disagree", "conflict"] },
   { id: "design-method", category: "skill", label: "Design method", hint: "Draft a methodology for the active question", icon: Microscope, keywords: ["protocol", "plan"] },
@@ -88,26 +88,26 @@ export const CATALOG: CatalogEntry[] = [
   { id: "rank-hypotheses", category: "skill", label: "Rank hypotheses", hint: "Score by evidence, novelty, feasibility", icon: ListChecks, keywords: ["score", "compare"] },
   { id: "extract-claims", category: "skill", label: "Extract claims", hint: "Pull atomic claims with citations from a paper", icon: Quote, keywords: ["pull", "extract", "claims"] },
 
-  // Tools — concrete environments
+  // Tools - concrete environments
   { id: "python", category: "tool", label: "Python REPL", hint: "Run Python with NumPy / Pandas / SciPy preloaded", icon: Code2, keywords: ["py", "jupyter", "code"] },
-  { id: "r", category: "tool", label: "R REPL", hint: "Statistical computing — run R inline", icon: Code2, keywords: ["rstats"] },
+  { id: "r", category: "tool", label: "R REPL", hint: "Statistical computing - run R inline", icon: Code2, keywords: ["rstats"] },
   { id: "julia", category: "tool", label: "Julia", hint: "High-performance numerics", icon: Code2, keywords: ["scientific computing"] },
   { id: "latex", category: "tool", label: "LaTeX compile", hint: "Compile a snippet, get the PDF back", icon: FileText, keywords: ["tex", "math", "pdf"] },
-  { id: "math", category: "tool", label: "Symbolic math", hint: "Algebra, calculus, equations — exact answers", icon: Calculator, keywords: ["sympy", "wolfram", "cas"] },
+  { id: "math", category: "tool", label: "Symbolic math", hint: "Algebra, calculus, equations - exact answers", icon: Calculator, keywords: ["sympy", "wolfram", "cas"] },
   { id: "viz", category: "tool", label: "Viz studio", hint: "Compose interactive figures from a dataset", icon: LineChart, keywords: ["plot", "chart"] },
   { id: "canvas", category: "tool", label: "Canvas", hint: "Spatial workspace for diagrams and notes", icon: ImageIcon, keywords: ["whiteboard"] },
   { id: "cite", category: "tool", label: "Citation manager", hint: "Insert formatted citations in your style", icon: Quote, keywords: ["zotero", "mendeley", "bib"] },
   { id: "data-explorer", category: "tool", label: "Data explorer", hint: "Browse, filter, profile a tabular dataset", icon: Database, keywords: ["pandas", "duckdb"] },
 
-  // Modes — behavioural settings
-  { id: "suggest", category: "mode", label: "Suggest", hint: "Propose, never execute — you approve every step", icon: Eye, keywords: ["readonly", "review"] },
+  // Modes - behavioural settings
+  { id: "suggest", category: "mode", label: "Suggest", hint: "Propose, never execute - you approve every step", icon: Eye, keywords: ["readonly", "review"] },
   { id: "semi-auto", category: "mode", label: "Semi-auto", hint: "Run trusted actions; pause for risk", icon: Zap, keywords: ["balanced"] },
   { id: "full-auto", category: "mode", label: "Full-auto", hint: "Run end-to-end with provenance trace", icon: Cpu, keywords: ["autonomous"] },
   { id: "pair", category: "mode", label: "Pair", hint: "Two-way back-and-forth, synchronous", icon: Compass, keywords: ["paired"] },
   { id: "plan-only", category: "mode", label: "Plan only", hint: "Produce a step-by-step plan, no execution", icon: ListChecks, keywords: ["dry-run"] },
   { id: "critique", category: "mode", label: "Critique", hint: "Tear apart your own argument first", icon: Eye, keywords: ["red-team"] },
 
-  // Agents — field-agnostic team
+  // Agents - field-agnostic team
   { id: "compass", category: "agent", label: "Compass · orchestrator", hint: "Routes work across the team, tracks progress", icon: Compass, keywords: ["pi", "lead"] },
   { id: "brain", category: "agent", label: "Brain · hypothesist", hint: "Generates and ranks competing hypotheses", icon: Brain, keywords: ["ideate"] },
   { id: "sigma", category: "agent", label: "Sigma · analyst", hint: "Statistics, modelling, uncertainty", icon: SigmaSquare, keywords: ["stats"] },
@@ -117,7 +117,7 @@ export const CATALOG: CatalogEntry[] = [
   { id: "witness", category: "agent", label: "Witness · auditor", hint: "Checks reproducibility and provenance", icon: Eye, keywords: ["audit", "reproducibility"] },
   { id: "kepler", category: "agent", label: "Kepler · experiment designer", hint: "Designs experiments with power analysis", icon: FlaskConical, keywords: ["doe"] },
 
-  // Templates — starters
+  // Templates - starters
   { id: "tpl-protocol", category: "template", label: "Protocol", hint: "Start a step-by-step protocol document", icon: ListChecks, keywords: ["procedure", "method"] },
   { id: "tpl-manuscript", category: "template", label: "Manuscript", hint: "IMRaD scaffold with figure slots", icon: FileText, keywords: ["paper"] },
   { id: "tpl-grant", category: "template", label: "Grant proposal", hint: "Aims, significance, approach, budget", icon: GraduationCap, keywords: ["nih", "nsf", "erc"] },
@@ -126,7 +126,7 @@ export const CATALOG: CatalogEntry[] = [
   { id: "tpl-prereg", category: "template", label: "Preregistration", hint: "Hypothesis, design, analysis plan", icon: ListChecks, keywords: ["osf"] },
   { id: "tpl-report", category: "template", label: "Lab report", hint: "Concise internal write-up", icon: FileText, keywords: ["memo"] },
 
-  // Actions — verbs
+  // Actions - verbs
   { id: "run-experiment", category: "action", label: "Run experiment", hint: "Queue the active experiment on compute", icon: FlaskConical, keywords: ["execute"] },
   { id: "queue-job", category: "action", label: "Queue job", hint: "Submit a long-running job to your cluster", icon: Cpu, keywords: ["hpc"] },
   { id: "preregister", category: "action", label: "Preregister", hint: "Sign and timestamp the current plan", icon: GitBranch, keywords: ["osf", "stamp"] },

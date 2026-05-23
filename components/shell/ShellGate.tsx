@@ -2,6 +2,13 @@
 
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { MarketingSmoothScroll } from "@/components/marketing/MarketingSmoothScroll";
+import { MarketingRoutePrefetch } from "@/components/marketing/MarketingRoutePrefetch";
+import { SelectionBinaryOverlay } from "@/components/marketing/SelectionBinaryOverlay";
+import { CookieConsentRoot } from "@/components/consent/CookieConsentRoot";
+import { KeyboardShortcutsHost } from "@/components/shell/KeyboardShortcutsDialog";
+import { useStandaloneInstituteChrome } from "@/components/institute/institute-app-shell";
+import { useHydrated } from "@/lib/hooks/useHydrated";
 import { Shell } from "./Shell";
 import { useSession } from "@/lib/store/auth";
 
@@ -9,13 +16,20 @@ const PUBLIC_ROUTES = new Set([
   "/",
   "/products",
   "/pricing",
+  "/team",
+  "/blog",
+  "/playground",
   "/enrol",
   "/login",
   "/signup",
   "/forgot",
+  "/privacy",
+  "/terms",
 ]);
 
-const PUBLIC_PREFIXES = ["/help", "/signup", "/login", "/forgot"];
+const PUBLIC_PREFIXES = ["/help", "/signup", "/login", "/forgot", "/blog"];
+
+const INSTITUTE_EMBED_PATHS = new Set(["/ire", "/lattice", "/workspace"]);
 
 function normalizePath(path: string): string {
   return path.length > 1 ? path.replace(/\/+$/, "") : path;
@@ -29,23 +43,43 @@ function isPublic(path: string): boolean {
   );
 }
 
-/** Full-viewport surfaces that ship their own chrome — avoid Shell + StartAnimation (z‑stack clashes, wrong heights when minimized). */
-function isStandaloneWorkspacePath(path: string): boolean {
-  const n = normalizePath(path);
-  return n === "/ire" || n === "/workspace";
+function readEmbedBypass(pathname: string): boolean {
+  if (typeof window === "undefined") return false;
+
+  if (window.self !== window.top) {
+    return INSTITUTE_EMBED_PATHS.has(normalizePath(pathname));
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("demo") !== "1") return false;
+
+  return INSTITUTE_EMBED_PATHS.has(normalizePath(pathname));
 }
 
 export function ShellGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
+  const standaloneChrome = useStandaloneInstituteChrome(pathname);
 
   if (isPublic(pathname)) {
-    return <>{children}</>;
+    return (
+      <>
+        <MarketingSmoothScroll />
+        <MarketingRoutePrefetch />
+        <SelectionBinaryOverlay />
+        {children}
+        <CookieConsentRoot />
+        <KeyboardShortcutsHost />
+      </>
+    );
   }
 
   return (
-    <SessionGate pathname={pathname}>
-      {isStandaloneWorkspacePath(pathname) ? children : <Shell>{children}</Shell>}
-    </SessionGate>
+    <>
+      <SessionGate pathname={pathname}>
+        {standaloneChrome ? children : <Shell>{children}</Shell>}
+      </SessionGate>
+      <KeyboardShortcutsHost />
+    </>
   );
 }
 
@@ -57,27 +91,29 @@ function SessionGate({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const hydrated = useHydrated();
+  const embedBypass = hydrated && readEmbedBypass(pathname);
   const { user, loading } = useSession();
 
-  /** Must not rely on state + effects — otherwise we redirect before bypass flips (broken product iframe). */
-  const embeddedPreview =
-    typeof window !== "undefined" && window.self !== window.top;
-
   React.useEffect(() => {
-    if (loading) return;
-    if (embeddedPreview) return;
+    if (!hydrated || loading) return;
+    if (embedBypass) return;
     if (!user) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [loading, embeddedPreview, user, pathname, router]);
+  }, [hydrated, embedBypass, loading, user, pathname, router]);
 
-  if (loading) {
-    return <div className="min-h-screen bg-parchment-50" />;
-  }
-
-  if (embeddedPreview || user) {
+  if (embedBypass) {
     return <>{children}</>;
   }
 
-  return <div className="min-h-screen bg-parchment-50" />;
+  if (!hydrated || loading) {
+    return null;
+  }
+
+  if (user) {
+    return <>{children}</>;
+  }
+
+  return null;
 }

@@ -343,7 +343,7 @@ const RUNS = [
     meta: "rerun after lot swap",
     hypothesis: "H-214 baseline",
     branch: "k11/main",
-    eta: "—",
+    eta: "-",
     delta: "flag I-03",
     spark: [6, 5, 6, 7, 6, 7, 8, 7, 6, 5],
     color: "#B4315F",

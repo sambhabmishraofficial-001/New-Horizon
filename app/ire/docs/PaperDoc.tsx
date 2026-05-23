@@ -81,14 +81,14 @@ export function PaperDoc({ path }: { path: string }) {
                   <span className="text-beacon-700 font-mono">
                     {p.linkedHypothesis ?? "H-001"}
                   </span>{" "}
-                  — {p.tag === "contradicts" ? "contradicts" : "supports"} the
+                  - {p.tag === "contradicts" ? "contradicts" : "supports"} the
                   current formulation.
                 </span>
               </li>
               <li className="flex gap-2">
                 <Link2 className="h-4 w-4 text-violet-600 mt-0.5 shrink-0" />
                 <span>
-                  Cited by Smith '24, Chen '23 — co-cluster{" "}
+                  Cited by Smith '24, Chen '23 - co-cluster{" "}
                   <span className="font-mono">osimertinib-resistance</span>
                 </span>
               </li>

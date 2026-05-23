@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Library,
   SquareTerminal,
+  Microscope,
   type LucideIcon,
 } from "lucide-react";
 
@@ -23,11 +24,11 @@ export type NavItem = {
 
 export const NAV: NavItem[] = [
   {
-    label: "Atrium",
-    href: "/atrium",
+    label: "Overview",
+    href: "/lattice",
     icon: Home,
     kbd: "1",
-    description: "Institute overview — your programs, twins, and feed.",
+    description: "Institute overview - programs, twins, and feed.",
     section: "Institute",
   },
   {
@@ -35,7 +36,15 @@ export const NAV: NavItem[] = [
     href: "/ire",
     icon: SquareTerminal,
     kbd: "W",
-    description: "Integrated Research Environment — your daily workstation.",
+    description: "Integrated Research Environment - your daily workstation.",
+    section: "Institute",
+  },
+  {
+    label: "Virtual Labs",
+    href: "/virtual-labs",
+    icon: Microscope,
+    kbd: "L",
+    description: "Digital lab spaces - benches, instruments, protocols, and live runs.",
     section: "Institute",
   },
   {
@@ -51,7 +60,7 @@ export const NAV: NavItem[] = [
     href: "/canvas",
     icon: Network,
     kbd: "3",
-    description: "Neurosymbolic research graph — hypotheses to proofs.",
+    description: "Neurosymbolic research graph - hypotheses to proofs.",
     section: "Discovery",
   },
   {
@@ -107,6 +116,6 @@ export const NAV: NavItem[] = [
 export const BRAND = {
   name: "New Horizon",
   tagline: "Virtual Research Institute",
-  version: "0.9.0 · Atrium build",
+  version: "0.9.0 · Institute",
   logo: "[NH]",
 };

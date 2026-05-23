@@ -20,7 +20,7 @@ import {
 import { cn } from "@/lib/cn";
 
 /* =====================================================================
-   Syntax-highlighted source viewer — fake-YAML feel, hand-tokenised.
+   Syntax-highlighted source viewer - fake-YAML feel, hand-tokenised.
    ===================================================================== */
 
 export function Source({ lines, className }: { lines: SourceLine[]; className?: string }) {
@@ -406,15 +406,15 @@ function HypothesisRendered() {
 
       <DocSection label="Arguments for">
         <ul className="space-y-2">
-          <li className="flex gap-3"><Check className="h-4 w-4 text-emerald-600 mt-1 shrink-0" /><span><b>Okonkwo '24</b> — Mg²⁺ saturation admits residual curvature.</span></li>
-          <li className="flex gap-3"><Check className="h-4 w-4 text-emerald-600 mt-1 shrink-0" /><span><b>Kepler ε-12</b> — 16 loop-3 mutants; 11 abolish the non-linearity in silico.</span></li>
+          <li className="flex gap-3"><Check className="h-4 w-4 text-emerald-600 mt-1 shrink-0" /><span><b>Okonkwo '24</b> - Mg²⁺ saturation admits residual curvature.</span></li>
+          <li className="flex gap-3"><Check className="h-4 w-4 text-emerald-600 mt-1 shrink-0" /><span><b>Kepler ε-12</b> - 16 loop-3 mutants; 11 abolish the non-linearity in silico.</span></li>
         </ul>
       </DocSection>
 
       <DocSection label="Arguments against">
         <ul className="space-y-2">
-          <li className="flex gap-3"><AlertTriangle className="h-4 w-4 text-rose-600 mt-1 shrink-0" /><span><b>Zhang '25</b> — Non-linearity explained by cofactor alone.</span></li>
-          <li className="flex gap-3"><AlertTriangle className="h-4 w-4 text-rose-600 mt-1 shrink-0" /><span><b>Tran '24</b> — No structural evidence for loop-3 pocket.</span></li>
+          <li className="flex gap-3"><AlertTriangle className="h-4 w-4 text-rose-600 mt-1 shrink-0" /><span><b>Zhang '25</b> - Non-linearity explained by cofactor alone.</span></li>
+          <li className="flex gap-3"><AlertTriangle className="h-4 w-4 text-rose-600 mt-1 shrink-0" /><span><b>Tran '24</b> - No structural evidence for loop-3 pocket.</span></li>
         </ul>
       </DocSection>
     </article>
@@ -623,7 +623,7 @@ export function TwinDoc() {
         <Turn
           who="you"
           kind="note"
-          text="Tighten the DOE — give me an arm that would separate a cofactor artifact from a true site."
+          text="Tighten the DOE - give me an arm that would separate a cofactor artifact from a true site."
         />
         <Turn
           who="dovetail"
@@ -811,7 +811,7 @@ export function DatasetDoc() {
 
 export function EnvDoc() {
   const lines: SourceLine[] = [
-    { content: <>{tok.cmt("# folding-rl.env — policy environment for K11")}</> },
+    { content: <>{tok.cmt("# folding-rl.env - policy environment for K11")}</> },
     { content: "" },
     { content: <>{tok.key("environment")}{tok.op(":")}</> },
     { content: <>{"  "}{tok.key("id")}{tok.op(":")} {tok.str("folding-rl")}</> },

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/cn";
 
 export function EditorBreadcrumbs({
   crumbs,
@@ -11,12 +10,16 @@ export function EditorBreadcrumbs({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="h-7 shrink-0 px-4 flex items-center justify-between border-b border-ink-900/8 bg-white text-[11.5px] text-ink-500 font-mono">
+    <div className="h-7 shrink-0 flex items-center justify-between border-b border-[var(--ire-border)] bg-[var(--ire-surface)] px-4 font-mono text-[11.5px] text-[var(--ire-text-muted)]">
       <div className="flex items-center gap-1.5 truncate">
         {crumbs.map((c, i) => (
           <React.Fragment key={i}>
-            {i > 0 && <span className="text-ink-300">▸</span>}
-            <span className={i === crumbs.length - 1 ? "text-ink-800" : ""}>{c}</span>
+            {i > 0 && <span className="opacity-40">▸</span>}
+            <span
+              className={i === crumbs.length - 1 ? "text-[var(--ire-text)]" : ""}
+            >
+              {c}
+            </span>
           </React.Fragment>
         ))}
       </div>
@@ -29,7 +32,6 @@ export function DocShell({
   crumbs,
   right,
   children,
-  bg = "white",
 }: {
   crumbs: string[];
   right?: React.ReactNode;
@@ -37,12 +39,7 @@ export function DocShell({
   bg?: "white" | "parchment";
 }) {
   return (
-    <div
-      className={cn(
-        "flex-1 min-h-0 flex flex-col",
-        bg === "white" ? "bg-white" : "bg-parchment-50"
-      )}
-    >
+    <div className="flex-1 min-h-0 flex flex-col bg-[var(--ire-surface-muted)]">
       <EditorBreadcrumbs crumbs={crumbs} right={right} />
       <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
     </div>

@@ -28,7 +28,7 @@ export default function FacultyPage() {
     <div>
       <PageHeader
         eyebrow="Faculty · Helix Bio Group"
-        title="People, permissions, and compute — as one institute."
+        title="People, permissions, and compute - as one institute."
         lede="Researchers are first-class. Labs are first-class. Compute nodes are first-class. Everything is audited; nothing is implicit."
         right={
           <div className="flex items-center gap-2">
@@ -312,7 +312,7 @@ const LABS = [
 const NODES = [
   { name: "halo-a", meta: "4× H100 · 80GB · NVLink", gpus: "4", util: 86, boundTo: "Kepler ε-12", state: "busy", tone: "beacon", dot: "beacon" },
   { name: "halo-b", meta: "4× H100 · 80GB · NVLink", gpus: "4", util: 62, boundTo: "Halo-A SFT", state: "busy", tone: "beacon", dot: "beacon" },
-  { name: "halo-c", meta: "8× A100 · 40GB", gpus: "8", util: 12, boundTo: "—", state: "idle", tone: "neutral", dot: "ink" },
+  { name: "halo-c", meta: "8× A100 · 40GB", gpus: "8", util: 12, boundTo: "-", state: "idle", tone: "neutral", dot: "ink" },
   { name: "halo-d", meta: "2× H100 · shared", gpus: "2", util: 48, boundTo: "Quorum audit", state: "busy", tone: "beacon", dot: "beacon" },
   { name: "halo-e", meta: "4× A100 · 80GB", gpus: "4", util: 0, boundTo: "maintenance", state: "down", tone: "rose", dot: "rose" },
 ];

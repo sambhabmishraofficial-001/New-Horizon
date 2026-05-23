@@ -64,7 +64,7 @@ export default function SignupYouStep() {
     <WizardShell
       step="you"
       title="Tell us a little about you."
-      description="Used to set defaults — the institute writes for your audience and shows the right tools first."
+      description="Used to set defaults - the institute writes for your audience and shows the right tools first."
       onBack={() => router.push("/signup/account")}
       onNext={persistAndAdvance}
       onSkip={() => router.push("/signup/domain")}
@@ -115,7 +115,7 @@ export default function SignupYouStep() {
         <div className="sm:col-span-2">
           <FieldGroup
             label="Short bio"
-            hint="One or two sentences — appears on your profile and helps agents calibrate"
+            hint="One or two sentences - appears on your profile and helps agents calibrate"
           >
             <FieldTextArea
               value={i.bio}
@@ -126,7 +126,7 @@ export default function SignupYouStep() {
           </FieldGroup>
         </div>
         <div className="sm:col-span-2">
-          <FieldGroup label="Avatar" hint="Optional — falls back to initials">
+          <FieldGroup label="Avatar" hint="Optional - falls back to initials">
             <div className="flex items-center gap-3">
               {i.avatarDataUrl ? (
                 <img src={i.avatarDataUrl} alt="" className="h-14 w-14 rounded-full object-cover" />

@@ -7,7 +7,7 @@ export default function EnrolPage() {
     <div className="min-h-screen bg-parchment-50 font-marketing text-ink-900">
       <MarketingNav variant="light" />
 
-      <main className="mx-auto max-w-[1100px] px-6 pb-24 pt-20 sm:px-10 sm:pt-28">
+      <main className="mx-auto max-w-[1100px] px-6 pb-24 pt-6 sm:px-10 sm:pt-10">
         <div className="grid gap-16 lg:grid-cols-[1.1fr_1fr]">
           <div>
             <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-400">
@@ -18,7 +18,7 @@ export default function EnrolPage() {
               <span className="font-editorial"> to New Horizon.</span>
             </h1>
             <p className="mt-6 max-w-[52ch] text-[16.5px] leading-[1.75] text-ink-600">
-              We're onboarding researchers in cohorts. Tell us about your work —
+              We're onboarding researchers in cohorts. Tell us about your work -
               one of our founding researchers will reply within two days.
             </p>
 

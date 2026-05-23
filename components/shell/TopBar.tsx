@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowLeft, Search, ChevronDown } from "lucide-react";
-import { BRAND } from "@/lib/nav";
 import { Kbd } from "@/components/ui/Primitives";
 import { AvatarMenu } from "@/components/shell/AvatarMenu";
 import { useSession } from "@/lib/store/auth";
@@ -11,19 +10,7 @@ import { useSession } from "@/lib/store/auth";
 export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
   const { user } = useSession();
   return (
-    <header className="h-14 shrink-0 bg-parchment-50/90 backdrop-blur-md border-b border-ink-900/8 flex items-center px-5 gap-5 sticky top-0 z-40 font-marketing not-italic">
-      {/* Brand */}
-      <div className="flex items-center gap-2.5">
-        <div className="h-7 min-w-8 px-1 grid place-items-center font-marketing text-[15px] font-light not-italic tracking-[0.02em] leading-none text-ink-900">
-          {BRAND.logo}
-        </div>
-        <div className="font-marketing text-[15px] font-medium not-italic text-ink-900 leading-none">
-          {BRAND.name}
-        </div>
-      </div>
-
-      <div className="h-5 w-px bg-ink-900/10" />
-
+    <header className="h-14 shrink-0 bg-[var(--ire-bg)]/95 backdrop-blur-md border-b border-[var(--ire-border)] flex items-center px-5 gap-3 sticky top-0 z-40 font-marketing not-italic">
       {/* Context */}
       <button className="inline-flex items-center gap-1.5 font-marketing text-[13px] not-italic text-ink-600 hover:text-ink-900">
         Helix Bio Group
@@ -32,14 +19,14 @@ export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
         <ChevronDown className="h-3.5 w-3.5 text-ink-400" />
       </button>
 
-      {/* Command bar */}
+      {/* Spotlight search trigger */}
       <button
         onClick={onOpenCommand}
-        className="flex-1 max-w-[520px] mx-auto h-9 px-3 rounded-lg bg-white hover:bg-white border border-ink-900/10 flex items-center gap-2.5 text-left font-marketing not-italic transition-colors"
-        aria-label="Open command palette"
+        className="group mx-auto flex h-10 w-full max-w-[560px] flex-1 items-center gap-3 rounded-full border border-[var(--ire-border)] bg-[var(--ire-surface-elevated)] px-4 text-left font-marketing not-italic shadow-[0_1px_0_rgba(17,17,16,0.03),0_8px_24px_-16px_rgba(17,17,16,0.18)] transition-[border-color,box-shadow,transform] hover:border-[var(--ire-border-strong)] hover:shadow-[0_10px_30px_-18px_rgba(17,17,16,0.22)] active:scale-[0.995]"
+        aria-label="Open institute spotlight search"
       >
-        <Search className="h-3.5 w-3.5 text-ink-400" />
-        <span className="font-marketing text-[13px] not-italic text-ink-400 truncate">
+        <Search className="h-4 w-4 text-ink-400 transition-colors group-hover:text-ink-600" />
+        <span className="truncate text-[14px] text-ink-400 transition-colors group-hover:text-ink-500">
           Search the institute
         </span>
         <div className="ml-auto flex items-center gap-1">
@@ -52,7 +39,7 @@ export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
       <div className="flex items-center gap-3">
         <Link
           href="/"
-          className="inline-flex h-9 items-center gap-1.5 rounded-md border border-ink-900/10 bg-white px-3 font-marketing text-[13px] font-medium not-italic text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900"
+          className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--ire-border)] bg-[var(--ire-surface-elevated)] px-3 font-marketing text-[13px] font-medium not-italic text-ink-600 transition-colors hover:bg-[var(--ire-surface)] hover:text-ink-900"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Home

@@ -177,10 +177,10 @@ export function KnowledgeGraphDoc() {
             <SectionLabel>Node</SectionLabel>
             <div className="mt-2 rounded-md border border-ink-900/10 bg-white px-3 py-2">
               <div className="font-mono text-[13px] text-ink-900">
-                {node?.label ?? "—"}
+                {node?.label ?? "-"}
               </div>
               <div className="text-[11px] text-ink-500 mt-0.5 font-mono">
-                {node?.type ?? "—"} · {selected}
+                {node?.type ?? "-"} · {selected}
               </div>
             </div>
           </div>

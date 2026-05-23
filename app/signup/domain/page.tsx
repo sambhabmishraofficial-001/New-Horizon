@@ -73,7 +73,7 @@ export default function SignupDomainStep() {
     <WizardShell
       step="domain"
       title="Your discipline."
-      description="Pick a primary field and up to three secondary. Drives default agents, templates, and seeded artifacts. Pure interdisciplinary work — pick the closest, refine with the secondary picks."
+      description="Pick a primary field and up to three secondary. Drives default agents, templates, and seeded artifacts. Pure interdisciplinary work - pick the closest, refine with the secondary picks."
       onBack={() => router.push("/signup/you")}
       onNext={persistAndAdvance}
       onSkip={() => router.push("/signup/workspace")}
@@ -172,7 +172,7 @@ export default function SignupDomainStep() {
       </div>
 
       <div className="mt-7">
-        <FieldGroup label="Subfield" hint="Free text — anything more specific">
+        <FieldGroup label="Subfield" hint="Free text - anything more specific">
           <FieldInput
             value={d.subfield}
             onChange={(v) => setField({ subfield: v })}

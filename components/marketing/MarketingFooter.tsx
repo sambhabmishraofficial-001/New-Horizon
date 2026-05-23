@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
+import { FooterStarWarsToggle } from "@/components/marketing/FooterStarWarsToggle";
 
 const columns = [
   {
@@ -11,8 +13,8 @@ const columns = [
   {
     title: "Company",
     links: [
-      ["About", "#"],
-      ["Blog", "#"],
+      ["Team", "/team"],
+      ["Blog", "/blog"],
       ["Careers", "#"],
       ["Press", "#"],
     ],
@@ -20,8 +22,8 @@ const columns = [
   {
     title: "Legal",
     links: [
-      ["Privacy Policy", "#"],
-      ["Terms of Service", "#"],
+      ["Privacy Policy", "/privacy/"],
+      ["Terms of Service", "/terms/"],
     ],
   },
   {
@@ -37,8 +39,8 @@ const columns = [
 
 export function MarketingFooter() {
   return (
-    <footer className="overflow-hidden border-t border-ink-900/10 bg-white font-marketing text-ink-900">
-      <div className="mx-auto max-w-[1200px] px-6 py-20 sm:px-10">
+    <footer className="overflow-hidden bg-white font-marketing text-ink-900">
+      <div className="mx-auto max-w-[1200px] px-6 pb-20 pt-16 sm:px-10 sm:pt-20">
         <div className="grid gap-16 lg:grid-cols-[1.1fr_2fr]">
           <div>
             <Link
@@ -87,8 +89,14 @@ export function MarketingFooter() {
           </div>
         </div>
 
-        <div className="mt-16 flex flex-col gap-3 border-t border-ink-900/10 pt-6 text-[12.5px] text-ink-500 sm:flex-row sm:items-center sm:justify-between">
-          <div>© 2026 New Horizon Research, Inc.</div>
+        <div className="mt-16 border-t border-ink-900/10 pt-8">
+          <div className="flex flex-col items-center gap-8 overflow-visible py-2">
+            <FooterStarWarsToggle />
+            <div className="flex w-full flex-col gap-3 text-[12.5px] text-ink-500 sm:flex-row sm:items-center sm:justify-between">
+              <div>© 2026 New Horizon Research, Inc.</div>
+              <CookieSettingsButton />
+            </div>
+          </div>
         </div>
 
         <div className="footer-stripe-wordmark" aria-hidden>

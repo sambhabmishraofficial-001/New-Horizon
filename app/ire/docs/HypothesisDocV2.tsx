@@ -131,30 +131,30 @@ function Rendered({
           {isScaffold ? (
             <>
               <ArgFor>
-                <b>Evidence ledger</b> — Citations, datasets, and experiment outcomes attached here become
+                <b>Evidence ledger</b> - Citations, datasets, and experiment outcomes attached here become
                 structured arguments instead of static prose.
               </ArgFor>
               <ArgFor>
-                <b>Domain language</b> — State quantities, units, regimes, and populations using terminology native
+                <b>Domain language</b> - State quantities, units, regimes, and populations using terminology native
                 to your field so reviewers map claims to observations cleanly.
               </ArgFor>
               <ArgFor>
-                <b>Positive controls</b> — Record which manipulations should increase signal if the mechanism class
+                <b>Positive controls</b> - Record which manipulations should increase signal if the mechanism class
                 holds; pin instrument settings and batch IDs.
               </ArgFor>
             </>
           ) : (
             <>
               <ArgFor>
-                <b>Smith &apos;24</b> — T790M induces a 2.1 Å conformational shift that
+                <b>Smith &apos;24</b> - T790M induces a 2.1 Å conformational shift that
                 favors ATP binding over osimertinib. [Cryo-EM, MD]
               </ArgFor>
               <ArgFor>
-                <b>TCGA LUAD (DS-003)</b> — T790M enriched in post-osimertinib
+                <b>TCGA LUAD (DS-003)</b> - T790M enriched in post-osimertinib
                 cohort (n = 567; p &lt; 10⁻⁶).
               </ArgFor>
               <ArgFor>
-                <b>EXP-001 (IC50)</b> — 12.3-fold shift in IC50 across 4 cell lines
+                <b>EXP-001 (IC50)</b> - 12.3-fold shift in IC50 across 4 cell lines
                 (p &lt; 0.001).
               </ArgFor>
             </>
@@ -168,22 +168,22 @@ function Rendered({
           {isScaffold ? (
             <>
               <ArgAgainst>
-                <b>No contradictions indexed yet</b> — Import conflicting findings or mark internal outliers so the
+                <b>No contradictions indexed yet</b> - Import conflicting findings or mark internal outliers so the
                 ledger stays balanced.
               </ArgAgainst>
               <ArgAgainst>
-                <b>Scope checks</b> — Document conditions where the claim should fail fast (wrong organism, regime,
+                <b>Scope checks</b> - Document conditions where the claim should fail fast (wrong organism, regime,
                 or measurement modality).
               </ArgAgainst>
             </>
           ) : (
             <>
               <ArgAgainst>
-                <b>Tran &apos;24</b> — T790M frequency falls below 30% in ≥3rd-line
+                <b>Tran &apos;24</b> - T790M frequency falls below 30% in ≥3rd-line
                 samples; MET amplification rises. Challenges primacy in late-stage.
               </ArgAgainst>
               <ArgAgainst>
-                <b>Internal lot 70c</b> — outlier assay behavior; under
+                <b>Internal lot 70c</b> - outlier assay behavior; under
                 investigation by Aletheia.
               </ArgAgainst>
             </>

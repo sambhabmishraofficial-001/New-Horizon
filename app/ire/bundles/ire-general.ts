@@ -12,7 +12,7 @@ import type {
 } from "../data";
 import type { WorkspaceBundle } from "../workspace-model";
 
-/** Domain-neutral scaffold — same IRE affordances, no field-specific demo narrative */
+/** Domain-neutral scaffold - same IRE affordances, no field-specific demo narrative */
 
 const GENERAL_TREE: TreeNode[] = [
   {
@@ -370,7 +370,7 @@ const GENERAL_PAPERS: PaperRecord[] = [
     tag: "suggested",
     keyClaim: "Pre-registration, raw data deposit, and explicit analysis plans reduce irreproducibility.",
     methods: ["reporting checklist", "metadata"],
-    summary: "Orientation shelf — swap for domain founding papers as your program matures.",
+    summary: "Orientation shelf - swap for domain founding papers as your program matures.",
   },
   {
     id: "stats-generic",
@@ -383,7 +383,7 @@ const GENERAL_PAPERS: PaperRecord[] = [
     tag: "suggested",
     keyClaim: "Mixed-effects and hierarchical models outperform naive aggregation when batches cluster.",
     methods: ["mixed models", "cross-validation"],
-    summary: "Placeholder reading — replace with field-standard statistical references.",
+    summary: "Placeholder reading - replace with field-standard statistical references.",
   },
 ];
 
@@ -396,7 +396,7 @@ const GENERAL_PROTOCOLS: ProtocolRecord[] = [
     duration: "TBD",
     success: 0,
     runs: 0,
-    lastUsed: "—",
+    lastUsed: "-",
     linkedExperiments: [],
     owner: "mine",
     steps: 0,
@@ -477,7 +477,7 @@ const GENERAL_INSIGHTS: InsightRecord[] = [
   },
   {
     id: "ig2",
-    ts: "—",
+    ts: "-",
     source: "protocol",
     title: "Protocol versioning",
     body: "Commit a versioned protocol before scheduling EXP-S001 so invariants can bind to explicit steps.",
@@ -485,7 +485,7 @@ const GENERAL_INSIGHTS: InsightRecord[] = [
   },
   {
     id: "ig3",
-    ts: "—",
+    ts: "-",
     source: "kg",
     title: "Graph is empty",
     body: "Seed entities (methods, materials, populations) from your domain ontology or spreadsheet import.",

@@ -178,7 +178,7 @@ export default function SignupWorkspaceStep() {
       <div className="mt-7">
         <FieldGroup
           label="Invite collaborators"
-          hint="Optional — comma-separated emails, can be added later"
+          hint="Optional - comma-separated emails, can be added later"
         >
           <FieldInput
             value={w.invites}

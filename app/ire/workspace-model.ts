@@ -11,7 +11,7 @@ import type {
   TeamMember,
 } from "./data";
 
-/** Top bar + status strip copy — neutral vs demo-specific */
+/** Top bar + status strip copy - neutral vs demo-specific */
 export type WorkspaceChrome = {
   projectDropdownTitle: string;
   projectVersionSuffix: string;

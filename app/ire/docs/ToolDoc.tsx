@@ -314,8 +314,8 @@ function ScholarSurface() {
 
 const STORAGE_FILES = [
   { name: "manuscript-v3.docx", kind: "doc", size: "184 KB", modified: "today, 14:21" },
-  { name: "figures", kind: "folder", size: "—", modified: "yesterday" },
-  { name: "raw-data", kind: "folder", size: "—", modified: "Apr 28" },
+  { name: "figures", kind: "folder", size: "-", modified: "yesterday" },
+  { name: "raw-data", kind: "folder", size: "-", modified: "Apr 28" },
   { name: "supplementary.pdf", kind: "pdf", size: "2.1 MB", modified: "Apr 24" },
   { name: "analysis.ipynb", kind: "notebook", size: "412 KB", modified: "Apr 22" },
   { name: "preregistration.md", kind: "md", size: "9 KB", modified: "Apr 20" },
@@ -482,16 +482,16 @@ function RepoView() {
         <div className="px-6 py-6 max-w-[760px]">
           <h1 className="font-editorial text-[26px] text-ink-900 leading-tight">README.md</h1>
           <p className="mt-3 text-[13px] text-ink-700 leading-relaxed">
-            A clean working surface for any scientific program — open the project
+            A clean working surface for any scientific program - open the project
             in your IRE, attach datasets, run experiments. The repository hosts
             analysis pipelines, protocols, and figure-generation code.
           </p>
           <h2 className="mt-6 font-editorial text-[18px] text-ink-900">Layout</h2>
           <ul className="mt-2 space-y-1 text-[12.5px] text-ink-700 font-mono">
-            <li>src/ — analysis pipelines</li>
-            <li>notebooks/ — exploratory and figure notebooks</li>
-            <li>data/ — pinned datasets and schemas</li>
-            <li>tests/ — pipeline tests, schema checks, golden runs</li>
+            <li>src/ - analysis pipelines</li>
+            <li>notebooks/ - exploratory and figure notebooks</li>
+            <li>data/ - pinned datasets and schemas</li>
+            <li>tests/ - pipeline tests, schema checks, golden runs</li>
           </ul>
           <h2 className="mt-6 font-editorial text-[18px] text-ink-900">Quick start</h2>
           <pre className="mt-2 bg-parchment-100 border border-ink-900/8 rounded p-3 text-[11.5px] font-mono text-ink-800 overflow-x-auto">
@@ -640,7 +640,7 @@ function SlidesSurface({ label }: { label: string }) {
 
 function RichTextSurface({ label }: { label: string }) {
   const [body, setBody] = React.useState(
-    `An integrated research environment unifies the surfaces a scientist already touches every day — a writing canvas, a citation library, a notebook, a planner — and binds them to the same evidence graph. The point is not to replace those surfaces. It is to make them aware of each other.\n\nWhen the manuscript cites a result, the result has a fingerprint. When the figure renders, it pulls its data from a pinned hash. When the protocol runs, the run is signed.`
+    `An integrated research environment unifies the surfaces a scientist already touches every day - a writing canvas, a citation library, a notebook, a planner - and binds them to the same evidence graph. The point is not to replace those surfaces. It is to make them aware of each other.\n\nWhen the manuscript cites a result, the result has a fingerprint. When the figure renders, it pulls its data from a pinned hash. When the protocol runs, the run is signed.`
   );
   const words = body.trim().split(/\s+/).length;
   return (
@@ -677,7 +677,7 @@ function RichTextSurface({ label }: { label: string }) {
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="max-w-[760px] mx-auto px-12 py-10">
           <h1 className="font-editorial text-[34px] text-ink-900 leading-tight mb-3">
-            Working notes — research program
+            Working notes - research program
           </h1>
           <textarea
             value={body}

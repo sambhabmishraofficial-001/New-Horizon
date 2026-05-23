@@ -12,6 +12,11 @@ import {
   AuthDivider,
   OAuthButton,
 } from "@/components/auth/AuthShell";
+import {
+  GitHubIcon,
+  GoogleIcon,
+  OrcidIcon,
+} from "@/components/auth/OAuthProviderIcons";
 import { signIn, signUp } from "@/lib/store/auth";
 
 export default function LoginPage() {
@@ -25,7 +30,7 @@ export default function LoginPage() {
 function LoginPageInner() {
   const router = useRouter();
   const search = useSearchParams();
-  const next = search?.get("next") || "/atrium";
+  const next = search?.get("next") || "/lattice";
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -46,17 +51,21 @@ function LoginPageInner() {
   }
 
   async function mockOAuth(provider: string) {
-    const fakeEmail = `${provider}-demo@newhorizon.dev`;
+    const fakeEmail = "contact@newhorizon.dev";
     const fakePassword = "oauth-mock-pw";
     setPending(true);
     setError("");
     let res = await signIn(fakeEmail, fakePassword);
     if (!res.ok) {
+      const localName =
+        fakeEmail.split("@")[0]?.replace(/[._+-]/g, " ") ?? "Researcher";
+      const preferredName =
+        localName.charAt(0).toUpperCase() + localName.slice(1).toLowerCase();
       res = await signUp({
         email: fakeEmail,
         password: fakePassword,
-        preferredName: provider === "orcid" ? "Researcher" : provider.charAt(0).toUpperCase() + provider.slice(1),
-        fullName: `${provider} demo user`,
+        preferredName,
+        fullName: preferredName,
       });
     }
     setPending(false);
@@ -71,7 +80,6 @@ function LoginPageInner() {
     <AuthShell
       eyebrow="Sign in"
       title="Welcome back."
-      subtitle="Continue your research where you left off."
       footer={
         <>
           New here?{" "}
@@ -122,17 +130,17 @@ function LoginPageInner() {
         <OAuthButton
           label="Continue with Google"
           onClick={() => mockOAuth("google")}
-          icon={<span className="font-mono text-[12px]">G</span>}
+          icon={<GoogleIcon />}
         />
         <OAuthButton
           label="Continue with GitHub"
           onClick={() => mockOAuth("github")}
-          icon={<span className="font-mono text-[12px]">{`{ }`}</span>}
+          icon={<GitHubIcon />}
         />
         <OAuthButton
           label="Continue with ORCID"
           onClick={() => mockOAuth("orcid")}
-          icon={<span className="font-mono text-[12px]">iD</span>}
+          icon={<OrcidIcon />}
         />
       </div>
     </AuthShell>

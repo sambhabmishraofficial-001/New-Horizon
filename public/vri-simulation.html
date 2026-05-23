@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>New Horizon — Virtual Research Institute</title>
+<title>New Horizon - Virtual Research Institute</title>
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #0a0d11;
     font-family: ui-sans-serif, -apple-system, system-ui, sans-serif; color: #e6edf3; }
@@ -331,7 +331,7 @@ function fumeHood(parent, x, z, rot=0) {
   parent.add(g);
 }
 
-// DNA sequencer / mass-spec — bigger benchtop unit
+// DNA sequencer / mass-spec - bigger benchtop unit
 function sequencer(parent, x, z) {
   const g = new THREE.Group();
   g.add(box(1.3, 0.65, 0.7, mat(0x2d3748), 0, 0.325, 0));
@@ -751,9 +751,9 @@ function buildLab(i, lab) {
   bench(root, 0, -5.5, 0, 9);
   bench(root, 5.5, 0, Math.PI / 2, 9);
 
-  // equipment per lab — each lab has a visibly different identity
+  // equipment per lab - each lab has a visibly different identity
   if (i === 0) {
-    // Lab α — target ID (dry lab heavy: lots of monitors + GPU + library)
+    // Lab α - target ID (dry lab heavy: lots of monitors + GPU + library)
     deskComputer(root, -3.4, -5.5, Math.PI);
     deskComputer(root, -2.0, -5.5, Math.PI);
     deskComputer(root, -0.5, -5.5, Math.PI);
@@ -765,7 +765,7 @@ function buildLab(i, lab) {
     gpuRack(root, -6.3, 2.5);
     bookshelf(root, -6.3, -2, Math.PI/2);
   } else if (i === 1) {
-    // Lab β — in silico assay (sequencer + fridge + screens)
+    // Lab β - in silico assay (sequencer + fridge + screens)
     sequencer(root, -3, -5.5);
     deskComputer(root, -1, -5.5, Math.PI);
     pcr(root, 1, -5.5);
@@ -777,7 +777,7 @@ function buildLab(i, lab) {
     fridge(root, -6.3, -1, Math.PI/2, 0xfbbf24);
     bookshelf(root, -6.3, 2, Math.PI/2);
   } else if (i === 2) {
-    // Lab γ — replication / wet lab (microscopes, fume hood, fridges, centrifuges)
+    // Lab γ - replication / wet lab (microscopes, fume hood, fridges, centrifuges)
     microscope(root, -3.5, -5.5);
     microscope(root, -2,   -5.5);
     centrifuge(root, -0.4, -5.5);
@@ -789,7 +789,7 @@ function buildLab(i, lab) {
     fridge(root, -6.3, 1, Math.PI/2, 0x10b981);
     cabinet(root, -6.3, 3, Math.PI/2);
   } else {
-    // Lab δ — safety / red team (cabinets, fume hood, monitors)
+    // Lab δ - safety / red team (cabinets, fume hood, monitors)
     fumeHood(root, -3, -5.5, 0);
     cabinet(root, -1, -5.5, 0);
     deskComputer(root, 1.2, -5.5, Math.PI);
@@ -813,7 +813,7 @@ function buildLab(i, lab) {
   chair(root, 3.8,  0,   -Math.PI / 2);
   chair(root, 3.8,  2.5, -Math.PI / 2);
 
-  // plants — keep clear of the door at (-6.93, 5.2)
+  // plants - keep clear of the door at (-6.93, 5.2)
   plant(root,  5.7,  5.7);   // front-right corner
   plant(root, -3.2,  5.6);   // front-center, away from door
 

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useClientQueryFlag } from "@/lib/hooks/useClientSearchParams";
 import {
   ArrowLeft,
   ArrowRight,
@@ -24,16 +25,16 @@ type Step = {
 const STEPS: Step[] = [
   {
     anchor: "activity-bar",
-    title: "Activity bar",
+    title: "Navigation",
     body:
-      "Switch lenses on your project without losing context. Each icon opens a different working surface — explorer, search, hypotheses, experiments, data, literature, protocols, knowledge graph, lineage.",
+      "Grouped views for your workspace and program - explorer, search, program map, hypotheses, runs, data, evidence, protocols, and provenance.",
     side: "right",
   },
   {
     anchor: "side-panel",
-    title: "Side panel",
+    title: "Context panel",
     body:
-      "The explorer holds your project as a typed tree of artifacts. Open any item into a tab. Right-click for actions; drag to reorder.",
+      "Lists and trees for the active view. Open any artifact into the center editor as a tab.",
     side: "right",
   },
   {
@@ -52,30 +53,16 @@ const STEPS: Step[] = [
   },
   {
     anchor: "agent-rail",
-    title: "Research agent",
+    title: "Co-science",
     body:
-      "Your agents live here. Adjust autonomy with one click. Each agent has a role — orchestrator, analyst, writer, auditor — and a digest of what they've done.",
-    side: "left",
-  },
-  {
-    anchor: "composer",
-    title: "Composer",
-    body:
-      "Ask anything. The agent has full context: open artifacts, the knowledge graph, your project rules. Type / for actions, @ to reference an artifact.",
+      "Chat with the institute or inspect the team tab - specialists, insights, and autonomy controls in one column.",
     side: "left",
   },
   {
     anchor: "bottom-panel",
-    title: "Output panel",
+    title: "Chat",
     body:
-      "Output, runs, problems, terminal — like an IDE, but the runs are real experiments. Long-running jobs stream here with provenance attached.",
-    side: "top",
-  },
-  {
-    anchor: "status-bar",
-    title: "Status bar",
-    body:
-      "Provenance, anomalies, FAIR score, agent digest, compute jobs. If anything goes red, you'll see it here first.",
+      "Pinned context, quick prompts, and the composer. Type / for actions or @ to reference an artifact.",
     side: "top",
   },
 ];
@@ -97,6 +84,7 @@ function IreTourInner() {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const isDemo = useClientQueryFlag("demo");
 
   const start = React.useCallback(() => {
     setStepIndex(0);
@@ -110,8 +98,10 @@ function IreTourInner() {
     } catch {}
   }, []);
 
-  // First-run gate + ?tour=1 autostart
+  // First-run gate + ?tour=1 autostart (never in marketing demo iframe)
   React.useEffect(() => {
+    if (isDemo) return;
+
     let seen = "0";
     try {
       seen = localStorage.getItem(STORAGE_KEY) ?? "0";
@@ -126,14 +116,16 @@ function IreTourInner() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname);
     }
-  }, [params, pathname, router, start]);
+  }, [params, pathname, router, start, isDemo]);
 
   // Listen for replay event from anywhere
   React.useEffect(() => {
+    if (isDemo) return;
+
     const onReplay = () => start();
     window.addEventListener(REPLAY_EVENT, onReplay);
     return () => window.removeEventListener(REPLAY_EVENT, onReplay);
-  }, [start]);
+  }, [start, isDemo]);
 
   // Keyboard navigation
   React.useEffect(() => {
@@ -185,6 +177,8 @@ function IreTourInner() {
     };
   }, [phase, stepIndex]);
 
+  if (isDemo) return null;
+
   if (phase === "closed") return null;
 
   if (phase === "welcome") {
@@ -204,7 +198,7 @@ function IreTourInner() {
             </h2>
             <p className="mt-2.5 text-[13px] leading-relaxed text-ink-600 font-marketing not-italic">
               The Integrated Research Environment is structured like an IDE, but every
-              artifact is a typed scientific object — hypothesis, experiment, dataset,
+              artifact is a typed scientific object - hypothesis, experiment, dataset,
               protocol, manuscript. We&rsquo;ll take eight short steps through every region.
               About a minute.
             </p>
@@ -482,7 +476,7 @@ function computePopoverPosition(
   const vh = window.innerHeight;
   const safeH = popH || 200;
 
-  // No anchor — center
+  // No anchor - center
   if (!rect) {
     return {
       top: Math.max(POPOVER_MARGIN, (vh - safeH) / 2),

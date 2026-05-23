@@ -32,7 +32,7 @@ export default function LibraryPage() {
       <PageHeader
         eyebrow="The Library"
         title="Every claim cited. Every dataset signed. Every artifact alive."
-        lede="Papers, datasets, sequences, runs, and models live as first-class objects. The library is the memory of the institute — and every twin reads from it."
+        lede="Papers, datasets, sequences, runs, and models live as first-class objects. The library is the memory of the institute - and every twin reads from it."
         right={
           <div className="flex items-center gap-2">
             <Button variant="outline">
@@ -48,7 +48,7 @@ export default function LibraryPage() {
           <Search className="h-4 w-4 text-ink-400" />
           <input
             className="bg-transparent outline-none text-[14px] flex-1 placeholder:text-ink-400"
-            placeholder='Ask a question — "papers that disagree with Zhang ’25", "all traces lot 71a"…'
+            placeholder='Ask a question - "papers that disagree with Zhang ’25", "all traces lot 71a"…'
           />
           <Kbd>/</Kbd>
         </div>

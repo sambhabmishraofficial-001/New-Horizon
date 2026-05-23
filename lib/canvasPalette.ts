@@ -1,5 +1,5 @@
 /**
- * Muted institute palette for Canvas — parchment/ink base with restrained
+ * Muted institute palette for Canvas - parchment/ink base with restrained
  * accents (beacon + signal hues). Distinguishes node kinds without toy-bright blocks.
  */
 
@@ -12,7 +12,7 @@ export type NodeKindKey =
   | "anomaly";
 
 export const canvasUi = {
-  /** Tab bar — ink, not purple */
+  /** Tab bar - ink, not purple */
   tabBar: "#1F1F1B",
   tabActive: "#F5F2EA",
   tabBg: "#EEEEE9",

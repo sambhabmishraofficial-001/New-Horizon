@@ -14,11 +14,13 @@ import {
 } from "lucide-react";
 import { useSession, signOut } from "@/lib/store/auth";
 import { cn } from "@/lib/cn";
+import { replayVriOnboarding } from "@/lib/hooks/useVriOnboardingDismissed";
 import { replayIreTour } from "@/components/tour/IreTour";
+import { openKeyboardShortcutsDialog } from "@/lib/keyboard-shortcuts-dialog";
 
 function initials(name?: string, email?: string) {
   const src = (name && name.trim()) || (email ? email.split("@")[0] : "");
-  if (!src) return "—";
+  if (!src) return "-";
   const parts = src.split(/[\s._-]+/).filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return src.slice(0, 2).toUpperCase();
@@ -127,11 +129,25 @@ export function AvatarMenu({
             <button
               role="menuitem"
               className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-700 hover:bg-ink-50"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                openKeyboardShortcutsDialog();
+              }}
             >
               <Keyboard className="h-4 w-4 text-ink-400" />
               Keyboard shortcuts
               <span className="ml-auto font-mono text-[10.5px] text-ink-400">⌘/</span>
+            </button>
+            <button
+              role="menuitem"
+              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-700 hover:bg-ink-50"
+              onClick={() => {
+                setOpen(false);
+                replayVriOnboarding();
+              }}
+            >
+              <Sparkles className="h-4 w-4 text-ink-400" />
+              Replay welcome tour
             </button>
             <button
               role="menuitem"

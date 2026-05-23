@@ -85,8 +85,8 @@ export function IntegrationsToolbar({ onOpenTool }: { onOpenTool: OpenToolFn }) 
     .filter((i): i is Integration => Boolean(i));
 
   return (
-    <div className="h-9 shrink-0 flex items-center gap-1 border-b border-ink-900/8 bg-white px-2.5 text-[12px]">
-      <span className="inline-flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.16em] text-ink-500 font-medium pr-1">
+    <div className="h-9 shrink-0 flex items-center gap-1 border-b border-[var(--ire-border)] bg-[var(--ire-surface-muted)] px-3 text-[12px]">
+      <span className="inline-flex items-center gap-1.5 ire-label pr-1 normal-case tracking-[0.1em] text-[10px]">
         <Plus className="h-3 w-3" /> new
       </span>
       <div className="flex items-center gap-0.5 overflow-x-auto">

@@ -96,7 +96,7 @@ export default function SignupAccountStep() {
           />
         </FieldGroup>
         <div className="sm:col-span-2">
-          <FieldGroup label="ORCID" hint="Optional — used for identity verification later">
+          <FieldGroup label="ORCID" hint="Optional - used for identity verification later">
             <FieldInput
               value={a.orcid || ""}
               onChange={(v) => setField({ orcid: v })}
