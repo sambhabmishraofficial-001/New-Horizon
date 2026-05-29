@@ -25,11 +25,10 @@ function readEmbeddedPreview(): boolean {
   return window.self !== window.top;
 }
 
-/** Standalone full chrome only for product iframe previews of /ire and /lattice. */
+/** Standalone full chrome only for product iframe previews of /ire. */
 export function useStandaloneInstituteChrome(pathname: string): boolean {
   const n = pathname.replace(/\/+$/, "") || "/";
-  const workspacePath =
-    n === "/ire" || n === "/workspace" || n === "/lattice";
+  const workspacePath = n === "/ire" || n === "/workspace";
   const [embedded, setEmbedded] = React.useState(false);
 
   React.useEffect(() => {

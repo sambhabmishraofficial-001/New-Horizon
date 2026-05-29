@@ -1,7 +1,5 @@
-"use client";
-
-import { LatticeWorkspaceShell } from "./LatticeWorkspaceShell";
+import { LatticeStudioFrame } from "@/components/lattice/LatticeStudioFrame";
 
 export default function LatticePage() {
-  return <LatticeWorkspaceShell />;
+  return <LatticeStudioFrame />;
 }

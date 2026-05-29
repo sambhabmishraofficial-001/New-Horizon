@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { InstituteBentoPreview } from "@/components/marketing/InstituteBentoPreview";
@@ -19,6 +20,27 @@ import { IreDemoPreloader } from "@/components/marketing/vri/IreDemoPreloader";
 import { prefetchIreDemoPreview } from "@/lib/ire-demo-preview";
 import { useClientSearchParamsReady } from "@/lib/hooks/useClientSearchParams";
 import { isVriProductOpen, vriProductHref } from "@/lib/vriProduct";
+import {
+  isLatticeProductOpen,
+  latticeProductHref,
+} from "@/lib/latticeProduct";
+import { LatticeProductExperience } from "@/components/marketing/lattice/LatticeProductExperience";
+import { RetroWindowsTaskbar } from "@/components/marketing/RetroWindowsTaskbar";
+import { RetroBrowserChrome } from "@/components/marketing/RetroBrowserChrome";
+import {
+  CorpusIcon,
+  DocumentsFolderIcon,
+  FineTuneIcon,
+  FolderIcon,
+  LatticeAppIcon,
+  LeaderboardIcon,
+  ModelStackIcon,
+  MyComputerIcon,
+  PreprintIcon,
+  SciDuckAppIcon,
+  TaskSuiteIcon,
+  VriAppIcon,
+} from "@/components/marketing/RetroDesktopIcons";
 import { sitePath } from "@/lib/sitePath";
 import { cn } from "@/lib/cn";
 
@@ -35,24 +57,16 @@ export default function LandingPage() {
 }
 
 function ProductsPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const paramsReady = useClientSearchParamsReady();
-  const showProduct = paramsReady && isVriProductOpen(searchParams);
-
-  function openProduct() {
-    prefetchIreDemoPreview();
-    router.push(vriProductHref(), { scroll: false });
-    window.setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 0);
-  }
+  const showVri = paramsReady && isVriProductOpen(searchParams);
+  const showLattice = paramsReady && isLatticeProductOpen(searchParams);
 
   useEffect(() => {
-    if (showProduct) prefetchIreDemoPreview();
-  }, [showProduct]);
+    if (showVri) prefetchIreDemoPreview();
+  }, [showVri]);
 
-  if (!showProduct) {
+  if (!showVri && !showLattice) {
     return (
       <div className="marketing-site min-h-screen bg-white text-ink-900 font-marketing">
         <MarketingNav variant="light" />
@@ -60,15 +74,19 @@ function ProductsPageContent() {
           <section className="bg-white px-4 pb-24 pt-10 text-ink-900 sm:px-6">
             <div className="mx-auto max-w-[980px]">
               <p className="mb-7 text-center font-marketing text-[13px] !font-light leading-relaxed tracking-[-0.012em] text-ink-500 sm:text-[14px]">
-                Click the VRI [NH] icon to open the product page
+                Click the VRI [NH] or Lattice icon to open a product page
               </p>
-              <RetroComputer onOpen={openProduct} />
+              <RetroComputer />
             </div>
           </section>
         </main>
         <MarketingFooter />
       </div>
     );
+  }
+
+  if (showLattice && !showVri) {
+    return <LatticeProductExperience />;
   }
 
   return (
@@ -125,21 +143,6 @@ function ProductsPageContent() {
       </section>
 
       <VriJobNotificationsSection id="vri-notifications" className="scroll-mt-24" />
-
-      <section id="vri-labs" className="scroll-mt-24 bg-white">
-        <div className="mx-auto max-w-[1400px] px-4 py-28 sm:px-6">
-          <div className="mb-10 max-w-[58ch] px-2 sm:px-4">
-            <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-400">
-              Institute simulation
-            </div>
-            <h2 className="mt-3 font-editorial text-[40px] leading-[1.05] text-ink-900 sm:text-[52px]">
-              Virtual labs, visible in motion.
-            </h2>
-          </div>
-
-          <SimulationPreview />
-        </div>
-      </section>
 
       <section id="vri-corpus" className="scroll-mt-24 bg-white">
         <div className="mx-auto grid max-w-[1200px] items-center gap-12 px-6 py-20 sm:px-10 lg:grid-cols-[1fr_1.05fr] lg:py-28">
@@ -205,55 +208,119 @@ function ProductsPageContent() {
   );
 }
 
-function RetroComputer({ onOpen }: { onOpen: () => void }) {
+function RetroComputer() {
+  type RetroTab = "products" | "models" | "benchmarks" | "research";
+  const [activeTab, setActiveTab] = useState<RetroTab>("products");
+
   return (
     <div className="retro-computer" aria-label="Virtual Research Institute desktop">
       <div className="retro-monitor">
         <div className="retro-screen-shell">
           <div className="retro-screen">
-            <div className="retro-window-bar">
-              <div className="retro-product-tab">Products</div>
-              <div className="retro-window-dots" aria-hidden>
-                <span className="retro-dot-close" />
-                <span className="retro-dot-min" />
-                <span className="retro-dot-max" />
-              </div>
+            <RetroBrowserChrome activeTab={activeTab} onTabChange={setActiveTab} />
+
+            <div className="retro-desktop-panel">
+              {activeTab === "products" ? (
+                <div className="retro-desktop">
+                  <div className="retro-desktop-icon retro-desktop-icon--computer">
+                    <MyComputerIcon />
+                    <span>My Computer</span>
+                  </div>
+
+                  <div className="retro-desktop-icon retro-desktop-icon--docs">
+                    <DocumentsFolderIcon />
+                    <span>Documents</span>
+                  </div>
+
+                  <Link
+                    href={vriProductHref()}
+                    prefetch
+                    onClick={() => prefetchIreDemoPreview()}
+                    className="retro-desktop-icon retro-desktop-icon--nh retro-desktop-icon--link"
+                    aria-label="Open Virtual Research Institute product page"
+                  >
+                    <VriAppIcon />
+                    <span>Virtual Research Institute</span>
+                  </Link>
+
+                  <div className="retro-desktop-icon retro-desktop-icon--sciduck">
+                    <SciDuckAppIcon />
+                    <span>SciDuck</span>
+                  </div>
+
+                  <Link
+                    href={latticeProductHref()}
+                    prefetch
+                    className="retro-desktop-icon retro-desktop-icon--lattice retro-desktop-icon--link"
+                    aria-label="Open Lattice studio"
+                  >
+                    <LatticeAppIcon />
+                    <span>Lattice</span>
+                  </Link>
+
+                  <div className="retro-hand-cursor" aria-hidden>
+                    <img
+                      src={sitePath("/cursors/mac-hand-pointer.png")}
+                      alt=""
+                      className="h-12 w-12 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {activeTab === "models" ? (
+                <div className="retro-desktop">
+                  <div className="retro-desktop-icon retro-desktop-icon--models-a">
+                    <ModelStackIcon />
+                    <span>Base models</span>
+                  </div>
+                  <div className="retro-desktop-icon retro-desktop-icon--models-b">
+                    <FineTuneIcon />
+                    <span>Fine-tunes</span>
+                  </div>
+                  <div className="retro-desktop-icon retro-desktop-icon--models-c">
+                    <FolderIcon />
+                    <span>Model registry</span>
+                  </div>
+                </div>
+              ) : null}
+
+              {activeTab === "benchmarks" ? (
+                <div className="retro-desktop">
+                  <div className="retro-desktop-icon retro-desktop-icon--bench-a">
+                    <LeaderboardIcon />
+                    <span>Leaderboard</span>
+                  </div>
+                  <div className="retro-desktop-icon retro-desktop-icon--bench-b">
+                    <TaskSuiteIcon />
+                    <span>Task suites</span>
+                  </div>
+                  <div className="retro-desktop-icon retro-desktop-icon--bench-c">
+                    <FolderIcon />
+                    <span>Run reports</span>
+                  </div>
+                </div>
+              ) : null}
+
+              {activeTab === "research" ? (
+                <div className="retro-desktop">
+                  <div className="retro-desktop-icon retro-desktop-icon--research-a">
+                    <CorpusIcon />
+                    <span>Corpus</span>
+                  </div>
+                  <div className="retro-desktop-icon retro-desktop-icon--research-b">
+                    <PreprintIcon />
+                    <span>Preprints</span>
+                  </div>
+                  <div className="retro-desktop-icon retro-desktop-icon--research-c">
+                    <FolderIcon />
+                    <span>Protocols</span>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
-            <div className="retro-desktop">
-              <div className="retro-desktop-icon retro-desktop-icon--computer">
-                <span className="retro-icon retro-icon-monitor" />
-                <span>My Computer</span>
-              </div>
-
-              <div className="retro-desktop-icon retro-desktop-icon--docs">
-                <span className="retro-icon retro-icon-folder" />
-                <span>Documents</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={onOpen}
-                className="retro-desktop-icon retro-desktop-icon--nh"
-                aria-label="Open Virtual Research Institute product page"
-              >
-                <span className="retro-icon retro-icon-nh">[NH]</span>
-                <span>Virtual Research Institute</span>
-              </button>
-
-              <div className="retro-desktop-icon retro-desktop-icon--sciduck">
-                <span className="retro-icon retro-icon-duck" aria-hidden />
-                <span>SciDuck</span>
-              </div>
-
-              <div className="retro-hand-cursor" aria-hidden>
-                <img
-                  src={sitePath("/cursors/mac-hand-pointer.png")}
-                  alt=""
-                  className="h-12 w-12 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
-                />
-              </div>
-            </div>
+            <RetroWindowsTaskbar />
           </div>
         </div>
 
@@ -263,12 +330,13 @@ function RetroComputer({ onOpen }: { onOpen: () => void }) {
           <span />
           <span />
           <span />
-          <em>21:06</em>
         </div>
         <div className="retro-led" aria-hidden />
       </div>
-      <div className="retro-neck" aria-hidden />
-      <div className="retro-base" aria-hidden />
+      <div className="retro-stand" aria-hidden>
+        <div className="retro-stand__neck" />
+        <div className="retro-stand__base" />
+      </div>
       <div className="retro-keyboard" aria-hidden>
         {Array.from({ length: 24 }, (_, index) => (
           <span key={index} />
@@ -278,38 +346,6 @@ function RetroComputer({ onOpen }: { onOpen: () => void }) {
   );
 }
 
-function SimulationPreview() {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-ink-900/25 bg-white shadow-[0_34px_90px_-38px_rgba(17,17,16,0.45),0_0_0_1px_rgba(17,17,16,0.18)]">
-      <div className="relative flex h-11 items-center justify-between border-b border-ink-900/20 bg-white px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-          </div>
-        </div>
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-[11px] text-ink-500">
-          untitled.ai/dashboard
-        </div>
-        <div className="flex items-center gap-2 text-ink-400" aria-hidden>
-          <span className="h-3 w-3 rounded-[3px] border border-ink-900/25" />
-          <span className="h-3 w-3 rounded-[3px] border border-ink-900/25 before:block before:h-px before:w-2 before:translate-x-[1px] before:translate-y-[5px] before:bg-ink-400" />
-          <span className="relative h-3 w-3 rounded-[3px] border border-ink-900/25 before:absolute before:left-1/2 before:top-1/2 before:h-px before:w-2 before:-translate-x-1/2 before:-translate-y-1/2 before:rotate-45 before:bg-ink-400 after:absolute after:left-1/2 after:top-1/2 after:h-px after:w-2 after:-translate-x-1/2 after:-translate-y-1/2 after:-rotate-45 after:bg-ink-400" />
-        </div>
-      </div>
-
-      <div className="simulation-preview-screen relative aspect-[16/9] min-h-[700px] bg-[#0a0d11]">
-        <iframe
-          src={sitePath("/vri-simulation.html")}
-          title="Virtual Research Institute simulation"
-          className="absolute inset-0 h-full w-full border-0 bg-[#0a0d11]"
-          loading="lazy"
-        />
-      </div>
-    </div>
-  );
-}
 
 /* ============================================================
    Live IRE workspace preview - see VriProductPreview.tsx

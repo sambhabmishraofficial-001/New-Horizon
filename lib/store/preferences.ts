@@ -67,7 +67,7 @@ export const DEFAULT_PREFS: UserPrefs = {
       typeof Intl !== "undefined"
         ? Intl.DateTimeFormat().resolvedOptions().timeZone
         : "UTC",
-    defaultLanding: "/lattice",
+    defaultLanding: "/ire",
   },
   appearance: {
     theme: "light",

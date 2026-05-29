@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Atrium was renamed to Lattice - keep old links working. */
+/** Legacy atrium URL → VRI workspace home (Lattice is a separate product at /lattice). */
 export default function AtriumRedirectPage() {
-  redirect("/lattice");
+  redirect("/ire");
 }

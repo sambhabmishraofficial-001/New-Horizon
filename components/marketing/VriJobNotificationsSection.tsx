@@ -1,24 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { cn } from "@/lib/cn";
 import { GmailInboxPreview } from "@/components/marketing/GmailInboxPreview";
-
-const NotificationCenter = dynamic(
-  () =>
-    import("@/components/ui/notification-center").then(
-      (mod) => mod.NotificationCenter,
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        className="mx-auto h-[270px] w-full max-w-[350px] animate-pulse rounded-lg bg-neutral-100/80"
-        aria-hidden
-      />
-    ),
-  },
-);
+import { NotificationCenter } from "@/components/ui/notification-center";
 
 export function VriJobNotificationsSection({
   className,

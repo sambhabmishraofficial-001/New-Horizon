@@ -17,8 +17,8 @@ const nextConfig = {
   },
   webpack: (config, { dev }) => {
     if (dev) {
-      // Avoid recurring Windows dev-cache corruption that leaves missing chunk files in .next.
-      config.cache = false;
+      // Filesystem webpack cache on Windows can leave stale chunk refs; use in-memory cache instead.
+      config.cache = { type: "memory" };
     }
     return config;
   },

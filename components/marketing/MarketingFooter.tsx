@@ -92,8 +92,11 @@ export function MarketingFooter() {
         <div className="mt-16 border-t border-ink-900/10 pt-8">
           <div className="flex flex-col items-center gap-8 overflow-visible py-2">
             <FooterStarWarsToggle />
-            <div className="flex w-full flex-col gap-3 text-[12.5px] text-ink-500 sm:flex-row sm:items-center sm:justify-between">
-              <div>© 2026 New Horizon Research, Inc.</div>
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="space-y-1 text-[12.5px] leading-relaxed text-ink-500">
+                <div>© 2026 New Horizon Research, Inc.</div>
+                <div>Make in India, Make for the World</div>
+              </div>
               <CookieSettingsButton />
             </div>
           </div>

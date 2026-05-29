@@ -16,10 +16,7 @@ import { institutePathActive } from "@/lib/instituteNav";
 import "@/app/ire/ire-workspace.css";
 
 function isInstituteWorkspaceMain(pathname: string): boolean {
-  return (
-    institutePathActive(pathname, "/ire") ||
-    institutePathActive(pathname, "/lattice")
-  );
+  return institutePathActive(pathname, "/ire");
 }
 
 /** Authenticated app shell - one persistent institute sidebar across all routes. */

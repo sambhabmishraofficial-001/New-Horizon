@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Lattice — Git for Research</title>
+<meta name="description" content="Lattice: the first true version-control system for scientific discovery. Cryptographically versioned Merkle-DAG for reproducible research." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  #lattice-access-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: #171717;
+    padding: 24px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  #lattice-access-gate.is-visible { display: flex; }
+  #lattice-access-gate .gate-card {
+    width: min(100%, 360px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    background: #1c1c1c;
+    padding: 32px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+  }
+  #lattice-access-gate .gate-mark {
+    width: 40px; height: 40px; margin: 0 auto 12px;
+    display: grid; place-items: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px; background: #262626;
+    color: #fff; font-weight: 600;
+  }
+  #lattice-access-gate h1 {
+    margin: 0; text-align: center; color: #fff;
+    font-size: 18px; font-weight: 500;
+  }
+  #lattice-access-gate p {
+    margin: 8px 0 0; text-align: center; color: #94a3b8; font-size: 14px;
+  }
+  #lattice-access-gate label {
+    display: block; margin-top: 24px;
+    color: #787878; font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  #lattice-access-gate input {
+    width: 100%; margin-top: 8px; box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 2px; background: #171717; color: #fff;
+    padding: 10px 12px; font-size: 14px;
+  }
+  #lattice-access-gate input:focus { outline: none; border-color: rgba(255,255,255,0.25); }
+  #lattice-access-gate button {
+    width: 100%; margin-top: 20px; border: 0; border-radius: 2px;
+    background: #fff; color: #171717; padding: 10px 16px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  #lattice-access-gate .gate-error {
+    margin-top: 12px; color: #f87171; font-size: 14px; min-height: 20px;
+  }
+  body.lattice-locked { overflow: hidden; }
+  body.lattice-locked #app,
+  body.lattice-locked .modal,
+  body.lattice-locked .palette,
+  body.lattice-locked .prompt { visibility: hidden; }
+</style>
+<script>
+  (function () {
+    var KEY = 'lattice-access-unlocked';
+    var PASS = '1234567';
+    try {
+      if (sessionStorage.getItem(KEY) === '1') return;
+    } catch (_) {}
+
+    function showGate() {
+      document.addEventListener('DOMContentLoaded', function () {
+        document.body.classList.add('lattice-locked');
+        var gate = document.getElementById('lattice-access-gate');
+        if (gate) gate.classList.add('is-visible');
+      });
+    }
+
+    if (document.readyState === 'loading') showGate();
+    else showGate();
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var gate = document.getElementById('lattice-access-gate');
+      var form = document.getElementById('lattice-access-form');
+      var input = document.getElementById('lattice-access-input');
+      var error = document.getElementById('lattice-access-error');
+      if (!form || !input) return;
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (input.value.trim() === PASS) {
+          try { sessionStorage.setItem(KEY, '1'); } catch (_) {}
+          document.body.classList.remove('lattice-locked');
+          if (gate) gate.classList.remove('is-visible');
+          if (error) error.textContent = '';
+          return;
+        }
+        if (error) error.textContent = 'Incorrect password.';
+      });
+    });
+  })();
+</script>
+</head>
+<body>
+
+<div id="lattice-access-gate" aria-hidden="true">
+  <form id="lattice-access-form" class="gate-card">
+    <div class="gate-mark">L</div>
+    <h1>Lattice Studio</h1>
+    <p>Enter the access password to continue.</p>
+    <label for="lattice-access-input">Password</label>
+    <input id="lattice-access-input" type="password" autocomplete="current-password" />
+    <div id="lattice-access-error" class="gate-error"></div>
+    <button type="submit">Open Lattice</button>
+  </form>
+</div>
+
+<div class="app" id="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="glyph">L</div>
+      <span>Lattice</span>
+    </div>
+    <nav class="topnav" id="topnav"></nav>
+    <div class="crumb" id="crumb"></div>
+    <div class="topactions">
+      <button class="ghost" id="open-search" title="Search (⌘K)">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="ghost" id="toggle-inspector" title="Inspector (⌘.)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main" id="main"></main>
+  <aside class="inspector" id="inspector"></aside>
+
+  <footer class="prompt" id="prompt">
+    <div class="prompt-box" id="prompt-box">
+      <div class="prompt-previews" id="prompt-previews" hidden></div>
+
+      <div class="prompt-editor" id="prompt-editor">
+        <textarea
+          id="prompt-input"
+          rows="1"
+          placeholder="Ask lattice-agent, @ to mention, / for actions (e.g. /replicate, /refute, /preregister)"
+        ></textarea>
+      </div>
+
+      <div class="prompt-recorder" id="prompt-recorder" hidden>
+        <div class="prompt-recorder-head">
+          <span class="prompt-rec-dot"></span>
+          <span class="prompt-rec-time" id="prompt-rec-time">00:00</span>
+        </div>
+        <div class="prompt-rec-bars" id="prompt-rec-bars"></div>
+      </div>
+
+      <div class="prompt-actions">
+        <div class="prompt-actions-left" id="prompt-actions-left">
+          <button type="button" class="prompt-icon-btn" id="prompt-upload" title="Upload image">
+            <svg viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            <input type="file" id="prompt-file-input" accept="image/*" hidden />
+          </button>
+
+          <div class="prompt-toggles">
+            <button type="button" class="prompt-toggle" id="prompt-toggle-search" data-mode="search" title="Search the web">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <span class="prompt-toggle-label">Search</span>
+            </button>
+            <span class="prompt-toggle-divider" aria-hidden="true"></span>
+            <button type="button" class="prompt-toggle" id="prompt-toggle-think" data-mode="think" title="Think deeply">
+              <svg viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></svg>
+              <span class="prompt-toggle-label">Think</span>
+            </button>
+            <span class="prompt-toggle-divider" aria-hidden="true"></span>
+            <button type="button" class="prompt-toggle" id="prompt-toggle-canvas" data-mode="canvas" title="Create on canvas">
+              <svg viewBox="0 0 24 24"><path d="M10 10.5v-3.5a2 2 0 0 1 4 0v3.5"/><path d="M8 8.5h8"/><path d="M7 15.5h10"/><path d="M12 15.5v3"/><path d="M8 18.5h8"/><path d="M4 4h16v16H4z"/></svg>
+              <span class="prompt-toggle-label">Canvas</span>
+            </button>
+          </div>
+        </div>
+
+        <button type="button" class="prompt-send-btn" id="prompt-send" title="Send message">
+          <svg class="icon-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+          <svg class="icon-send" viewBox="0 0 24 24" hidden><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+          <svg class="icon-stop" viewBox="0 0 24 24" hidden><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" stroke="none"/></svg>
+          <svg class="icon-rec-stop" viewBox="0 0 24 24" hidden><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <div class="prompt-image-modal" id="prompt-image-modal" hidden>
+    <div class="prompt-image-backdrop" data-close-image></div>
+    <div class="prompt-image-card">
+      <button type="button" class="prompt-image-close" id="prompt-image-close" title="Close">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+      <img id="prompt-image-full" alt="Attachment preview" />
+    </div>
+  </div>
+
+</div>
+
+<div class="modal" id="modal-new" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card" id="modal-new-card"></div>
+</div>
+
+<div class="palette" id="palette" hidden>
+  <div class="palette-backdrop" data-close></div>
+  <div class="palette-card">
+    <div class="palette-input">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="palette-input" placeholder="Search hashes, claims, ORCIDs, falsifiers, citations…" autocomplete="off" />
+      <kbd>esc</kbd>
+    </div>
+    <div class="palette-results" id="palette-results"></div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function closeAll() {
+      document.querySelectorAll('.modal, .palette').forEach(function (el) { el.hidden = true; });
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeAll();
+    });
+    document.addEventListener('click', function (e) {
+      if (e.target.matches && (e.target.matches('.modal-backdrop, .palette-backdrop, [data-close]'))) closeAll();
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.modal, .palette').forEach(function (el) { el.hidden = true; });
+    });
+  })();
+</script>
+<script src="data.js"></script>
+<script src="dag.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

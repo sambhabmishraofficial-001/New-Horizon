@@ -9,7 +9,6 @@ import {
   GraduationCap,
   Library,
   SquareTerminal,
-  Microscope,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,7 +24,7 @@ export type NavItem = {
 export const NAV: NavItem[] = [
   {
     label: "Overview",
-    href: "/lattice",
+    href: "/ire",
     icon: Home,
     kbd: "1",
     description: "Institute overview - programs, twins, and feed.",
@@ -37,14 +36,6 @@ export const NAV: NavItem[] = [
     icon: SquareTerminal,
     kbd: "W",
     description: "Integrated Research Environment - your daily workstation.",
-    section: "Institute",
-  },
-  {
-    label: "Virtual Labs",
-    href: "/virtual-labs",
-    icon: Microscope,
-    kbd: "L",
-    description: "Digital lab spaces - benches, instruments, protocols, and live runs.",
     section: "Institute",
   },
   {

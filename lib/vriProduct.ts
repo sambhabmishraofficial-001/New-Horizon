@@ -1,10 +1,11 @@
+import { sitePath } from "./sitePath";
+
 /** In-page sections on the VRI product experience */
 export const VRI_SECTIONS = [
   { id: "vri-overview", label: "Overview" },
   { id: "vri-workspace", label: "Workspace" },
   { id: "vri-institute", label: "Institute" },
   { id: "vri-how-it-works", label: "How it works" },
-  { id: "vri-labs", label: "Virtual labs" },
   { id: "vri-corpus", label: "Corpus" },
   { id: "vri-start", label: "Get started" },
 ] as const;
@@ -18,7 +19,7 @@ export const VRI_PATHS = {
 export const VRI_PRODUCT_QUERY = "vri=1";
 
 export function vriProductHref(): string {
-  return `${VRI_PATHS.products}?${VRI_PRODUCT_QUERY}`;
+  return `${sitePath(`${VRI_PATHS.products}/`)}?${VRI_PRODUCT_QUERY}`;
 }
 
 export function isVriProductOpen(searchParams: URLSearchParams | null): boolean {

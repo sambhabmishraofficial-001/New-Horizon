@@ -30,7 +30,7 @@ export default function LoginPage() {
 function LoginPageInner() {
   const router = useRouter();
   const search = useSearchParams();
-  const next = search?.get("next") || "/lattice";
+  const next = search?.get("next") || "/ire";
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");

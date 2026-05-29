@@ -49,7 +49,7 @@ export function VriCtaRow({ className }: VriCtaRowProps) {
           onClick={() => setDownloadOpen(true)}
           {...(reducedMotion ? {} : SHINY_SWEEP)}
           style={{ "--x": "100%" } as React.CSSProperties}
-          className="btn-xai btn-xai-primary btn-xai-rainbow-shimmer btn-xai-shiny"
+          className="btn-xai btn-xai-primary btn-xai-shiny"
         >
           <span
             className="btn-xai-shiny__label relative z-[3] inline-flex items-center gap-2"

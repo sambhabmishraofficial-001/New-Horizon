@@ -2,7 +2,6 @@ import type { LucideIcon } from "lucide-react";
 import {
   Home,
   SquareTerminal,
-  Microscope,
   Library,
   Sparkles,
   Network,
@@ -26,7 +25,7 @@ export const INSTITUTE_FEATURES: InstituteFeature[] = [
   {
     id: "overview",
     label: "Overview",
-    href: "/lattice",
+    href: "/ire",
     icon: Home,
     description: "Programs, twins, and institute feed",
   },
@@ -36,13 +35,6 @@ export const INSTITUTE_FEATURES: InstituteFeature[] = [
     href: "/ire",
     icon: SquareTerminal,
     description: "Integrated research environment",
-  },
-  {
-    id: "virtual-labs",
-    label: "Virtual Labs",
-    href: "/virtual-labs",
-    icon: Microscope,
-    description: "Digital benches, instruments, live runs",
   },
   {
     id: "library",

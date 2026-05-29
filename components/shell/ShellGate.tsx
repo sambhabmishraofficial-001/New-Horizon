@@ -15,6 +15,7 @@ import { useSession } from "@/lib/store/auth";
 const PUBLIC_ROUTES = new Set([
   "/",
   "/products",
+  "/labs",
   "/pricing",
   "/team",
   "/blog",
@@ -25,11 +26,12 @@ const PUBLIC_ROUTES = new Set([
   "/forgot",
   "/privacy",
   "/terms",
+  "/lattice",
 ]);
 
 const PUBLIC_PREFIXES = ["/help", "/signup", "/login", "/forgot", "/blog"];
 
-const INSTITUTE_EMBED_PATHS = new Set(["/ire", "/lattice", "/workspace"]);
+const INSTITUTE_EMBED_PATHS = new Set(["/ire", "/workspace"]);
 
 function normalizePath(path: string): string {
   return path.length > 1 ? path.replace(/\/+$/, "") : path;
@@ -59,6 +61,11 @@ function readEmbedBypass(pathname: string): boolean {
 export function ShellGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
   const standaloneChrome = useStandaloneInstituteChrome(pathname);
+  const normalized = normalizePath(pathname);
+
+  if (normalized === "/lattice") {
+    return <>{children}</>;
+  }
 
   if (isPublic(pathname)) {
     return (
