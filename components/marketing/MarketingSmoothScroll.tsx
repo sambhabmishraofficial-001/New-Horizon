@@ -2,6 +2,10 @@
 
 import Lenis from "lenis";
 import { useEffect } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const ANCHOR_OFFSET = 96;
 
@@ -20,12 +24,33 @@ export function MarketingSmoothScroll() {
       lerp: 0.085,
     });
 
-    let rafId = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
+    lenis.on("scroll", ScrollTrigger.update);
+
+    const tickerCallback = (time: number) => {
+      lenis.raf(time * 1000);
     };
-    rafId = requestAnimationFrame(raf);
+
+    gsap.ticker.add(tickerCallback);
+    gsap.ticker.lagSmoothing(0);
+
+    ScrollTrigger.scrollerProxy(document.documentElement, {
+      scrollTop(value) {
+        if (arguments.length && typeof value === "number") {
+          lenis.scrollTo(value, { immediate: true });
+        }
+        return lenis.scroll;
+      },
+      getBoundingClientRect() {
+        return {
+          top: 0,
+          left: 0,
+          width: window.innerWidth,
+          height: window.innerHeight,
+        };
+      },
+    });
+
+    ScrollTrigger.refresh();
 
     const onAnchorClick = (event: MouseEvent) => {
       const target = event.target;
@@ -48,8 +73,9 @@ export function MarketingSmoothScroll() {
 
     return () => {
       document.removeEventListener("click", onAnchorClick);
-      cancelAnimationFrame(rafId);
+      gsap.ticker.remove(tickerCallback);
       lenis.destroy();
+      ScrollTrigger.refresh();
     };
   }, []);
 

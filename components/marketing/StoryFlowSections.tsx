@@ -161,6 +161,8 @@ export function StoryFlowSections() {
           });
         });
 
+      ScrollTrigger.refresh();
+
       return () => {
         triggers.forEach((trigger) => trigger.kill());
       };
@@ -175,17 +177,14 @@ export function StoryFlowSections() {
       const targets = [copyRef.current, visualFrameRef.current].filter(Boolean);
       if (targets.length === 0) return;
 
-      gsap.fromTo(
-        targets,
-        { autoAlpha: 0, y: 28 },
-        {
-          autoAlpha: 1,
-          duration: 0.45,
-          ease: "power2.out",
-          stagger: 0.08,
-          y: 0,
-        },
-      );
+      gsap.from(targets, {
+        y: 20,
+        opacity: 0.001,
+        duration: 0.45,
+        ease: "power2.out",
+        stagger: 0.08,
+        overwrite: "auto",
+      });
     },
     { scope: rootRef, dependencies: [activeIndex, reducedMotion] },
   );

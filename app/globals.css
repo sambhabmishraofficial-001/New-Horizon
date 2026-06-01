@@ -648,8 +648,14 @@ html.lenis body {
 .story-atmo-scroll {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  min-height: 300vh;
   background: #fff;
+}
+
+.story-atmo-content,
+.story-atmo-image-frame {
+  opacity: 1;
+  visibility: visible;
 }
 
 .story-atmo-scroll__sticky {
