@@ -4,10 +4,10 @@ import { BlogCardStack } from "@/components/marketing/BlogCardStack";
 
 export default function BlogPage() {
   return (
-    <div className="marketing-site min-h-screen bg-white font-marketing text-ink-900">
+    <div className="marketing-site boxed-theme-page min-h-screen bg-white font-marketing text-ink-900">
       <MarketingNav />
 
-      <section className="border-b border-ink-900/8 bg-white">
+      <section className="boxed-theme-page__surface bg-white">
         <div className="mx-auto max-w-[980px] px-6 py-20 sm:px-10 sm:py-28">
           <div className="text-center">
             <h1 className="home-section-subtitle font-editorial text-ink-900">
@@ -25,7 +25,9 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <MarketingFooter />
+      <div className="boxed-theme-page__surface boxed-theme-page__surface--footer">
+        <MarketingFooter />
+      </div>
     </div>
   );
 }

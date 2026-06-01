@@ -31,7 +31,10 @@ export const FlowSection: React.FC<FlowSectionProps> = ({
     id={id}
     data-flow-section
     aria-label={ariaLabel}
-    className={cx("relative min-h-screen w-full overflow-hidden bg-white", className)}
+    className={cx(
+      "relative min-h-screen w-full overflow-hidden bg-white",
+      className,
+    )}
   >
     <div
       data-flow-inner
@@ -87,20 +90,28 @@ const FlowArt: React.FC<FlowArtProps> = ({
         const inner = section.querySelector<HTMLElement>(".flow-art-container");
         if (!inner) return;
 
-        if (i > 0) {
-          gsap.set(inner, { rotation: 30, transformOrigin: "bottom left" });
-          const tween = gsap.to(inner, {
-            rotation: 0,
-            ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "top bottom",
-              end: "top top",
-              scrub: 0.65,
-            },
-          });
-          if (tween.scrollTrigger) triggers.push(tween.scrollTrigger);
-        }
+        const startScale = i === 0 ? 1 : 0.965;
+        const startY = i === 0 ? 0 : 36;
+
+        gsap.set(inner, {
+          transformOrigin: "center top",
+          transformPerspective: 1200,
+          scale: startScale,
+          y: startY,
+        });
+
+        const tween = gsap.to(inner, {
+          scale: 1,
+          y: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top bottom",
+            end: "top top",
+            scrub: 0.7,
+          },
+        });
+        if (tween.scrollTrigger) triggers.push(tween.scrollTrigger);
 
         if (i < sections.length - 1) {
           triggers.push(

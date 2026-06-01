@@ -238,6 +238,18 @@ svg { stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round
   border-bottom: 1px solid var(--line);
   z-index: 10;
 }
+.topbar-back {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 28px; padding: 0 8px 0 4px;
+  border-radius: var(--r-2);
+  color: var(--fg-2);
+  font-size: 12px; font-weight: 500;
+  flex-shrink: 0;
+}
+.topbar-back:hover { background: var(--bg-hover); color: var(--fg-0); }
+.topbar-back svg { width: 14px; height: 14px; }
+.topbar-back-label { letter-spacing: -0.01em; }
+
 .brand {
   display: flex; align-items: center; gap: 8px;
   font-weight: 700; font-size: 13px;

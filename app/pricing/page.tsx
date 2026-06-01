@@ -219,10 +219,11 @@ export default function PricingPage() {
   const [billing, setBilling] = React.useState<Billing>("yearly");
 
   return (
-    <div className="marketing-site min-h-screen bg-white font-marketing text-ink-900">
+    <div className="marketing-site boxed-theme-page min-h-screen bg-white font-marketing text-ink-900">
       <MarketingNav variant="light" />
 
-      <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-6 sm:px-8 sm:pt-10 lg:px-10">
+      <main className="boxed-theme-page__surface">
+        <div className="mx-auto max-w-[1240px] px-5 pb-24 pt-6 sm:px-8 sm:pt-10 lg:px-10">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="font-editorial text-[44px] leading-[1.05] tracking-tight text-ink-900 sm:text-[56px] lg:text-[64px]">
             Choose your institute.
@@ -308,9 +309,12 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
+        </div>
       </main>
 
-      <MarketingFooter />
+      <div className="boxed-theme-page__surface boxed-theme-page__surface--footer">
+        <MarketingFooter />
+      </div>
     </div>
   );
 }

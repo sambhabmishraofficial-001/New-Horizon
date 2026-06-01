@@ -2093,6 +2093,20 @@ function flash(msg, kind = 'info') {
 }
 
 /* ============================================================
+   EXIT / BACK
+   ============================================================ */
+function latticeGoBack() {
+  const computerHref = '/products/';
+  try {
+    if (window.top !== window.self) {
+      window.top.location.href = computerHref;
+      return;
+    }
+  } catch (_) {}
+  window.location.href = computerHref;
+}
+
+/* ============================================================
    INIT
    ============================================================ */
 window.ops = ops; // expose for inline onclick handlers
@@ -2121,6 +2135,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Topbar inspector + search toggles
+  document.getElementById('topbar-back')?.addEventListener('click', latticeGoBack);
   document.getElementById('toggle-inspector').addEventListener('click', ops.toggleInspector);
   document.getElementById('open-search').addEventListener('click', openPalette);
 

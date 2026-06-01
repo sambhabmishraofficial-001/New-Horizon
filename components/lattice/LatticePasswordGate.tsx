@@ -1,11 +1,14 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import {
   checkLatticePassword,
   isLatticeUnlocked,
   unlockLattice,
 } from "@/lib/latticeAccess";
+import { sitePath } from "@/lib/sitePath";
 
 export function LatticePasswordGate({
   children,
@@ -50,9 +53,18 @@ export function LatticePasswordGate({
 
   return (
     <div
-      className="flex items-center justify-center bg-[#171717] px-6"
+      className="relative flex items-center justify-center bg-[#171717] px-6"
       style={{ minHeight: compact ? "100%" : "100dvh" }}
     >
+      {!compact ? (
+        <Link
+          href={sitePath("/products/")}
+          className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm text-[#94a3b8] transition-colors hover:bg-white/5 hover:text-white sm:left-6 sm:top-6"
+        >
+          <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+          Back
+        </Link>
+      ) : null}
       <form
         onSubmit={handleSubmit}
         className={`w-full rounded-md border border-white/10 bg-[#1c1c1c] shadow-[0_24px_64px_rgba(0,0,0,0.35)] ${

@@ -1,71 +1,57 @@
 "use client";
 
+import Lenis from "lenis";
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
 
-const SMOOTH_SCROLL_PATHS = new Set([
-  "/",
-  "/products",
-  "/pricing",
-  "/team",
-  "/blog",
-  "/enrol",
-  "/login",
-  "/signup",
-  "/forgot",
-]);
-
-function normalizePath(path: string): string {
-  if (!path || path === "/") return "/";
-  return path.replace(/\/+$/, "") || "/";
-}
-
-function isSmoothScrollPath(pathname: string): boolean {
-  const path = normalizePath(pathname);
-  if (SMOOTH_SCROLL_PATHS.has(path)) return true;
-  return path.startsWith("/help") || path.startsWith("/blog");
-}
+const ANCHOR_OFFSET = 96;
 
 export function MarketingSmoothScroll() {
-  const pathname = usePathname() ?? "/";
-
   useEffect(() => {
-    if (!isSmoothScrollPath(pathname)) return;
-
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const setNativeSmoothScroll = () => {
-      document.documentElement.style.scrollBehavior = reducedMotionQuery.matches
-        ? "auto"
-        : "smooth";
+    if (reducedMotionQuery.matches) return;
+
+    const lenis = new Lenis({
+      duration: 1.15,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: "vertical",
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 1.1,
+      lerp: 0.085,
+    });
+
+    let rafId = 0;
+    const raf = (time: number) => {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
     };
+    rafId = requestAnimationFrame(raf);
 
     const onAnchorClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
+
       const anchor = target.closest('a[href^="#"]');
       if (!(anchor instanceof HTMLAnchorElement)) return;
+
       const hash = anchor.getAttribute("href");
       if (!hash || hash === "#" || hash.length < 2) return;
+
       const el = document.querySelector<HTMLElement>(hash);
       if (!el) return;
+
       event.preventDefault();
-      const top = el.getBoundingClientRect().top + window.scrollY - 96;
-      window.scrollTo({
-        top,
-        behavior: reducedMotionQuery.matches ? "auto" : "smooth",
-      });
+      lenis.scrollTo(el, { offset: -ANCHOR_OFFSET, duration: 1.15 });
     };
 
-    setNativeSmoothScroll();
-    reducedMotionQuery.addEventListener("change", setNativeSmoothScroll);
     document.addEventListener("click", onAnchorClick);
 
     return () => {
       document.removeEventListener("click", onAnchorClick);
-      reducedMotionQuery.removeEventListener("change", setNativeSmoothScroll);
-      document.documentElement.style.scrollBehavior = "";
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
     };
-  }, [pathname]);
+  }, []);
 
   return null;
 }

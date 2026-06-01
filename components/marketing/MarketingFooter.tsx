@@ -39,7 +39,7 @@ const columns = [
 
 export function MarketingFooter() {
   return (
-    <footer className="overflow-hidden bg-white font-marketing text-ink-900">
+    <footer className="relative z-30 overflow-hidden bg-white font-marketing text-ink-900">
       <div className="mx-auto max-w-[1200px] px-6 pb-20 pt-16 sm:px-10 sm:pt-20">
         <div className="grid gap-16 lg:grid-cols-[1.1fr_2fr]">
           <div>
