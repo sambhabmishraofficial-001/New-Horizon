@@ -18,15 +18,15 @@ const teamMembers = [
   {
     name: "Sambhab Mishra",
     role: "Co-founder",
-    image: sitePath("/images/about/sambhab-mishra-avatar.png"),
+    image: sitePath("/images/about/cofounder-1.png"),
     location: "United Kingdom",
     skills: ["Strategy", "Research", "Leadership"],
     gradient: "from-[#2563eb]/10 via-[#2563eb]/5 to-transparent",
   },
   {
-    name: "Anonymous",
+    name: "Bibhu Prasad",
     role: "Co-founder",
-    image: "https://api.dicebear.com/7.x/notionists/svg?seed=NHCTO",
+    image: sitePath("/images/about/cofounder-2.png"),
     location: "Remote",
     skills: ["Architecture", "AI Systems", "Infrastructure"],
     gradient: "from-ink-900/8 via-ink-900/4 to-transparent",
@@ -34,7 +34,7 @@ const teamMembers = [
   {
     name: "Anonymous",
     role: "Co-founder",
-    image: "https://api.dicebear.com/7.x/notionists/svg?seed=NHCMO",
+    image: sitePath("/images/about/cofounder-3.png"),
     location: "Remote",
     skills: ["Brand", "Growth", "Community"],
     gradient: "from-beacon-500/10 via-beacon-500/5 to-transparent",
@@ -140,9 +140,9 @@ function TeamMemberCard({ member }: { member: (typeof teamMembers)[0] }) {
                   animate={
                     isHovered
                       ? {
-                          rotate: shouldReduceMotion ? 0 : 360,
-                          scale: shouldReduceMotion ? 1 : [1, 1.08, 1],
-                        }
+                        rotate: shouldReduceMotion ? 0 : 360,
+                        scale: shouldReduceMotion ? 1 : [1, 1.08, 1],
+                      }
                       : { rotate: 0, scale: 1 }
                   }
                   transition={{

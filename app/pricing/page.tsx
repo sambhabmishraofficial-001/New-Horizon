@@ -182,11 +182,9 @@ function PlanCard({
           <span className="text-[14px] font-medium text-ink-500">{priceSub}</span>
         )}
       </div>
-      {billedNote && !isFreeOrCustom && (
-        <p className="mt-2 text-[12.5px] leading-tight text-ink-500">
-          {billedNote}
-        </p>
-      )}
+      <p className="mt-2 text-[12.5px] leading-tight text-ink-500">
+        {billedNote && !isFreeOrCustom ? billedNote : "\u00A0"}
+      </p>
       <div className="my-6 h-px w-full bg-ink-900/10" />
 
       <ul className="flex flex-1 flex-col gap-3">
@@ -234,7 +232,7 @@ export default function PricingPage() {
             seat taxes.
           </p>
 
-          <div className="mx-auto mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
+          <div className="mx-auto mt-10 flex flex-col items-center gap-3">
             <div
               className="inline-flex rounded-xl border border-ink-900/12 bg-ink-900/[0.03] p-1"
               role="group"
@@ -266,7 +264,7 @@ export default function PricingPage() {
                 Monthly
               </button>
             </div>
-            <p className="text-center font-mono text-[10px] uppercase tracking-[0.18em] text-ink-400 sm:text-left">
+            <p className="text-center font-mono text-[10px] uppercase tracking-[0.18em] text-ink-400">
               {billing === "yearly"
                 ? `Annual billing saves about ${YEARLY_SAVE_PERCENT}% on Solo & Lab.`
                 : "Pay month to month - cancel anytime."}
