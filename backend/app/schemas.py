@@ -94,6 +94,15 @@ class WorkStep(BaseModel):
     label: str
 
 
+class ToolCallRecord(BaseModel):
+    name: str
+    status: str
+    input: Any = None
+    output: Any = None
+    started_at: str | None = None
+    completed_at: str | None = None
+
+
 class StartWorkRequest(BaseModel):
     messages: list[VriChatMessage] = Field(min_length=1)
     planner_reply: VriChatResponse
@@ -109,10 +118,29 @@ class StartWorkResponse(BaseModel):
     venv_path: str
     literature_query: str
     steps: list[WorkStep]
+    tool_calls: list[ToolCallRecord]
+    generated_files: list[str]
+    data_files: list[str]
+    processed_files: list[str]
     labs_created: list[dict[str, Any]]
     tasks_created: list[dict[str, Any]]
     literature_results: list[LiteratureResult]
     errors: list[str]
+
+
+class WorkspaceArtifactFile(BaseModel):
+    path: str
+    relative_path: str
+    kind: str
+    size_bytes: int
+    preview: str
+    truncated: bool
+
+
+class WorkspaceArtifactsResponse(BaseModel):
+    run_id: str
+    workspace_path: str
+    files: list[WorkspaceArtifactFile]
 
 
 class InvestigationCreate(BaseModel):
