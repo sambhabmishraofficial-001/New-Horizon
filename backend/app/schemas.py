@@ -61,6 +61,10 @@ class ProposedLab(BaseModel):
 
 class VriChatRequest(BaseModel):
     messages: list[VriChatMessage] = Field(min_length=1)
+    allowed_lab_ids: list[str] = []
+    workstream_preference: Literal[
+        "any", "computational", "experimental", "hybrid", "review", "data"
+    ] = "any"
 
 
 class VriChatResponse(BaseModel):
@@ -71,6 +75,44 @@ class VriChatResponse(BaseModel):
     computational_work: list[str]
     experimental_work: list[str]
     next_actions: list[str]
+
+
+class LiteratureResult(BaseModel):
+    title: str
+    authors: str | None = None
+    year: str | None = None
+    journal: str | None = None
+    doi: str | None = None
+    pmid: str | None = None
+    source: str | None = None
+    url: str | None = None
+    abstract: str | None = None
+
+
+class WorkStep(BaseModel):
+    status: str
+    label: str
+
+
+class StartWorkRequest(BaseModel):
+    messages: list[VriChatMessage] = Field(min_length=1)
+    planner_reply: VriChatResponse
+    workstream_preference: Literal[
+        "any", "computational", "experimental", "hybrid", "review", "data"
+    ] = "any"
+
+
+class StartWorkResponse(BaseModel):
+    run_id: str
+    status: str
+    workspace_path: str
+    venv_path: str
+    literature_query: str
+    steps: list[WorkStep]
+    labs_created: list[dict[str, Any]]
+    tasks_created: list[dict[str, Any]]
+    literature_results: list[LiteratureResult]
+    errors: list[str]
 
 
 class InvestigationCreate(BaseModel):

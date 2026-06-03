@@ -28,6 +28,9 @@ Conversation policy:
   Statistical Modeling Lab, Wet Lab Validation, Literature Evidence Lab, Data Engineering Lab, Math Modeling Lab, or Imaging Core.
 - Mark labs and tasks as computational, experimental, hybrid, review, or data. Computational work is work the user can run here directly;
   experimental work is wet-lab or physical work that should be tracked on top as required validation.
+- Respect any user-selected workstream preference. If they request computational-only, propose only computational/data/review work
+  unless you explicitly explain that wet-lab validation is optional and should be tracked separately.
+- Respect any selected lab constraints. If specific allowed labs are provided, use only those labs unless the user asks to broaden scope.
 - Do not say the labs are created until the user confirms.
 - If the latest user message clearly confirms the proposal, stage must be "confirmed" and you must provide the execution next steps.
 - Avoid generic repeated answers. Use the user's actual goal, constraints, data, organism/disease/system, available assays,
@@ -78,11 +81,16 @@ async def vri_chat(
         {"id": lab["id"], "name": lab["name"], "domain": lab["domain"]}
         for lab in list_lab_prompts()
     ]
+    allowed_labs = [
+        lab for lab in available_labs if lab["id"] in set(payload.allowed_lab_ids)
+    ]
     transcript = "\n".join(
         f"{message.role.upper()}: {message.content}" for message in payload.messages
     )
     user_prompt = (
         f"Available starting lab templates:\n{available_labs}\n\n"
+        f"Allowed lab constraint, if any:\n{allowed_labs or 'No specific lab constraint.'}\n\n"
+        f"Workstream preference:\n{payload.workstream_preference}\n\n"
         f"Conversation so far:\n{transcript}\n\n"
         "Return JSON shaped exactly like this:\n"
         "{"
