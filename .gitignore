@@ -1,9 +1,19 @@
 node_modules
+vri_env/
 .next
 out
-.env*
+
+# Local secrets and environment overrides. Keep examples committed.
+.env
+.env.*
+backend/.env
+backend/.env.*
+!.env.example
+!backend/.env.example
 .DS_Store
 *.log
+__pycache__/
+*.py[cod]
 .vercel
 .tsbuildinfo
 *.tsbuildinfo

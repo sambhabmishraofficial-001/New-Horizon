@@ -20,6 +20,7 @@ const PUBLIC_ROUTES = new Set([
   "/team",
   "/blog",
   "/playground",
+  "/backend-test",
   "/enrol",
   "/login",
   "/signup",
@@ -99,7 +100,7 @@ function SessionGate({
 }) {
   const router = useRouter();
   const hydrated = useHydrated();
-  const embedBypass = hydrated && readEmbedBypass(pathname);
+  const embedBypass = (hydrated && readEmbedBypass(pathname)) || (hydrated && process.env.NODE_ENV === "development");
   const { user, loading } = useSession();
 
   React.useEffect(() => {
