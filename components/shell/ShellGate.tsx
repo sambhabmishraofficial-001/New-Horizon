@@ -46,6 +46,10 @@ function isPublic(path: string): boolean {
   );
 }
 
+function shouldUseMarketingSmoothScroll(path: string): boolean {
+  return normalizePath(path) !== "/backend-test";
+}
+
 function readEmbedBypass(pathname: string): boolean {
   if (typeof window === "undefined") return false;
 
@@ -71,7 +75,7 @@ export function ShellGate({ children }: { children: React.ReactNode }) {
   if (isPublic(pathname)) {
     return (
       <>
-        <MarketingSmoothScroll />
+        {shouldUseMarketingSmoothScroll(pathname) ? <MarketingSmoothScroll /> : null}
         <MarketingRoutePrefetch />
         <SelectionBinaryOverlay />
         {children}
