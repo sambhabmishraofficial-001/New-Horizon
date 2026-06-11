@@ -59,6 +59,19 @@ class ProposedLab(BaseModel):
     first_tasks: list[str]
 
 
+class ClarificationOption(BaseModel):
+    label: str
+    detail: str | None = None
+
+
+class ClarificationItem(BaseModel):
+    id: str
+    label: str
+    question: str
+    input_type: Literal["single_choice", "free_text"]
+    options: list[ClarificationOption] = []
+
+
 class VriChatRequest(BaseModel):
     messages: list[VriChatMessage] = Field(min_length=1)
     allowed_lab_ids: list[str] = []
@@ -68,13 +81,22 @@ class VriChatRequest(BaseModel):
 
 
 class VriChatResponse(BaseModel):
-    stage: Literal["clarify", "proposal", "confirmed"]
+    stage: Literal["direct_answer", "clarify", "proposal", "confirmed"]
+    intent: Literal["direct_answer", "clarify", "proposal"] = "clarify"
     answer: str
+    clarification_round: int = 0
+    planning_allowed: bool = False
+    objective_clear: bool = False
+    answer_quality: Literal["unknown", "clear", "incomplete", "invalid"] = "unknown"
+    missing_information: list[str] = []
+    repair_reasons: list[str] = []
     clarification_questions: list[str]
+    clarification_items: list[ClarificationItem] = []
     proposed_labs: list[ProposedLab]
     computational_work: list[str]
     experimental_work: list[str]
     next_actions: list[str]
+    plan_markdown: str = ""
 
 
 class LiteratureResult(BaseModel):
@@ -103,6 +125,16 @@ class ToolCallRecord(BaseModel):
     completed_at: str | None = None
 
 
+class LabEvent(BaseModel):
+    lab_name: str
+    workstream: str
+    action: str
+    tool: str | None = None
+    files: list[str] = []
+    handoff_to: str | None = None
+    summary: str
+
+
 class StartWorkRequest(BaseModel):
     messages: list[VriChatMessage] = Field(min_length=1)
     planner_reply: VriChatResponse
@@ -124,6 +156,7 @@ class StartWorkResponse(BaseModel):
     processed_files: list[str]
     labs_created: list[dict[str, Any]]
     tasks_created: list[dict[str, Any]]
+    lab_events: list[LabEvent] = []
     literature_results: list[LiteratureResult]
     errors: list[str]
 

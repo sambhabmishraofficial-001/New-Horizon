@@ -2,18 +2,30 @@
 
 import * as React from "react";
 import {
-  Activity,
+  BookOpen,
+  Bot,
   CheckCircle2,
-  Cpu,
-  Database,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  Clock3,
+  Code2,
+  ExternalLink,
+  Eye,
+  FileText,
   FlaskConical,
-  History,
-  ListChecks,
-  Play,
+  Folder,
+  GripVertical,
+  Loader2,
+  MessageSquareText,
+  Minimize2,
+  PanelRight,
   Plus,
   RefreshCw,
   Send,
-  Server,
+  Sparkles,
+  Wrench,
+  XCircle,
 } from "lucide-react";
 
 type Workstream = "computational" | "experimental" | "hybrid" | "review" | "data";
@@ -28,17 +40,6 @@ type Health = {
   langsmith_tracing: boolean;
 };
 
-type Investigation = {
-  id: string;
-  title: string | null;
-  objective: string;
-  domain: string | null;
-  context: string | null;
-  status: string;
-  created_at: string;
-  updated_at: string;
-};
-
 type LabPrompt = {
   id: string;
   name: string;
@@ -46,16 +47,6 @@ type LabPrompt = {
   system_prompt: string;
   default_objective: string;
   default_context: string;
-};
-
-type RunResult = {
-  id?: string;
-  status?: string;
-  result_json?: unknown;
-  detail?: {
-    run_id?: string;
-    error?: string;
-  };
 };
 
 type LiteratureResult = {
@@ -79,6 +70,38 @@ type ToolCallRecord = {
   completed_at?: string | null;
 };
 
+type LabEvent = {
+  lab_name: string;
+  workstream: string;
+  action: string;
+  tool?: string | null;
+  files: string[];
+  handoff_to?: string | null;
+  summary: string;
+};
+
+type ProposedLab = {
+  name: string;
+  kind: string;
+  workstream: Workstream;
+  can_run_here: boolean;
+  rationale: string;
+  first_tasks: string[];
+};
+
+type ClarificationOption = {
+  label: string;
+  detail?: string | null;
+};
+
+type ClarificationItem = {
+  id: string;
+  label: string;
+  question: string;
+  input_type: "single_choice" | "free_text";
+  options: ClarificationOption[];
+};
+
 type WorkRun = {
   run_id: string;
   status: string;
@@ -92,6 +115,7 @@ type WorkRun = {
   processed_files: string[];
   labs_created: ProposedLab[];
   tasks_created: { title: string; workstream: Workstream; source: string }[];
+  lab_events?: LabEvent[];
   literature_results: LiteratureResult[];
   errors: string[];
 };
@@ -114,25 +138,26 @@ type WorkspaceArtifacts = {
 type PlannerMessage = {
   role: "user" | "assistant";
   content: string;
-};
-
-type ProposedLab = {
-  name: string;
-  kind: string;
-  workstream: Workstream;
-  can_run_here: boolean;
-  rationale: string;
-  first_tasks: string[];
+  reply?: VriPlannerReply;
 };
 
 type VriPlannerReply = {
-  stage: "clarify" | "proposal" | "confirmed";
+  stage: "direct_answer" | "clarify" | "proposal" | "confirmed";
+  intent?: "direct_answer" | "clarify" | "proposal";
   answer: string;
+  clarification_round?: number;
+  planning_allowed?: boolean;
+  objective_clear?: boolean;
+  answer_quality?: "unknown" | "clear" | "incomplete" | "invalid";
+  missing_information?: string[];
+  repair_reasons?: string[];
   clarification_questions: string[];
+  clarification_items?: ClarificationItem[];
   proposed_labs: ProposedLab[];
   computational_work: string[];
   experimental_work: string[];
   next_actions: string[];
+  plan_markdown?: string;
 };
 
 type SavedConversation = {
@@ -145,70 +170,121 @@ type SavedConversation = {
   allowed_lab_ids: string[];
 };
 
-type WorkspaceLab = ProposedLab & {
+type ViewFile = {
   id: string;
-  created_at: string;
+  name: string;
+  path: string;
+  kind: string;
+  sizeLabel: string;
+  preview: string | null;
+  truncated?: boolean;
 };
 
-type WorkspaceTask = {
-  id: string;
-  title: string;
-  workstream: Workstream;
-  source: string;
-  created_at: string;
-};
+type InspectorPanel = "progress" | "results" | "files" | "tools";
 
 const apiBase =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://127.0.0.1:8000";
 
 const CONVERSATIONS_KEY = "vri.planner.conversations";
-const LABS_KEY = "vri.workspace.labs";
-const TASKS_KEY = "vri.workspace.tasks";
 const WORK_RUNS_KEY = "vri.workspace.runs";
+
+const workstreams: { value: WorkstreamPreference; label: string }[] = [
+  { value: "any", label: "Any work" },
+  { value: "computational", label: "Computational" },
+  { value: "experimental", label: "Experimental" },
+  { value: "hybrid", label: "Hybrid" },
+  { value: "review", label: "Review" },
+  { value: "data", label: "Data" },
+];
 
 export default function BackendTestPage() {
   const [health, setHealth] = React.useState<Health | null>(null);
   const [labPrompts, setLabPrompts] = React.useState<LabPrompt[]>([]);
-  const [selectedLabId, setSelectedLabId] = React.useState("ribozyme-wet");
+  const [selectedLabId, setSelectedLabId] = React.useState("");
   const [allowedLabIds, setAllowedLabIds] = React.useState<string[]>([]);
   const [workstreamPreference, setWorkstreamPreference] =
     React.useState<WorkstreamPreference>("any");
   const [activeConversationId, setActiveConversationId] = React.useState<string | null>(null);
   const [savedConversations, setSavedConversations] = React.useState<SavedConversation[]>([]);
-  const [workspaceLabs, setWorkspaceLabs] = React.useState<WorkspaceLab[]>([]);
-  const [workspaceTasks, setWorkspaceTasks] = React.useState<WorkspaceTask[]>([]);
   const [workRuns, setWorkRuns] = React.useState<WorkRun[]>([]);
   const [activeWorkRun, setActiveWorkRun] = React.useState<WorkRun | null>(null);
   const [workspaceArtifacts, setWorkspaceArtifacts] =
     React.useState<WorkspaceArtifacts | null>(null);
   const [artifactLoading, setArtifactLoading] = React.useState(false);
   const [artifactError, setArtifactError] = React.useState<string | null>(null);
-  const [investigation, setInvestigation] = React.useState<Investigation | null>(null);
-  const [runResult, setRunResult] = React.useState<RunResult | null>(null);
-  const [plannerInput, setPlannerInput] = React.useState(
-    "I want to investigate drug resistance in a cancer cell line using transcriptomics and CRISPR screen data."
-  );
+  const [plannerInput, setPlannerInput] = React.useState("");
   const [plannerMessages, setPlannerMessages] = React.useState<PlannerMessage[]>([]);
   const [plannerReply, setPlannerReply] = React.useState<VriPlannerReply | null>(null);
-  const [objective, setObjective] = React.useState(
-    "Find possible causes of drug resistance in a cancer cell line"
-  );
-  const [context, setContext] = React.useState(
-    "We have transcriptomics and CRISPR screen results."
-  );
   const [loading, setLoading] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const [selectedFileId, setSelectedFileId] = React.useState<string | null>(null);
+  const [openInspectorPanels, setOpenInspectorPanels] =
+    React.useState<InspectorPanel[]>(["progress", "files"]);
+  const [expandedFileViewer, setExpandedFileViewer] = React.useState(false);
+  const [inspectorWidth, setInspectorWidth] = React.useState(430);
+  const [visibleReplyText, setVisibleReplyText] = React.useState("");
+  const chatEndRef = React.useRef<HTMLDivElement | null>(null);
 
   const selectedLab = React.useMemo(
     () => labPrompts.find((lab) => lab.id === selectedLabId) ?? null,
     [labPrompts, selectedLabId]
   );
 
+  const viewFiles = React.useMemo(() => {
+    const artifactFiles = workspaceArtifacts?.files ?? [];
+    const seen = new Set<string>();
+    const files: ViewFile[] = artifactFiles.map((file) => {
+      seen.add(file.relative_path);
+      seen.add(file.path);
+      return {
+        id: `artifact:${file.path}`,
+        name: file.relative_path,
+        path: file.path,
+        kind: file.kind,
+        sizeLabel: formatBytes(file.size_bytes),
+        preview: file.preview,
+        truncated: file.truncated,
+      };
+    });
+
+    const runPaths = activeWorkRun
+      ? [
+          ...activeWorkRun.generated_files,
+          ...activeWorkRun.data_files,
+          ...activeWorkRun.processed_files,
+        ]
+      : [];
+
+    for (const path of runPaths) {
+      if (seen.has(path)) continue;
+      files.push({
+        id: `path:${path}`,
+        name: path,
+        path,
+        kind: "file",
+        sizeLabel: "Preview pending",
+        preview: null,
+      });
+    }
+
+    return files;
+  }, [activeWorkRun, workspaceArtifacts]);
+
+  const selectedFile = React.useMemo(
+    () => viewFiles.find((file) => file.id === selectedFileId) ?? viewFiles[0] ?? null,
+    [selectedFileId, viewFiles]
+  );
+
+  const nextStep = React.useMemo(() => {
+    if (!health || labPrompts.length === 0) return "Wait for backend health and lab prompts.";
+    if (!plannerReply) return "Choose labs in the chat, then ask VRI your research question.";
+    if (plannerReply.stage === "clarify") return "Answer the clarification questions directly in chat.";
+    if (!activeWorkRun) return "Review the proposed labs, then approve the workspace.";
+    return "Review workspace files, tool calls, literature, and run output.";
+  }, [activeWorkRun, health, labPrompts.length, plannerReply]);
+
   React.useEffect(() => {
     setSavedConversations(readStorage<SavedConversation[]>(CONVERSATIONS_KEY, []));
-    setWorkspaceLabs(readStorage<WorkspaceLab[]>(LABS_KEY, []));
-    setWorkspaceTasks(readStorage<WorkspaceTask[]>(TASKS_KEY, []));
     const runs = readStorage<WorkRun[]>(WORK_RUNS_KEY, []);
     setWorkRuns(runs);
     setActiveWorkRun(runs[0] ?? null);
@@ -219,52 +295,13 @@ export default function BackendTestPage() {
   }, [savedConversations]);
 
   React.useEffect(() => {
-    writeStorage(LABS_KEY, workspaceLabs);
-  }, [workspaceLabs]);
-
-  React.useEffect(() => {
-    writeStorage(TASKS_KEY, workspaceTasks);
-  }, [workspaceTasks]);
-
-  React.useEffect(() => {
     writeStorage(WORK_RUNS_KEY, workRuns);
   }, [workRuns]);
 
-  const request = React.useCallback(async <T,>(path: string, init?: RequestInit) => {
-    const response = await fetch(`${apiBase}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...init?.headers,
-      },
-    });
-    const payload = (await response.json()) as T;
-    if (!response.ok) {
-      throw new Error(JSON.stringify(payload, null, 2));
-    }
-    return payload;
-  }, []);
-
-  const checkHealth = React.useCallback(async () => {
-    setLoading("health");
-    setError(null);
-    try {
-      setHealth(await request<Health>("/health"));
-      const prompts = await request<LabPrompt[]>("/v1/lab-prompts");
-      setLabPrompts(prompts);
-      if (prompts.length > 0 && !prompts.some((lab) => lab.id === selectedLabId)) {
-        setSelectedLabId(prompts[0].id);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Backend health check failed.");
-    } finally {
-      setLoading(null);
-    }
-  }, [request, selectedLabId]);
-
   React.useEffect(() => {
     void checkHealth();
-  }, [checkHealth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     if (!activeWorkRun) {
@@ -272,6 +309,7 @@ export default function BackendTestPage() {
       setArtifactError(null);
       return;
     }
+
     let cancelled = false;
     setArtifactLoading(true);
     setArtifactError(null);
@@ -288,51 +326,164 @@ export default function BackendTestPage() {
       .finally(() => {
         if (!cancelled) setArtifactLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
-  }, [activeWorkRun, request]);
+  }, [activeWorkRun]);
 
   React.useEffect(() => {
-    if (!selectedLab || investigation) return;
-    setObjective(selectedLab.default_objective);
-    setContext(selectedLab.default_context);
-  }, [selectedLab, investigation]);
+    if (viewFiles.length > 0 && !viewFiles.some((file) => file.id === selectedFileId)) {
+      setSelectedFileId(viewFiles[0].id);
+    }
+  }, [selectedFileId, viewFiles]);
+
+  React.useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ block: "end" });
+  }, [plannerMessages, plannerReply, visibleReplyText]);
+
+  React.useEffect(() => {
+    if (viewFiles.length > 0 && !openInspectorPanels.includes("files")) {
+      setOpenInspectorPanels((prev) => [...prev, "files"]);
+    }
+  }, [openInspectorPanels, viewFiles.length]);
+
+  async function request<T>(path: string, init?: RequestInit) {
+    const response = await fetch(`${apiBase}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+    });
+    const payload = (await response.json()) as T;
+    if (!response.ok) throw new Error(JSON.stringify(payload, null, 2));
+    return payload;
+  }
+
+  async function checkHealth() {
+    setLoading("health");
+    setError(null);
+    try {
+      const nextHealth = await request<Health>("/health");
+      const prompts = await request<LabPrompt[]>("/v1/lab-prompts");
+      setHealth(nextHealth);
+      setLabPrompts(prompts);
+      setSelectedLabId((current) =>
+        prompts.length > 0 && (!current || !prompts.some((lab) => lab.id === current))
+          ? prompts[0].id
+          : current
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Backend health check failed.");
+    } finally {
+      setLoading(null);
+    }
+  }
 
   async function askVri(message = plannerInput) {
     const clean = message.trim();
     if (!clean) return;
+
     const nextMessages: PlannerMessage[] = [
       ...plannerMessages,
       { role: "user", content: clean },
     ];
+    setPlannerInput("");
+    setPlannerMessages(nextMessages);
+    setPlannerReply(null);
+    setVisibleReplyText("");
     setLoading("chat");
     setError(null);
-    setPlannerInput("");
+
     try {
-      const reply = await request<VriPlannerReply>("/v1/vri-chat", {
-        method: "POST",
-        body: JSON.stringify({
-          messages: nextMessages,
-          allowed_lab_ids: allowedLabIds,
-          workstream_preference: workstreamPreference,
-        }),
-      });
+      let reply: VriPlannerReply;
+      try {
+        reply = await streamVriReply(nextMessages);
+      } catch {
+        setVisibleReplyText("");
+        reply = await request<VriPlannerReply>("/v1/vri-chat", {
+          method: "POST",
+          body: JSON.stringify({
+            messages: wireMessages(nextMessages),
+            allowed_lab_ids: allowedLabIds,
+            workstream_preference: workstreamPreference,
+          }),
+        });
+        setVisibleReplyText(reply.answer);
+      }
+
       const updatedMessages: PlannerMessage[] = [
         ...nextMessages,
-        { role: "assistant", content: reply.answer },
+        { role: "assistant", content: reply.answer, reply },
       ];
       const conversationId = activeConversationId ?? makeId();
       setActiveConversationId(conversationId);
       setPlannerReply(reply);
       setPlannerMessages(updatedMessages);
+      setVisibleReplyText((current) => current || reply.answer);
       saveConversation(conversationId, updatedMessages, reply);
     } catch (err) {
       setError(err instanceof Error ? err.message : "VRI planner request failed.");
+      setPlannerMessages(plannerMessages);
       setPlannerInput(clean);
     } finally {
       setLoading(null);
     }
+  }
+
+  async function streamVriReply(messages: PlannerMessage[]) {
+    const response = await fetch(`${apiBase}/v1/vri-chat/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: wireMessages(messages),
+        allowed_lab_ids: allowedLabIds,
+        workstream_preference: workstreamPreference,
+      }),
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error("Streaming VRI planner request failed.");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let finalReply: VriPlannerReply | null = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const events = buffer.split("\n\n");
+      buffer = events.pop() ?? "";
+
+      for (const eventBlock of events) {
+        const event = parseSseEvent(eventBlock);
+        if (!event) continue;
+        if (event.type === "answer_delta" && typeof event.data.delta === "string") {
+          setVisibleReplyText((current) => current + event.data.delta);
+        }
+        if (event.type === "final") {
+          finalReply = event.data as VriPlannerReply;
+        }
+        if (event.type === "error") {
+          throw new Error(String(event.data.message ?? "Streaming VRI planner request failed."));
+        }
+      }
+    }
+
+    if (buffer.trim()) {
+      const event = parseSseEvent(buffer);
+      if (event?.type === "final") finalReply = event.data as VriPlannerReply;
+      if (event?.type === "error") {
+        throw new Error(String(event.data.message ?? "Streaming VRI planner request failed."));
+      }
+    }
+
+    if (!finalReply) throw new Error("Streaming VRI planner did not return a final plan.");
+    return finalReply;
   }
 
   function saveConversation(
@@ -343,13 +494,14 @@ export default function BackendTestPage() {
     const firstUser = messages.find((message) => message.role === "user")?.content;
     const saved: SavedConversation = {
       id: conversationId,
-      title: firstUser ? truncate(firstUser, 70) : "Untitled VRI plan",
+      title: firstUser ? truncate(firstUser, 68) : "Untitled VRI thread",
       updated_at: new Date().toISOString(),
       messages,
       reply,
       workstream_preference: workstreamPreference,
       allowed_lab_ids: allowedLabIds,
     };
+
     setSavedConversations((prev) => [
       saved,
       ...prev.filter((conversation) => conversation.id !== conversationId),
@@ -363,6 +515,7 @@ export default function BackendTestPage() {
     setWorkstreamPreference(conversation.workstream_preference);
     setAllowedLabIds(conversation.allowed_lab_ids);
     setPlannerInput("");
+    setError(null);
   }
 
   function newConversation() {
@@ -373,58 +526,32 @@ export default function BackendTestPage() {
     setError(null);
   }
 
-  function addLab(lab: ProposedLab) {
-    setWorkspaceLabs((prev) => [
-      {
-        ...lab,
-        id: makeId(),
-        created_at: new Date().toISOString(),
-      },
-      ...prev,
-    ]);
-    void askVri(
-      `Revise the plan to include this lab and update all downstream tasks: ${lab.name}. Rationale: ${lab.rationale}`
-    );
+  function selectLab(labId: string) {
+    setSelectedLabId(labId);
   }
 
-  function addTask(title: string, workstream: Workstream, source: string) {
-    setWorkspaceTasks((prev) => [
-      {
-        id: makeId(),
-        title,
-        workstream,
-        source,
-        created_at: new Date().toISOString(),
-      },
-      ...prev,
-    ]);
-    void askVri(`Revise the plan to include this ${workstream} task from ${source}: ${title}`);
+  function toggleLab(labId: string) {
+    setAllowedLabIds((prev) =>
+      prev.includes(labId) ? prev.filter((id) => id !== labId) : [...prev, labId]
+    );
+    selectLab(labId);
   }
 
   async function approveAndStartWork() {
-    if (!plannerReply || plannerMessages.length === 0) return;
+    if (!plannerReply || !plannerReply.planning_allowed || plannerMessages.length === 0) return;
     setLoading("work");
     setError(null);
     try {
       const run = await request<WorkRun>("/v1/start-work", {
         method: "POST",
         body: JSON.stringify({
-          messages: plannerMessages.filter((message) => message.role === "user" || message.role === "assistant"),
+          messages: wireMessages(plannerMessages),
           planner_reply: plannerReply,
           workstream_preference: workstreamPreference,
         }),
       });
       setActiveWorkRun(run);
       setWorkRuns((prev) => [run, ...prev].slice(0, 10));
-      const now = new Date().toISOString();
-      setWorkspaceLabs((prev) => [
-        ...run.labs_created.map((lab) => ({ ...lab, id: makeId(), created_at: now })),
-        ...prev,
-      ]);
-      setWorkspaceTasks((prev) => [
-        ...run.tasks_created.map((task) => ({ ...task, id: makeId(), created_at: now })),
-        ...prev,
-      ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start VRI work.");
     } finally {
@@ -432,1278 +559,1660 @@ export default function BackendTestPage() {
     }
   }
 
-  async function createInvestigation() {
-    setLoading("create");
-    setError(null);
-    setRunResult(null);
-    try {
-      const created = await request<Investigation>("/v1/investigations", {
-        method: "POST",
-        body: JSON.stringify({
-          objective,
-          domain: selectedLabId,
-          context,
-        }),
-      });
-      setInvestigation(created);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Investigation creation failed.");
-    } finally {
-      setLoading(null);
+  function startInspectorResize(event: React.PointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = inspectorWidth;
+
+    function onPointerMove(moveEvent: PointerEvent) {
+      const nextWidth = startWidth + startX - moveEvent.clientX;
+      setInspectorWidth(Math.min(720, Math.max(360, nextWidth)));
     }
-  }
 
-  async function runInvestigation() {
-    if (!investigation) return;
-    setLoading("run");
-    setError(null);
-    try {
-      const result = await request<RunResult>(`/v1/investigations/${investigation.id}/run`, {
-        method: "POST",
-        body: JSON.stringify({}),
-      });
-      setRunResult(result);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Investigation run failed.";
-      setRunResult(safeJson(message));
-      setError(message);
-    } finally {
-      setLoading(null);
+    function onPointerUp() {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
     }
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp, { once: true });
   }
 
-  function focusWithText(text: string) {
-    setPlannerInput(text);
-    window.requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
+  function toggleInspectorPanel(panel: InspectorPanel) {
+    setOpenInspectorPanels((prev) =>
+      prev.includes(panel) ? prev.filter((item) => item !== panel) : [...prev, panel]
+    );
   }
 
-  const activeScopeLabel =
-    workstreamPreference === "any" ? "All workstreams" : `${workstreamPreference} only`;
+  function selectFile(fileId: string) {
+    setSelectedFileId(fileId);
+    setExpandedFileViewer(true);
+  }
+
+  function openFileInNewTab(file: ViewFile | null) {
+    if (!file || typeof window === "undefined") return;
+    const html = filePreviewHtml(file);
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+  }
+
+  const renderedMessages =
+    plannerReply &&
+    plannerMessages.at(-1)?.role === "assistant" &&
+    plannerMessages.at(-1)?.content === plannerReply.answer
+      ? plannerMessages.slice(0, -1)
+      : plannerMessages;
+
+  const isReplyRevealing = loading === "chat";
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f7f7f2] px-4 py-6 text-[#141413] sm:px-6">
-      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5">
-        <header className="flex flex-col gap-3 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-normal text-black/50">
-              VRI planner console
-            </p>
-            <h1 className="mt-2 text-3xl font-medium tracking-normal md:text-5xl">
-              Plan labs, tasks, and runs
-            </h1>
-          </div>
-          <div className="flex flex-wrap gap-2 text-sm">
-            <StatusPill label="Frontend" value="localhost:4000" tone="ok" />
-            <StatusPill
-              label="Backend"
-              value={health?.status === "ok" ? "reachable" : "checking"}
-              tone={health?.status === "ok" ? "ok" : "pending"}
-            />
-            <StatusPill label="Scope" value={activeScopeLabel} tone="pending" />
-          </div>
-        </header>
+    <main className="min-h-screen overflow-x-hidden bg-ink-50 text-ink-900 font-marketing">
+      <div
+        className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[64px_320px_minmax(420px,1fr)_minmax(360px,var(--inspector-width))] lg:overflow-hidden"
+        style={{ "--inspector-width": `${inspectorWidth}px` } as React.CSSProperties}
+      >
+        <ActivityRail onRefresh={() => void checkHealth()} />
 
-        <section className="grid min-w-0 gap-4 xl:grid-cols-[300px_minmax(0,1fr)_420px]">
-          <div className="min-w-0 space-y-4">
-            <Panel title="Conversations" icon={<History size={18} />}>
-              <button
-                className="mb-3 inline-flex h-9 items-center gap-2 rounded-md bg-[#171715] px-3 text-sm text-white"
-                type="button"
-                onClick={newConversation}
-              >
-                <Plus size={15} />
-                New plan
-              </button>
-              <div className="max-h-64 space-y-2 overflow-auto">
-                {savedConversations.length === 0 ? (
-                  <div className="rounded-md border border-black/10 bg-[#fafaf7] p-3 text-sm text-black/55">
-                    Old conversations will appear here after you send a goal.
-                  </div>
-                ) : (
-                  savedConversations.map((conversation) => (
-                    <button
-                      key={conversation.id}
-                      className={`w-full rounded-md border p-3 text-left text-sm ${
-                        conversation.id === activeConversationId
-                          ? "border-blue-600/30 bg-blue-50"
-                          : "border-black/10 bg-white hover:bg-[#fafaf7]"
-                      }`}
-                      type="button"
-                      onClick={() => loadConversation(conversation)}
-                    >
-                      <div className="font-medium text-black/80">{conversation.title}</div>
-                      <div className="mt-1 font-mono text-[11px] text-black/40">
-                        {new Date(conversation.updated_at).toLocaleString()}
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            </Panel>
+        <ProjectSidebar
+          activeConversationId={activeConversationId}
+          artifactLoading={artifactLoading}
+          conversations={savedConversations}
+          files={viewFiles}
+          health={health}
+          onLoadConversation={loadConversation}
+          onNewConversation={newConversation}
+          onRefresh={() => void checkHealth()}
+          onSelectFile={selectFile}
+          selectedFileId={selectedFile?.id ?? null}
+        />
 
-            <Panel title="Scope" icon={<Cpu size={18} />}>
-              <label className="block text-sm text-black/60" htmlFor="workstream">
-                Workstream preference
-              </label>
-              <select
-                id="workstream"
-                className="mt-2 h-10 w-full rounded-md border border-black/15 bg-white px-3 text-sm outline-none focus:border-black/45"
-                value={workstreamPreference}
-                onChange={(event) =>
-                  setWorkstreamPreference(event.target.value as WorkstreamPreference)
-                }
-              >
-                <option value="any">Any workstream</option>
-                <option value="computational">Computational only</option>
-                <option value="data">Data / bioinformatics only</option>
-                <option value="review">Literature / review only</option>
-                <option value="experimental">Experimental only</option>
-                <option value="hybrid">Hybrid</option>
-              </select>
+        <ChatPane
+          activeRun={activeWorkRun}
+          allowedLabIds={allowedLabIds}
+          chatEndRef={chatEndRef}
+          error={error}
+          labPrompts={labPrompts}
+          loading={loading}
+          nextStep={nextStep}
+          onApprove={() => void approveAndStartWork()}
+          onAsk={(message?: string) => void askVri(message)}
+          onUseAllLabs={() => setAllowedLabIds([])}
+          onToggleLab={toggleLab}
+          plannerInput={plannerInput}
+          plannerMessages={renderedMessages}
+          plannerReply={plannerReply}
+          setPlannerInput={setPlannerInput}
+          setWorkstreamPreference={setWorkstreamPreference}
+          visibleReplyText={visibleReplyText}
+          workstreamPreference={workstreamPreference}
+          hasWorkspace={Boolean(activeWorkRun)}
+          isReplyRevealing={isReplyRevealing}
+        />
 
-              <div className="mt-4">
-                <div className="text-sm text-black/60">Specific labs to use</div>
-                <div className="mt-2 max-h-52 space-y-2 overflow-auto">
-                  {labPrompts.map((lab) => (
-                    <label
-                      key={lab.id}
-                      className="flex items-start gap-2 rounded-md border border-black/10 bg-[#fafaf7] p-2 text-sm"
-                    >
-                      <input
-                        className="mt-1"
-                        type="checkbox"
-                        checked={allowedLabIds.includes(lab.id)}
-                        onChange={() =>
-                          setAllowedLabIds((prev) =>
-                            prev.includes(lab.id)
-                              ? prev.filter((id) => id !== lab.id)
-                              : [...prev, lab.id]
-                          )
-                        }
-                      />
-                      <span>
-                        <span className="block font-medium text-black/80">{lab.name}</span>
-                        <span className="block text-xs text-black/45">{lab.domain}</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {allowedLabIds.length > 0 ? (
-                  <button
-                    className="mt-3 text-sm text-blue-700"
-                    type="button"
-                    onClick={() => setAllowedLabIds([])}
-                  >
-                    Clear lab constraint
-                  </button>
-                ) : null}
-              </div>
-            </Panel>
-          </div>
-
-          <div className="min-w-0 space-y-4">
-            <Panel title="Verbose Progress" icon={<Activity size={18} />}>
-              <ProgressDeck
-                loading={loading === "chat" || loading === "work"}
-                messages={plannerMessages}
-                reply={plannerReply}
-                allowedCount={allowedLabIds.length}
-                workstream={workstreamPreference}
-                createdLabs={workspaceLabs.length}
-                createdTasks={workspaceTasks.length}
-                workRun={activeWorkRun}
-                loadingMode={loading}
-              />
-            </Panel>
-
-            <Panel title="Plan With VRI" icon={<Send size={18} />}>
-              <div className="mb-4 max-h-[460px] space-y-3 overflow-auto rounded-md border border-black/10 bg-[#fafaf7] p-3">
-                {plannerMessages.length === 0 ? (
-                  <div className="text-sm text-black/55">
-                    Describe the research goal. The VRI can ask many numbered clarifying
-                    questions, propose labs, and split runnable computational work from wet-lab work.
-                  </div>
-                ) : (
-                  plannerMessages.map((message, index) => (
-                    <div
-                      key={`${message.role}-${index}`}
-                      className={`rounded-md px-3 py-2 text-sm leading-6 ${
-                        message.role === "user"
-                          ? "ml-8 bg-[#2356b8] text-white"
-                          : "mr-8 border border-black/10 bg-white text-black/75"
-                      }`}
-                    >
-                      {message.content}
-                    </div>
-                  ))
-                )}
-              </div>
-              <label className="block text-sm text-black/60" htmlFor="planner-message">
-                Your goal, answer, or instruction
-              </label>
-              <textarea
-                ref={inputRef}
-                id="planner-message"
-                className="mt-2 min-h-32 w-full resize-y rounded-md border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-black/45"
-                value={plannerInput}
-                onChange={(event) => setPlannerInput(event.target.value)}
-              />
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  className="inline-flex h-10 items-center gap-2 rounded-md bg-[#2356b8] px-4 text-sm text-white disabled:opacity-50"
-                  type="button"
-                  onClick={() => askVri()}
-                  disabled={loading === "chat" || plannerInput.trim().length < 2}
-                >
-                  <Send size={16} />
-                  {loading === "chat" ? "Asking..." : "Send"}
-                </button>
-                {plannerReply?.stage === "proposal" ? (
-                  <button
-                    className="inline-flex h-10 items-center gap-2 rounded-md border border-black/15 bg-white px-4 text-sm disabled:opacity-50"
-                    type="button"
-                    onClick={() =>
-                      askVri("Confirm this lab plan and give me the first execution steps.")
-                    }
-                    disabled={loading === "chat"}
-                  >
-                    <Play size={16} />
-                    Confirm plan
-                  </button>
-                ) : null}
-                {plannerReply?.proposed_labs.length ? (
-                  <button
-                    className="inline-flex h-10 items-center gap-2 rounded-md bg-emerald-700 px-4 text-sm text-white disabled:opacity-50"
-                    type="button"
-                    onClick={approveAndStartWork}
-                    disabled={loading === "work"}
-                  >
-                    <CheckCircle2 size={16} />
-                    {loading === "work" ? "Starting work..." : "Approve & start work"}
-                  </button>
-                ) : null}
-              </div>
-            </Panel>
-          </div>
-
-          <div className="min-w-0 space-y-4">
-            <Panel title="Planner Output" icon={<ListChecks size={18} />}>
-              {loading === "chat" ? (
-                <div className="rounded-md border border-black/10 bg-[#fafaf7] p-4 text-sm text-black/60">
-                  Waiting for model response...
-                </div>
-              ) : plannerReply ? (
-                <PlannerOutput
-                  reply={plannerReply}
-                  onUseText={focusWithText}
-                  onAddLab={addLab}
-                  onAddTask={addTask}
-                />
-              ) : (
-                <div className="rounded-md border border-black/10 bg-[#fafaf7] p-4 text-sm text-black/60">
-                  The detailed planner output appears here.
-                </div>
-              )}
-            </Panel>
-
-          </div>
-        </section>
-
-        <Panel title="Research Run Workspace" icon={<CheckCircle2 size={18} />}>
-          <WorkspaceSummary
-            labs={workspaceLabs}
-            tasks={workspaceTasks}
-            activeRun={activeWorkRun}
-            workRuns={workRuns}
-            artifacts={workspaceArtifacts}
-            artifactLoading={artifactLoading}
-            artifactError={artifactError}
-            onSelectRun={setActiveWorkRun}
-          />
-        </Panel>
-
-        <section className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-          <Panel title="Backend Health" icon={<Server size={18} />}>
-            <div className="flex flex-wrap gap-2">
-              <button
-                className="inline-flex h-10 items-center gap-2 rounded-md bg-[#171715] px-4 text-sm text-white disabled:opacity-50"
-                type="button"
-                onClick={checkHealth}
-                disabled={loading === "health"}
-              >
-                <RefreshCw size={16} />
-                Refresh
-              </button>
-            </div>
-            <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-              <Metric label="API URL" value={apiBase} />
-              <Metric label="Status" value={health?.status ?? "not checked"} />
-              <Metric label="Database" value={health?.database ?? "not checked"} />
-              <Metric label="Model" value={health?.model_name ?? "unknown"} />
-              <Metric
-                label="OpenAI configured"
-                value={health?.model_configured ? "yes" : "no"}
-              />
-              <Metric
-                label="LangSmith tracing"
-                value={health?.langsmith_tracing ? "on" : "off"}
-              />
-            </dl>
-          </Panel>
-
-          <Panel title="Create Investigation" icon={<FlaskConical size={18} />}>
-            <label className="block text-sm text-black/60" htmlFor="lab">
-              Lab prompt
-            </label>
-            <select
-              id="lab"
-              className="mt-2 h-10 w-full rounded-md border border-black/15 bg-white px-3 text-sm outline-none focus:border-black/45"
-              value={selectedLabId}
-              onChange={(event) => {
-                const lab = labPrompts.find((item) => item.id === event.target.value);
-                setSelectedLabId(event.target.value);
-                setInvestigation(null);
-                setRunResult(null);
-                if (lab) {
-                  setObjective(lab.default_objective);
-                  setContext(lab.default_context);
-                }
-              }}
-            >
-              {labPrompts.length === 0 ? (
-                <option value={selectedLabId}>Loading labs</option>
-              ) : (
-                labPrompts.map((lab) => (
-                  <option key={lab.id} value={lab.id}>
-                    {lab.name}
-                  </option>
-                ))
-              )}
-            </select>
-            {selectedLab ? (
-              <div className="mt-3 rounded-md border border-black/10 bg-[#fafaf7] p-3">
-                <div className="font-mono text-xs uppercase tracking-normal text-black/45">
-                  Active system prompt
-                </div>
-                <p className="mt-2 text-sm leading-6 text-black/70">
-                  {selectedLab.system_prompt}
-                </p>
-              </div>
-            ) : null}
-
-            <label className="block text-sm text-black/60" htmlFor="objective">
-              Objective
-            </label>
-            <textarea
-              id="objective"
-              className="mt-2 min-h-24 w-full resize-y rounded-md border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-black/45"
-              value={objective}
-              onChange={(event) => setObjective(event.target.value)}
-            />
-            <label className="mt-4 block text-sm text-black/60" htmlFor="context">
-              Context
-            </label>
-            <textarea
-              id="context"
-              className="mt-2 min-h-24 w-full resize-y rounded-md border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-black/45"
-              value={context}
-              onChange={(event) => setContext(event.target.value)}
-            />
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                className="inline-flex h-10 items-center gap-2 rounded-md bg-[#2356b8] px-4 text-sm text-white disabled:opacity-50"
-                type="button"
-                onClick={createInvestigation}
-                disabled={loading === "create" || objective.trim().length < 3}
-              >
-                <Send size={16} />
-                Create
-              </button>
-              <button
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-black/15 bg-white px-4 text-sm disabled:opacity-50"
-                type="button"
-                onClick={runInvestigation}
-                disabled={!investigation || loading === "run"}
-              >
-                <Play size={16} />
-                Run graph
-              </button>
-            </div>
-          </Panel>
-        </section>
-
-        {error ? (
-          <section className="rounded-md border border-amber-500/30 bg-amber-50 p-4 text-sm text-amber-950">
-            <div className="font-medium">Backend returned an error</div>
-            <pre className="mt-2 overflow-auto whitespace-pre-wrap font-mono text-xs">
-              {error}
-            </pre>
-          </section>
-        ) : null}
-
-        <section className="grid gap-4 lg:grid-cols-2">
-          <Panel title="Latest Investigation" icon={<Database size={18} />}>
-            <JsonBlock value={investigation ?? { state: "No investigation created yet." }} />
-          </Panel>
-          <Panel title="Latest Run" icon={<Play size={18} />}>
-            <JsonBlock value={runResult ?? { state: "No run started yet." }} />
-          </Panel>
-        </section>
+        <SideInspector
+          openPanels={openInspectorPanels}
+          activeRun={activeWorkRun}
+          artifactError={artifactError}
+          artifactLoading={artifactLoading}
+          files={viewFiles}
+          health={health}
+          nextStep={nextStep}
+          onOpenFileInNewTab={openFileInNewTab}
+          onTogglePanel={toggleInspectorPanel}
+          onResizeStart={startInspectorResize}
+          onSelectFile={selectFile}
+          selectedFile={selectedFile}
+          selectedLab={selectedLab}
+        />
       </div>
+      {expandedFileViewer ? (
+        <ExpandedFileViewer
+          file={selectedFile}
+          onClose={() => setExpandedFileViewer(false)}
+          onOpenInNewTab={() => openFileInNewTab(selectedFile)}
+        />
+      ) : null}
     </main>
   );
 }
 
-function PlannerOutput({
-  reply,
-  onUseText,
-  onAddLab,
-  onAddTask,
-}: {
-  reply: VriPlannerReply;
-  onUseText: (text: string) => void;
-  onAddLab: (lab: ProposedLab) => void;
-  onAddTask: (title: string, workstream: Workstream, source: string) => void;
-}) {
+function ActivityRail({ onRefresh }: { onRefresh: () => void }) {
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <StatusPill label="Stage" value={reply.stage} tone="ok" />
-        <StatusPill label="Questions" value={String(reply.clarification_questions.length)} tone="pending" />
-        <StatusPill label="Labs" value={String(reply.proposed_labs.length)} tone="pending" />
-      </div>
-      <div className="rounded-md border border-black/10 bg-white p-4">
-        <div className="font-mono text-xs uppercase tracking-normal text-black/45">
-          Planner response
+    <aside className="hidden border-r border-ink-900/8 bg-white lg:flex lg:flex-col lg:items-center lg:justify-between lg:py-5">
+      <div className="grid gap-5">
+        <div className="grid h-9 w-9 place-items-center rounded-full border border-ink-900/10 bg-ink-900 text-parchment-50">
+          <Sparkles className="h-4 w-4" />
         </div>
-        <p className="mt-2 text-sm leading-6 text-black/80">{reply.answer}</p>
+        <RailLink active href="#planner" icon={MessageSquareText} label="Planner" />
+        <RailLink href="#tasks" icon={Folder} label="Threads" />
+        <RailLink href="#drive" icon={FileText} label="Files" />
+        <RailAction icon={RefreshCw} label="Sync" onClick={onRefresh} />
       </div>
-      <ActionList
-        title="Clarifying questions"
-        items={reply.clarification_questions}
-        variant="numbered"
-        actionLabel="Answer"
-        onAction={(item) => onUseText(`${stripLeadingNumber(item)}\nAnswer: `)}
-      />
-      <WorkstreamList
-        title="Computational work you can run here"
-        items={reply.computational_work}
-        tone="blue"
-        onAddTask={(item) => onAddTask(item, "computational", "planner")}
-      />
-      <WorkstreamList
-        title="Wet-lab / experimental work to track on top"
-        items={reply.experimental_work}
-        tone="green"
-        onAddTask={(item) => onAddTask(item, "experimental", "planner")}
-      />
-      <LabProposalList
-        labs={reply.proposed_labs}
-        onAddLab={onAddLab}
-        onAddTask={onAddTask}
-      />
-      <ActionList
-        title="Next actions"
-        items={reply.next_actions}
-        actionLabel="Use in chat"
-        onAction={onUseText}
-        onAddTask={(item) => onAddTask(item, "hybrid", "next action")}
-      />
-    </div>
-  );
-}
-
-function ProgressDeck({
-  loading,
-  loadingMode,
-  messages,
-  reply,
-  allowedCount,
-  workstream,
-  createdLabs,
-  createdTasks,
-  workRun,
-}: {
-  loading: boolean;
-  loadingMode: string | null;
-  messages: PlannerMessage[];
-  reply: VriPlannerReply | null;
-  allowedCount: number;
-  workstream: WorkstreamPreference;
-  createdLabs: number;
-  createdTasks: number;
-  workRun: WorkRun | null;
-}) {
-  const steps = [
-    {
-      label: "Conversation context",
-      detail: `${messages.length} message${messages.length === 1 ? "" : "s"} in the current planner thread.`,
-      done: messages.length > 0,
-    },
-    {
-      label: "Scope constraints",
-      detail: `${workstream === "any" ? "No workstream restriction" : `${workstream} preference`} with ${
-        allowedCount === 0 ? "all lab templates allowed" : `${allowedCount} selected lab template${allowedCount === 1 ? "" : "s"}`
-      }.`,
-      done: true,
-    },
-    {
-      label: "Planner call",
-      detail:
-        loadingMode === "work"
-          ? "The backend is creating a run workspace, venv, scripts, literature records, data files, and processed outputs."
-          : loading
-            ? "The backend is asking OpenAI for the next planning state."
-            : "No request currently running.",
-      done: !loading,
-    },
-    {
-      label: "Latest response",
-      detail: reply
-        ? `${reply.stage} stage with ${reply.clarification_questions.length} questions, ${reply.proposed_labs.length} lab proposals, ${reply.next_actions.length} next actions.`
-        : "No planner response yet.",
-      done: Boolean(reply),
-    },
-    {
-      label: "Workspace materialized",
-      detail: `${createdLabs} lab${createdLabs === 1 ? "" : "s"} and ${createdTasks} task${createdTasks === 1 ? "" : "s"} created locally.`,
-      done: createdLabs + createdTasks > 0,
-    },
-    {
-      label: "Work execution",
-      detail: workRun
-        ? `${workRun.status}: ${(workRun.tool_calls ?? []).length} tool calls, ${(workRun.generated_files ?? []).length} generated files, ${(workRun.data_files ?? []).length} data files, ${(workRun.processed_files ?? []).length} processed files.`
-        : "No approved work run yet.",
-      done: Boolean(workRun),
-    },
-    {
-      label: "Visible execution trace",
-      detail: workRun
-        ? (workRun.tool_calls ?? [])
-            .slice(-3)
-            .map((call) => `${call.name}: ${call.status}`)
-            .join(" / ") || "No tool calls recorded."
-        : "Tool calls will appear after you approve a plan.",
-      done: Boolean((workRun?.tool_calls ?? []).length),
-    },
-  ];
-
-  return (
-    <div className="space-y-3">
-      {steps.map((step, index) => (
-        <div key={step.label} className="flex gap-3 rounded-md border border-black/10 bg-[#fafaf7] p-3">
-          <span
-            className={`grid h-7 w-7 shrink-0 place-items-center rounded-md font-mono text-xs ${
-              step.done ? "bg-emerald-100 text-emerald-900" : "bg-white text-black/45"
-            }`}
-          >
-            {index + 1}
+      <div className="grid gap-3 text-center text-xs text-ink-500">
+        <a className="grid justify-items-center gap-1 hover:text-ink-900" href="#progress">
+          <span className="grid h-8 w-8 place-items-center rounded-full border border-ink-900/10">
+            <PanelRight className="h-4 w-4" />
           </span>
-          <div>
-            <div className="text-sm font-medium text-black/80">{step.label}</div>
-            <div className="mt-1 text-sm leading-6 text-black/60">{step.detail}</div>
-          </div>
-        </div>
-      ))}
-    </div>
+          Run
+        </a>
+      </div>
+    </aside>
   );
 }
 
-function ActionList({
-  title,
-  items,
-  variant = "plain",
-  actionLabel,
-  onAction,
-  onAddTask,
+function RailLink({
+  active,
+  href,
+  icon: Icon,
+  label,
 }: {
-  title: string;
-  items: string[];
-  variant?: "plain" | "numbered";
-  actionLabel?: string;
-  onAction?: (item: string) => void;
-  onAddTask?: (item: string) => void;
+  active?: boolean;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
 }) {
-  if (items.length === 0) return null;
   return (
-    <div>
-      <div className="font-mono text-xs uppercase tracking-normal text-black/45">
-        {title}
-      </div>
-      <ul className="mt-2 space-y-2 text-sm leading-6 text-black/75">
-        {items.map((item, index) => (
-          <li
-            key={`${item}-${index}`}
-            className="rounded-md border border-black/10 bg-[#fafaf7] px-3 py-2"
-          >
-            <div className="flex gap-3">
-              {variant === "numbered" ? (
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-white font-mono text-xs text-black/55">
-                  {index + 1}
-                </span>
-              ) : null}
-              <span>{stripLeadingNumber(item)}</span>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {onAction ? (
-                <button
-                  className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs text-black/70"
-                  type="button"
-                  onClick={() => onAction(stripLeadingNumber(item))}
-                >
-                  {actionLabel ?? "Use"}
-                </button>
-              ) : null}
-              {onAddTask ? (
-                <button
-                  className="rounded-md border border-blue-700/20 bg-blue-50 px-2 py-1 text-xs text-blue-900"
-                  type="button"
-                  onClick={() => onAddTask(stripLeadingNumber(item))}
-                >
-                  Add task
-                </button>
-              ) : null}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <a
+      className="grid justify-items-center gap-1 text-[11px] text-ink-500 hover:text-ink-900"
+      href={href}
+    >
+      <span
+        className={cx(
+          "grid h-9 w-9 place-items-center rounded-full border",
+          active ? "border-beacon-500/40 bg-beacon-50 text-beacon-700" : "border-transparent"
+        )}
+      >
+        <Icon className={cx("h-5 w-5", active ? "text-beacon-700" : "text-ink-500")} />
+      </span>
+      {label}
+    </a>
   );
 }
 
-function WorkstreamList({
-  title,
-  items,
-  tone,
-  onAddTask,
+function RailAction({
+  icon: Icon,
+  label,
+  onClick,
 }: {
-  title: string;
-  items: string[];
-  tone: "blue" | "green";
-  onAddTask?: (item: string) => void;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
 }) {
-  if (items.length === 0) return null;
-  const classes =
-    tone === "blue"
-      ? "border-blue-700/20 bg-blue-50 text-blue-950"
-      : "border-emerald-700/20 bg-emerald-50 text-emerald-950";
   return (
-    <div>
-      <div className="font-mono text-xs uppercase tracking-normal text-black/45">
-        {title}
-      </div>
-      <div className="mt-2 grid gap-2">
-        {items.map((item, index) => (
-          <div key={`${item}-${index}`} className={`rounded-md border p-3 text-sm leading-6 ${classes}`}>
-            <div>{item}</div>
-            {onAddTask ? (
-              <button
-                className="mt-2 rounded-md border border-black/10 bg-white/80 px-2 py-1 text-xs"
-                type="button"
-                onClick={() => onAddTask(item)}
-              >
-                Add task
-              </button>
-            ) : null}
-          </div>
-        ))}
-      </div>
-    </div>
+    <button
+      className="grid justify-items-center gap-1 text-[11px] text-ink-500 hover:text-ink-900"
+      onClick={onClick}
+      type="button"
+    >
+      <span className="grid h-9 w-9 place-items-center rounded-full border border-transparent">
+        <Icon className="h-5 w-5 text-ink-500" />
+      </span>
+      {label}
+    </button>
   );
 }
 
-function LabProposalList({
-  labs,
-  onAddLab,
-  onAddTask,
-}: {
-  labs: ProposedLab[];
-  onAddLab: (lab: ProposedLab) => void;
-  onAddTask: (title: string, workstream: Workstream, source: string) => void;
-}) {
-  if (labs.length === 0) return null;
-  return (
-    <div>
-      <div className="font-mono text-xs uppercase tracking-normal text-black/45">
-        Proposed labs
-      </div>
-      <div className="mt-2 space-y-3">
-        {labs.map((lab) => (
-          <article
-            key={`${lab.name}-${lab.kind}`}
-            className={`rounded-md border p-3 ${labTone(lab.workstream)}`}
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-sm font-medium text-black/85">{lab.name}</h3>
-              <span className="rounded-md border border-black/10 bg-white px-2 py-1 font-mono text-[11px] uppercase text-black/45">
-                {lab.kind}
-              </span>
-              <span className="rounded-md border border-black/10 bg-white px-2 py-1 font-mono text-[11px] uppercase text-black/45">
-                {lab.workstream}
-              </span>
-              {lab.can_run_here ? (
-                <span className="rounded-md border border-blue-700/20 bg-blue-100 px-2 py-1 font-mono text-[11px] uppercase text-blue-900">
-                  runnable here
-                </span>
-              ) : (
-                <span className="rounded-md border border-emerald-700/20 bg-emerald-100 px-2 py-1 font-mono text-[11px] uppercase text-emerald-900">
-                  track on top
-                </span>
-              )}
-            </div>
-            <p className="mt-2 text-sm leading-6 text-black/70">{lab.rationale}</p>
-            <ActionList
-              title="First tasks"
-              items={lab.first_tasks}
-              onAddTask={(item) => onAddTask(item, lab.workstream, lab.name)}
-            />
-            <button
-              className="mt-3 inline-flex h-8 items-center gap-2 rounded-md bg-[#171715] px-3 text-xs text-white"
-              type="button"
-              onClick={() => onAddLab(lab)}
-            >
-              <Plus size={14} />
-              Add lab
-            </button>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function WorkspaceSummary({
-  labs,
-  tasks,
-  activeRun,
-  workRuns,
-  artifacts,
+function ProjectSidebar({
+  activeConversationId,
   artifactLoading,
-  artifactError,
-  onSelectRun,
+  conversations,
+  files,
+  health,
+  onLoadConversation,
+  onNewConversation,
+  onRefresh,
+  onSelectFile,
+  selectedFileId,
 }: {
-  labs: WorkspaceLab[];
-  tasks: WorkspaceTask[];
-  activeRun: WorkRun | null;
-  workRuns: WorkRun[];
-  artifacts: WorkspaceArtifacts | null;
+  activeConversationId: string | null;
   artifactLoading: boolean;
-  artifactError: string | null;
-  onSelectRun: (run: WorkRun) => void;
+  conversations: SavedConversation[];
+  files: ViewFile[];
+  health: Health | null;
+  onLoadConversation: (conversation: SavedConversation) => void;
+  onNewConversation: () => void;
+  onRefresh: () => void;
+  onSelectFile: (id: string) => void;
+  selectedFileId: string | null;
 }) {
-  const [tab, setTab] = React.useState<"overview" | "trace" | "artifacts" | "literature">("overview");
-
   return (
-    <div className="min-w-0 space-y-4">
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
-        <Metric label="Created labs" value={String(labs.length)} />
-        <Metric label="Created tasks" value={String(tasks.length)} />
-        <Metric label="Tool calls" value={String(activeRun?.tool_calls?.length ?? 0)} />
-        <Metric
-          label="Run files"
-          value={String(
-            (activeRun?.generated_files?.length ?? 0) +
-              (activeRun?.data_files?.length ?? 0) +
-              (activeRun?.processed_files?.length ?? 0)
+    <aside className="min-h-[520px] border-b border-ink-900/8 bg-parchment-50 lg:h-screen lg:border-b-0 lg:border-r lg:border-ink-900/8">
+      <div className="border-b border-ink-900/8 px-4 py-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.12em] text-ink-500">Project</p>
+            <h1 className="mt-1 text-2xl font-medium tracking-tight">VRI Harness</h1>
+          </div>
+          <button
+            aria-label="Refresh backend status and lab prompts"
+            className="rounded-md p-1.5 text-ink-500 hover:bg-ink-900/[0.04] hover:text-ink-900"
+            onClick={onRefresh}
+            title="Refresh backend status and lab prompts"
+            type="button"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-4 flex items-center gap-2 text-sm">
+          {health?.status === "ok" ? (
+            <CheckCircle2 className="h-4 w-4 text-green-700" />
+          ) : (
+            <XCircle className="h-4 w-4 text-amber-700" />
           )}
-        />
-        <Metric label="Literature" value={String(activeRun?.literature_results?.length ?? 0)} />
-        <Metric label="Artifact previews" value={artifactLoading ? "loading" : String(artifacts?.files.length ?? 0)} />
+          <span>{health ? `${health.model_name} / ${health.database}` : "Connecting backend"}</span>
+        </div>
       </div>
 
-      {workRuns.length > 1 ? (
-        <div>
-          <div className="font-mono text-xs uppercase tracking-normal text-black/45">
-            Work runs
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {workRuns.map((run) => (
-              <button
-                key={run.run_id}
-                className="rounded-md border border-black/10 bg-white px-2 py-1 font-mono text-xs text-black/60"
-                type="button"
-                onClick={() => onSelectRun(run)}
-              >
-                {run.run_id.slice(0, 8)}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      <SidebarSection
+        action={<button aria-label="Start a new planner thread" className="rounded p-1 text-ink-500 hover:bg-ink-900/[0.04] hover:text-ink-900" onClick={onNewConversation} title="Start a new planner thread" type="button"><Plus className="h-4 w-4" /></button>}
+        id="tasks"
+        title="Tasks"
+      >
+        {conversations.length === 0 ? (
+          <EmptySidebarText>Planner threads appear after VRI responds.</EmptySidebarText>
+        ) : (
+          conversations.map((conversation) => (
+            <button
+              key={conversation.id}
+              className={cx(
+                "flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm",
+                activeConversationId === conversation.id
+                  ? "border-beacon-500/35 bg-beacon-50 text-beacon-900"
+                  : "border-transparent text-ink-700 hover:bg-ink-900/[0.04]"
+              )}
+              onClick={() => onLoadConversation(conversation)}
+              type="button"
+            >
+              <span className="h-2 w-2 shrink-0 rounded-full bg-ink-300" />
+              <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
+              <span className="shrink-0 text-xs text-ink-500">{relativeTime(conversation.updated_at)}</span>
+            </button>
+          ))
+        )}
+      </SidebarSection>
 
-      <div className="flex min-w-0 gap-2 overflow-x-auto border-b border-black/10 pb-2">
-        {[
-          ["overview", "Overview"],
-          ["trace", "Tool calls"],
-          ["artifacts", "Artifacts"],
-          ["literature", "Literature"],
-        ].map(([value, label]) => (
+      <SidebarSection id="drive" title="Drive">
+        {artifactLoading ? (
+          <EmptySidebarText>Loading workspace files.</EmptySidebarText>
+        ) : files.length === 0 ? (
+          <EmptySidebarText>Files appear after a workspace run creates artifacts.</EmptySidebarText>
+        ) : (
+          files.map((file) => (
+            <button
+              key={file.id}
+              className={cx(
+                "flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm",
+                selectedFileId === file.id
+                  ? "border-beacon-500/35 bg-beacon-50 text-beacon-900"
+                  : "border-transparent text-ink-700 hover:bg-ink-900/[0.04]"
+              )}
+              onClick={() => onSelectFile(file.id)}
+              type="button"
+            >
+              <FileText className="h-4 w-4 shrink-0 text-ink-400" />
+              <span className="min-w-0 flex-1 truncate">{file.name}</span>
+            </button>
+          ))
+        )}
+      </SidebarSection>
+    </aside>
+  );
+}
+
+function SidebarSection({
+  action,
+  children,
+  id,
+  title,
+}: {
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  id?: string;
+  title: string;
+}) {
+  return (
+    <section className="border-b border-ink-900/8" id={id}>
+      <div className="flex items-center justify-between border-b border-ink-900/8 px-4 py-2">
+        <div className="flex items-center gap-2">
+          <ChevronDown className="h-4 w-4" />
+          <h2 className="text-sm font-medium">{title}</h2>
+        </div>
+        {action}
+      </div>
+      <div className="max-h-[32vh] space-y-1 overflow-y-auto p-3">{children}</div>
+    </section>
+  );
+}
+
+function EmptySidebarText({ children }: { children: React.ReactNode }) {
+  return <p className="px-3 py-4 text-center text-sm text-ink-500">{children}</p>;
+}
+
+function ChatPane({
+  activeRun,
+  allowedLabIds,
+  chatEndRef,
+  error,
+  hasWorkspace,
+  labPrompts,
+  loading,
+  nextStep,
+  onApprove,
+  onAsk,
+  onToggleLab,
+  onUseAllLabs,
+  plannerInput,
+  plannerMessages,
+  plannerReply,
+  setPlannerInput,
+  setWorkstreamPreference,
+  visibleReplyText,
+  workstreamPreference,
+  isReplyRevealing,
+}: {
+  activeRun: WorkRun | null;
+  allowedLabIds: string[];
+  chatEndRef: React.RefObject<HTMLDivElement>;
+  error: string | null;
+  hasWorkspace: boolean;
+  labPrompts: LabPrompt[];
+  loading: string | null;
+  nextStep: string;
+  onApprove: () => void;
+  onAsk: (message?: string) => void;
+  onToggleLab: (labId: string) => void;
+  onUseAllLabs: () => void;
+  plannerInput: string;
+  plannerMessages: PlannerMessage[];
+  plannerReply: VriPlannerReply | null;
+  setPlannerInput: (value: string) => void;
+  setWorkstreamPreference: (value: WorkstreamPreference) => void;
+  visibleReplyText: string;
+  workstreamPreference: WorkstreamPreference;
+  isReplyRevealing: boolean;
+}) {
+  return (
+    <section className="flex min-h-[760px] min-w-0 flex-col border-b border-ink-900/8 bg-white lg:h-screen lg:border-b-0 lg:border-r lg:border-ink-900/8" id="planner">
+      <header className="flex min-h-14 items-center justify-between border-b border-ink-900/8 px-4">
+        <div className="min-w-0 text-sm">
+          <span className="text-ink-500">VRI Harness</span>
+          <span className="px-2 text-ink-500">/</span>
+          <span className="font-medium">Lab planner</span>
+        </div>
+        <div className="hidden items-center gap-3 text-sm text-ink-500 sm:flex">
+          <span>Lab scope + run trace</span>
+          <PanelRight className="h-4 w-4" />
+        </div>
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 lg:px-12">
+        <div className="mx-auto max-w-4xl space-y-5">
+          <AssistantCard>
+            <div className="flex items-start gap-3">
+              <Bot className="mt-0.5 h-5 w-5 shrink-0" />
+              <div className="min-w-0">
+                <p className="font-medium">Ask in chat. Labs and constraints live here.</p>
+                <p className="mt-2 text-sm leading-6 text-ink-500">{nextStep}</p>
+              </div>
+            </div>
+          </AssistantCard>
+
+          <LabPickerInChat
+            allowedLabIds={allowedLabIds}
+            labPrompts={labPrompts}
+            onToggleLab={onToggleLab}
+            onUseAllLabs={onUseAllLabs}
+            setWorkstreamPreference={setWorkstreamPreference}
+            workstreamPreference={workstreamPreference}
+          />
+
+          {plannerMessages.map((message, index) => (
+            <ChatBubble key={`${message.role}-${index}`} message={message} onAnswer={onAsk} />
+          ))}
+
+          {loading === "chat" && !visibleReplyText ? <PendingAssistantCard /> : null}
+
+          {loading === "chat" && visibleReplyText ? (
+            <StreamingAssistantCard visibleText={visibleReplyText} />
+          ) : null}
+
+          {plannerReply ? (
+            <AssistantReplyCard
+              isRevealing={isReplyRevealing}
+              onAnswer={onAsk}
+              reply={plannerReply}
+              visibleText={visibleReplyText}
+            />
+          ) : null}
+
+          {plannerReply?.planning_allowed && plannerReply.stage !== "direct_answer" ? (
+            <PlanCard
+              hasWorkspace={hasWorkspace}
+              loading={loading}
+              onApprove={onApprove}
+              onRevise={onAsk}
+              reply={plannerReply}
+            />
+          ) : null}
+
+          <RunTraceCard activeRun={activeRun} loading={loading} />
+
+          {error ? <ErrorCard error={error} /> : null}
+          <div ref={chatEndRef} />
+        </div>
+      </div>
+
+      <div className="border-t border-ink-900/8 bg-white px-4 py-4 lg:px-12">
+        <form
+          className="mx-auto max-w-4xl rounded-xl border border-ink-900/10 bg-white shadow-lift"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onAsk();
+          }}
+        >
+          <textarea
+            className="min-h-20 w-full resize-none rounded-t-lg bg-transparent px-5 py-4 text-base outline-none placeholder:text-ink-400"
+            onChange={(event) => setPlannerInput(event.target.value)}
+            placeholder="Ask VRI what to do with your project, dataset, biological question, or workflow..."
+            value={plannerInput}
+          />
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-900/8 px-4 py-3">
+            <div className="flex items-center gap-2 text-sm text-ink-500">
+              <MessageSquareText className="h-4 w-4" />
+              <span>{allowedLabIds.length || "All"} labs in scope</span>
+            </div>
+            <button
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-beacon-700 bg-beacon-600 px-4 text-sm font-medium text-white shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={loading === "chat" || plannerInput.trim().length === 0}
+              type="submit"
+            >
+              {loading === "chat" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Ask
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  );
+}
+
+function LabPickerInChat({
+  allowedLabIds,
+  labPrompts,
+  onToggleLab,
+  onUseAllLabs,
+  setWorkstreamPreference,
+  workstreamPreference,
+}: {
+  allowedLabIds: string[];
+  labPrompts: LabPrompt[];
+  onToggleLab: (labId: string) => void;
+  onUseAllLabs: () => void;
+  setWorkstreamPreference: (value: WorkstreamPreference) => void;
+  workstreamPreference: WorkstreamPreference;
+}) {
+  return (
+    <AssistantCard>
+      <div className="flex items-center gap-2">
+        <FlaskConical className="h-4 w-4" />
+        <h2 className="font-medium">Institute labs in scope</h2>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          className={cx(
+            "rounded-full border px-3 py-1 text-xs font-medium",
+            allowedLabIds.length === 0
+              ? "border-beacon-500/40 bg-beacon-50 text-beacon-900"
+              : "border-ink-900/10 bg-white text-ink-700 hover:bg-ink-900/[0.03]"
+          )}
+          onClick={onUseAllLabs}
+          type="button"
+        >
+          All institute labs
+        </button>
+        <span className="text-xs text-ink-500">
+          {allowedLabIds.length === 0 ? "VRI can route across every lab." : `${allowedLabIds.length} lab${allowedLabIds.length === 1 ? "" : "s"} selected.`}
+        </span>
+      </div>
+      {labPrompts.length === 0 ? (
+        <p className="mt-3 text-sm text-ink-500">Lab prompts are loading from /v1/lab-prompts.</p>
+      ) : (
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          {labPrompts.map((lab) => {
+            const constrained = allowedLabIds.length > 0;
+            const active = allowedLabIds.includes(lab.id);
+            return (
+              <button
+                key={lab.id}
+                className={cx(
+                  "rounded-md border p-3 text-left transition",
+                  active
+                    ? "border-beacon-500/40 bg-beacon-50 text-beacon-900"
+                    : "border-ink-900/8 bg-white hover:border-ink-900/20 hover:bg-ink-900/[0.02]"
+                )}
+                onClick={() => onToggleLab(lab.id)}
+                type="button"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 truncate text-sm font-medium">{lab.name}</p>
+                  <span className={cx(
+                    "shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.1em]",
+                    active
+                      ? "border-beacon-500/35 text-beacon-800"
+                      : constrained
+                        ? "border-ink-900/10 text-ink-400"
+                        : "border-ink-900/10 text-ink-500"
+                  )}>
+                    {active ? "selected" : constrained ? "out" : "available"}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs uppercase tracking-[0.12em] text-ink-500">{lab.domain}</p>
+                <p className="mt-2 line-clamp-2 text-sm leading-5 text-ink-500">{lab.default_objective}</p>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-ink-500">Workstream</span>
+        {workstreams.map((stream) => (
           <button
-            key={value}
-            className={`h-9 shrink-0 rounded-md px-3 text-sm ${
-              tab === value
-                ? "bg-[#171715] text-white"
-                : "border border-black/10 bg-white text-black/65"
-            }`}
+            key={stream.value}
+            className={cx(
+              "rounded-full border px-3 py-1 text-xs font-medium",
+              workstreamPreference === stream.value
+                ? "border-ink-900 bg-ink-900 text-white"
+                : "border-ink-900/10 bg-white text-ink-700 hover:bg-ink-900/[0.03]"
+            )}
+            onClick={() => setWorkstreamPreference(stream.value)}
             type="button"
-            onClick={() => setTab(value as typeof tab)}
           >
-            {label}
+            {stream.label}
           </button>
         ))}
       </div>
-
-      {!activeRun ? (
-        <div className="rounded-md border border-black/10 bg-[#fafaf7] p-4 text-sm text-black/55">
-          Approve a plan to create a local workspace, venv, scripts, downloaded data, and processed outputs.
-        </div>
-      ) : null}
-
-      {activeRun && tab === "overview" ? (
-        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div className="min-w-0 space-y-4">
-            <div className="rounded-md border border-emerald-700/20 bg-emerald-50 p-3">
-              <div className="font-mono text-xs uppercase tracking-normal text-emerald-900/70">
-                Active work run
-              </div>
-              <div className="mt-2 grid gap-2 text-sm leading-6 text-emerald-950 sm:grid-cols-2">
-                <div><strong>Status:</strong> {activeRun.status}</div>
-                <div><strong>Literature:</strong> {activeRun.literature_results.length} records</div>
-                <div><strong>Generated:</strong> {activeRun.generated_files?.length ?? 0} files</div>
-                <div><strong>Data:</strong> {activeRun.data_files?.length ?? 0} files</div>
-                <div><strong>Processed:</strong> {activeRun.processed_files?.length ?? 0} files</div>
-                <div><strong>Tool calls:</strong> {activeRun.tool_calls?.length ?? 0}</div>
-              </div>
-              <div className="mt-3 space-y-1 font-mono text-[11px] leading-5 text-emerald-950/75">
-                <div className="break-all"><strong>Workspace:</strong> {activeRun.workspace_path}</div>
-                <div className="break-all"><strong>Venv:</strong> {activeRun.venv_path}</div>
-              </div>
-            </div>
-            <CompactCollection
-              icon={<FlaskConical size={16} />}
-              title="Labs"
-              empty="Add proposed labs to make them appear here."
-              items={labs.map((lab) => ({
-                id: lab.id,
-                title: lab.name,
-                detail: `${lab.workstream} / ${lab.kind}`,
-                tone: lab.workstream,
-              }))}
-            />
-          </div>
-          <div className="min-w-0">
-            <CompactCollection
-              icon={<ListChecks size={16} />}
-              title="Tasks"
-              empty="Click Add task on next actions or workstreams."
-              items={tasks.map((task) => ({
-                id: task.id,
-                title: task.title,
-                detail: `${task.workstream} / ${task.source}`,
-                tone: task.workstream,
-              }))}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {activeRun && tab === "trace" ? (
-        <div className="min-w-0">
-          <ToolCallList calls={activeRun.tool_calls ?? []} />
-        </div>
-      ) : null}
-
-      {activeRun && tab === "artifacts" ? (
-        <div className="grid min-w-0 gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-          <div className="min-w-0 grid gap-2">
-            <FileList title="Generated files" files={activeRun.generated_files ?? []} />
-            <FileList title="Downloaded data" files={activeRun.data_files ?? []} tone="blue" />
-            <FileList title="Processed outputs" files={activeRun.processed_files ?? []} tone="green" />
-          </div>
-          <ArtifactBrowser
-            artifacts={artifacts}
-            loading={artifactLoading}
-            error={artifactError}
-          />
-        </div>
-      ) : null}
-
-      {activeRun && tab === "literature" ? (
-        <div className="min-w-0">
-          <div className="mt-2 rounded-md border border-black/10 bg-[#fafaf7] p-3">
-            <div className="font-mono text-xs text-black/45">Query</div>
-            <div className="mt-1 text-sm leading-6 text-black/70">
-              {activeRun.literature_query}
-            </div>
-          </div>
-          <div className="mt-2 max-h-[420px] space-y-2 overflow-auto">
-            {activeRun.literature_results.length === 0 ? (
-              <div className="rounded-md border border-black/10 bg-[#fafaf7] p-3 text-sm text-black/55">
-                No literature records returned yet. Check the work run errors if present.
-              </div>
-            ) : (
-              activeRun.literature_results.map((item, index) => (
-                <article key={`${item.title}-${index}`} className="rounded-md border border-black/10 bg-white p-3">
-                  <div className="text-sm font-medium leading-6 text-black/85">
-                    {item.url ? (
-                      <a href={item.url} target="_blank" rel="noreferrer" className="text-blue-800 hover:underline">
-                        {item.title}
-                      </a>
-                    ) : (
-                      item.title
-                    )}
-                  </div>
-                  <div className="mt-1 text-xs text-black/50">
-                    {[item.authors, item.journal, item.year].filter(Boolean).join(" / ")}
-                  </div>
-                  {item.abstract ? (
-                    <p className="mt-2 line-clamp-4 text-xs leading-5 text-black/60">
-                      {item.abstract}
-                    </p>
-                  ) : null}
-                </article>
-              ))
-            )}
-          </div>
-          {activeRun.errors.length > 0 ? (
-            <div className="mt-2 rounded-md border border-amber-600/25 bg-amber-50 p-3 text-sm text-amber-950">
-              {activeRun.errors.join("\n")}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
+    </AssistantCard>
   );
 }
 
-function CompactCollection({
-  icon,
-  title,
-  empty,
-  items,
+function ChatBubble({
+  message,
+  onAnswer,
 }: {
-  icon: React.ReactNode;
-  title: string;
-  empty: string;
-  items: { id: string; title: string; detail: string; tone: Workstream }[];
+  message: PlannerMessage;
+  onAnswer: (message?: string) => void;
 }) {
+  const isUser = message.role === "user";
   return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-2">
-        {icon}
-        <div className="font-mono text-xs uppercase tracking-normal text-black/45">
-          {title}
-        </div>
-      </div>
-      <div className="mt-2 max-h-80 space-y-2 overflow-auto pr-1">
-        {items.length === 0 ? (
-          <div className="rounded-md border border-black/10 bg-[#fafaf7] p-3 text-sm text-black/55">
-            {empty}
-          </div>
-        ) : (
-          items.map((item) => (
-            <div key={item.id} className={`min-w-0 rounded-md border p-3 text-sm ${labTone(item.tone)}`}>
-              <div className="break-words font-medium">{item.title}</div>
-              <div className="mt-1 break-words font-mono text-xs uppercase text-black/45">
-                {item.detail}
-              </div>
-            </div>
-          ))
+    <div className={cx("flex", isUser ? "justify-end" : "justify-start")}>
+      <div
+        className={cx(
+          "max-w-[88%] rounded-lg border px-4 py-3 text-sm leading-6",
+          isUser
+            ? "border-ink-900/10 bg-ink-900 text-white"
+            : "border-ink-900/8 bg-white text-ink-900"
         )}
-      </div>
-    </div>
-  );
-}
-
-function ArtifactBrowser({
-  artifacts,
-  loading,
-  error,
-}: {
-  artifacts: WorkspaceArtifacts | null;
-  loading: boolean;
-  error: string | null;
-}) {
-  const files = React.useMemo(() => artifacts?.files ?? [], [artifacts]);
-  const [selectedPath, setSelectedPath] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (files.length === 0) {
-      setSelectedPath(null);
-      return;
-    }
-    if (!selectedPath || !files.some((file) => file.relative_path === selectedPath)) {
-      setSelectedPath(files[0].relative_path);
-    }
-  }, [files, selectedPath]);
-
-  const selectedFile =
-    files.find((file) => file.relative_path === selectedPath) ?? files[0] ?? null;
-  const grouped = groupArtifacts(files);
-
-  if (loading) {
-    return (
-      <div className="rounded-md border border-black/10 bg-[#fafaf7] p-4 text-sm text-black/55">
-        Loading workspace artifact previews...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-md border border-amber-600/25 bg-amber-50 p-4 text-sm text-amber-950">
-        {error}
-      </div>
-    );
-  }
-
-  if (!artifacts || files.length === 0) {
-    return (
-      <div className="rounded-md border border-black/10 bg-[#fafaf7] p-4 text-sm text-black/55">
-        No artifact previews found for this run.
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid min-w-0 gap-3 lg:grid-cols-[280px_minmax(0,1fr)]">
-      <div className="min-w-0 rounded-md border border-black/10 bg-[#fafaf7] p-3">
-        <div className="font-mono text-xs uppercase tracking-normal text-black/45">
-          Workspace files
-        </div>
-        <div className="mt-2 max-h-[520px] space-y-3 overflow-auto pr-1">
-          {Object.entries(grouped).filter(([, groupFiles]) => groupFiles.length > 0).map(([kind, groupFiles]) => (
-            <div key={kind}>
-              <div className="mb-1 font-mono text-[11px] uppercase text-black/35">
-                {kind}
-              </div>
-              <div className="space-y-1">
-                {groupFiles.map((file) => (
-                  <button
-                    key={file.relative_path}
-                    className={`w-full min-w-0 rounded-md border px-2 py-2 text-left text-xs ${
-                      selectedFile?.relative_path === file.relative_path
-                        ? "border-blue-700/30 bg-blue-50 text-blue-950"
-                        : "border-black/10 bg-white text-black/65 hover:bg-white/70"
-                    }`}
-                    type="button"
-                    onClick={() => setSelectedPath(file.relative_path)}
-                  >
-                    <span className="block break-all font-mono">{file.relative_path}</span>
-                    <span className="mt-1 block text-[11px] text-black/40">
-                      {formatBytes(file.size_bytes)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="min-w-0 rounded-md border border-black/10 bg-white p-3">
-        {selectedFile ? (
-          <>
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="rounded-md border border-black/10 bg-[#fafaf7] px-2 py-1 font-mono text-[11px] uppercase text-black/45">
-                {selectedFile.kind}
-              </span>
-              <span className="min-w-0 break-all font-mono text-xs text-black/65">
-                {selectedFile.relative_path}
-              </span>
-              <span className="text-xs text-black/40">
-                {formatBytes(selectedFile.size_bytes)}
-              </span>
-            </div>
-            <pre className="mt-3 max-h-[620px] min-w-0 overflow-auto whitespace-pre-wrap break-words rounded-md bg-[#171715] p-4 font-mono text-[11px] leading-relaxed text-[#f4f2ea]">
-              {selectedFile.preview}
-              {selectedFile.truncated ? "\n\n... preview truncated ..." : ""}
-            </pre>
-          </>
+      >
+        <p className="whitespace-pre-wrap">{message.content}</p>
+        {!isUser && message.reply ? (
+          <ClarificationQuestions onSubmit={onAnswer} reply={message.reply} />
         ) : null}
       </div>
     </div>
   );
 }
 
-function ToolCallList({ calls }: { calls: ToolCallRecord[] }) {
-  if (calls.length === 0) {
-    return (
-      <div className="mt-2 rounded-md border border-black/10 bg-[#fafaf7] p-3 text-sm text-black/55">
-        No tool calls recorded for this run.
-      </div>
-    );
-  }
-
+function PendingAssistantCard() {
   return (
-    <div className="mt-2 max-h-[620px] min-w-0 space-y-2 overflow-auto pr-1">
-      {calls.map((call, index) => (
-        <details
-          key={`${call.name}-${index}`}
-          className={`min-w-0 rounded-md border bg-white p-3 text-sm ${
-            call.status === "done"
-              ? "border-emerald-700/20"
-              : call.status === "error"
-                ? "border-amber-700/25 bg-amber-50"
-                : "border-blue-700/20 bg-blue-50"
-          }`}
-          open={index >= calls.length - 2 || call.status === "error"}
-        >
-          <summary className="cursor-pointer list-none">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium text-black/85">{call.name}</span>
-              <span className="rounded-md border border-black/10 bg-white px-2 py-1 font-mono text-[11px] uppercase text-black/50">
-                {call.status}
-              </span>
-            </div>
-            <div className="mt-1 font-mono text-[11px] text-black/40">
-              {[call.started_at, call.completed_at].filter(Boolean).join(" -> ")}
-            </div>
-          </summary>
-          <div className="mt-3 grid gap-2">
-            <PayloadBlock label="Input" value={call.input ?? null} />
-            <PayloadBlock label="Output" value={call.output ?? null} />
-          </div>
-        </details>
-      ))}
+    <AssistantCard>
+      <div className="flex items-center gap-3">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-ink-900 text-parchment-50">
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </span>
+        <div>
+          <p className="text-sm font-medium">Aletheia is routing this through the institute labs.</p>
+          <p className="mt-1 text-xs text-ink-500">Waiting for /v1/vri-chat to return a structured plan.</p>
+        </div>
+      </div>
+    </AssistantCard>
+  );
+}
+
+function StreamingAssistantCard({ visibleText }: { visibleText: string }) {
+  return (
+    <div className="flex justify-start">
+      <div className="max-w-[92%] rounded-xl border border-ink-900/8 bg-white px-4 py-3 text-sm leading-6 shadow-pane">
+        <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-ink-500">
+          <Bot className="h-3.5 w-3.5" />
+          <span>Aletheia</span>
+          <span className="normal-case tracking-normal text-beacon-700">streaming</span>
+        </div>
+        <p className="whitespace-pre-wrap">
+          {visibleText}
+          <span className="ml-0.5 inline-block h-4 w-1 animate-pulse bg-beacon-600 align-[-2px]" />
+        </p>
+      </div>
     </div>
   );
 }
 
-function FileList({
-  title,
-  files,
-  tone = "neutral",
+function AssistantReplyCard({
+  isRevealing,
+  onAnswer,
+  reply,
+  visibleText,
 }: {
-  title: string;
-  files: string[];
-  tone?: "neutral" | "blue" | "green";
+  isRevealing: boolean;
+  onAnswer: (message?: string) => void;
+  reply: VriPlannerReply;
+  visibleText: string;
 }) {
-  const classes =
-    tone === "blue"
-      ? "border-blue-700/20 bg-blue-50"
-      : tone === "green"
-        ? "border-emerald-700/20 bg-emerald-50"
-        : "border-black/10 bg-[#fafaf7]";
+  return (
+    <div className="flex justify-start">
+      <div className="max-w-[92%] rounded-xl border border-ink-900/8 bg-white px-4 py-3 text-sm leading-6 shadow-pane">
+        <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-ink-500">
+          <Bot className="h-3.5 w-3.5" />
+          <span>Aletheia / {reply.stage}</span>
+          {isRevealing ? <span className="normal-case tracking-normal text-beacon-700">writing</span> : null}
+        </div>
+        <p className="whitespace-pre-wrap">
+          {visibleText}
+          {isRevealing ? <span className="ml-0.5 inline-block h-4 w-1 animate-pulse bg-beacon-600 align-[-2px]" /> : null}
+        </p>
+        {hasClarifications(reply) ? (
+          <ClarificationQuestions onSubmit={onAnswer} reply={reply} />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ClarificationQuestions({
+  onSubmit,
+  reply,
+}: {
+  onSubmit: (message?: string) => void;
+  reply: VriPlannerReply;
+}) {
+  const items = getClarificationItems(reply);
+  const [answers, setAnswers] = React.useState<Record<string, string>>({});
+  const answeredItems = items.filter((item) => answers[item.id]?.trim());
+  const allAnswered = answeredItems.length === items.length;
+
+  if (items.length === 0) return null;
+
+  function submitAnswers() {
+    if (!allAnswered) return;
+    const message = [
+      "Answers to clarification questions:",
+      ...items.map((item, index) => `${index + 1}. ${item.label}: ${answers[item.id].trim()}`),
+    ].join("\n");
+    onSubmit(message);
+  }
 
   return (
-    <div className={`min-w-0 rounded-md border p-3 ${classes}`}>
-      <div className="font-mono text-xs uppercase tracking-normal text-black/45">
-        {title}
+    <div className="mt-4 rounded-lg border border-ink-900/8 bg-parchment-50/65 p-3">
+      <p className="border-b border-ink-900/8 px-3 py-2 text-xs uppercase tracking-[0.14em] text-ink-500">
+        {clarificationStatusLabel(reply)}
+      </p>
+      <div className="space-y-5 px-1 py-3">
+        {items.map((item) => (
+          <div key={item.id}>
+            <p className="font-medium">{item.label}</p>
+            <p className="mt-1 text-sm text-ink-700">{item.question}</p>
+            {item.input_type === "single_choice" && item.options.length >= 2 ? (
+              <div className="mt-2 space-y-2">
+                {item.options.map((option) => {
+                  const selected = answers[item.id] === option.label;
+                  return (
+                    <button
+                      key={option.label}
+                      className={cx(
+                        "flex w-full items-start gap-3 rounded-md border px-3 py-2 text-left transition",
+                        selected
+                          ? "border-beacon-500/40 bg-beacon-50 text-beacon-900"
+                          : "border-ink-900/8 bg-white hover:bg-ink-900/[0.025]"
+                      )}
+                      onClick={() => setAnswers((current) => ({ ...current, [item.id]: option.label }))}
+                      type="button"
+                    >
+                      <span className={cx(
+                        "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border",
+                        selected ? "border-beacon-600 bg-beacon-100 text-beacon-700" : "border-ink-300"
+                      )}>
+                        {selected ? <CheckCircle2 className="h-3 w-3" /> : null}
+                      </span>
+                      <span>
+                        <span className="block text-sm font-medium">{option.label}</span>
+                        {option.detail ? <span className="mt-1 block text-xs leading-5 text-ink-500">{option.detail}</span> : null}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <textarea
+                className="mt-2 min-h-24 w-full resize-y rounded-md border border-ink-900/10 bg-white px-3 py-2 text-sm outline-none placeholder:text-ink-400 focus:border-beacon-500/45"
+                onChange={(event) => setAnswers((current) => ({ ...current, [item.id]: event.target.value }))}
+                placeholder="Type your answer here..."
+                value={answers[item.id] ?? ""}
+              />
+            )}
+          </div>
+        ))}
       </div>
-      {files.length === 0 ? (
-        <div className="mt-2 text-sm text-black/55">No files yet.</div>
+      <button
+        className="mt-1 inline-flex items-center gap-2 rounded-full border border-beacon-700 bg-beacon-600 px-4 py-2 text-sm font-medium text-white shadow-glow disabled:cursor-not-allowed disabled:opacity-45"
+        disabled={!allAnswered}
+        onClick={submitAnswers}
+        type="button"
+      >
+        <Send className="h-4 w-4" />
+        {allAnswered ? "Send answers" : `Answer ${items.length - answeredItems.length} more`}
+      </button>
+    </div>
+  );
+}
+
+function AssistantCard({ children }: { children: React.ReactNode }) {
+  return <section className="rounded-xl border border-ink-900/8 bg-parchment-50/70 p-4 shadow-pane">{children}</section>;
+}
+
+function PlanCard({
+  hasWorkspace,
+  loading,
+  onApprove,
+  onRevise,
+  reply,
+}: {
+  hasWorkspace: boolean;
+  loading: string | null;
+  onApprove: () => void;
+  onRevise: (message?: string) => void;
+  reply: VriPlannerReply;
+}) {
+  const [revision, setRevision] = React.useState("");
+
+  function submitRevision() {
+    const clean = revision.trim();
+    if (!clean) return;
+    onRevise(`Please revise the plan:\n${clean}`);
+    setRevision("");
+  }
+
+  return (
+    <AssistantCard>
+      <div>
+        <p className="text-xs uppercase tracking-[0.14em] text-ink-500">VRI plan / {reply.stage}</p>
+        <p className="mt-2 text-sm leading-6 text-ink-500">
+          Review the proposed labs, tasks, estimates, files, and handoffs. Workspace files and analysis only start after you approve it.
+        </p>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-ink-900/10 bg-white p-4">
+        <MarkdownBlock
+          markdown={reply.plan_markdown || fallbackPlanMarkdown(reply)}
+        />
+      </div>
+
+      <div className="mt-4 rounded-lg border border-ink-900/10 bg-white p-4">
+        <p className="text-sm font-medium">Does this plan look good to you?</p>
+        <div className="mt-3 space-y-2">
+          <button
+            className="flex w-full items-center gap-3 rounded-md border border-beacon-500/40 bg-beacon-50 px-3 py-2 text-left text-sm text-beacon-900 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={loading === "work"}
+            onClick={onApprove}
+            type="button"
+          >
+            {loading === "work" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            {hasWorkspace ? "Yes, start a new workspace from this plan" : "Yes, proceed with the plan"}
+          </button>
+          <div className="flex gap-2">
+            <input
+              className="min-w-0 flex-1 rounded-md border border-ink-900/10 px-3 py-2 text-sm outline-none placeholder:text-ink-400 focus:border-beacon-500/45"
+              onChange={(event) => setRevision(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") submitRevision();
+              }}
+              placeholder="Tell VRI what you want to change in the plan..."
+              value={revision}
+            />
+            <button
+              aria-label="Send plan revision request"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-ink-900/10 text-ink-500 hover:bg-ink-900/[0.03] disabled:cursor-not-allowed disabled:opacity-45"
+              disabled={!revision.trim() || loading === "chat"}
+              onClick={submitRevision}
+              title="Send plan revision request"
+              type="button"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </AssistantCard>
+  );
+}
+
+function MarkdownBlock({ markdown }: { markdown: string }) {
+  const blocks = markdown
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  return (
+    <div className="space-y-4 text-sm leading-6 text-ink-700">
+      {blocks.map((block, index) => {
+        if (block.startsWith("### ")) {
+          return <h4 key={index} className="pt-1 text-base font-semibold text-ink-900">{renderInlineMarkdown(block.slice(4))}</h4>;
+        }
+        if (block.startsWith("## ")) {
+          return <h3 key={index} className="text-lg font-semibold text-ink-900">{renderInlineMarkdown(block.slice(3))}</h3>;
+        }
+        if (block.startsWith("# ")) {
+          return <h2 key={index} className="text-xl font-semibold text-ink-900">{renderInlineMarkdown(block.slice(2))}</h2>;
+        }
+
+        const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+        if (lines.every((line) => line.startsWith("- "))) {
+          return (
+            <ul key={index} className="space-y-2 pl-5">
+              {lines.map((line, lineIndex) => (
+                <li key={lineIndex} className="list-disc">{renderInlineMarkdown(line.slice(2))}</li>
+              ))}
+            </ul>
+          );
+        }
+        if (lines.every((line) => /^\d+\.\s/.test(line))) {
+          return (
+            <ol key={index} className="space-y-2 pl-5">
+              {lines.map((line, lineIndex) => (
+                <li key={lineIndex} className="list-decimal">{renderInlineMarkdown(line.replace(/^\d+\.\s/, ""))}</li>
+              ))}
+            </ol>
+          );
+        }
+
+        return <p key={index} className="whitespace-pre-wrap">{renderInlineMarkdown(block)}</p>;
+      })}
+    </div>
+  );
+}
+
+function renderInlineMarkdown(value: string) {
+  const parts = value.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code key={index} className="rounded bg-ink-900/[0.06] px-1 py-0.5 text-[0.92em]">{part.slice(1, -1)}</code>;
+    }
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index} className="font-semibold text-ink-900">{part.slice(2, -2)}</strong>;
+    }
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
+}
+
+function ErrorCard({ error }: { error: string }) {
+  return (
+    <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm leading-6 text-red-800">
+      {error}
+    </div>
+  );
+}
+
+function SideInspector({
+  activeRun,
+  artifactError,
+  artifactLoading,
+  files,
+  health,
+  nextStep,
+  onOpenFileInNewTab,
+  onResizeStart,
+  onSelectFile,
+  onTogglePanel,
+  openPanels,
+  selectedFile,
+  selectedLab,
+}: {
+  activeRun: WorkRun | null;
+  artifactError: string | null;
+  artifactLoading: boolean;
+  files: ViewFile[];
+  health: Health | null;
+  nextStep: string;
+  onOpenFileInNewTab: (file: ViewFile | null) => void;
+  onResizeStart: (event: React.PointerEvent<HTMLButtonElement>) => void;
+  onSelectFile: (id: string) => void;
+  onTogglePanel: (panel: InspectorPanel) => void;
+  openPanels: InspectorPanel[];
+  selectedFile: ViewFile | null;
+  selectedLab: LabPrompt | null;
+}) {
+  const toolCount = activeRun?.tool_calls.length ?? 0;
+  const literatureCount = activeRun?.literature_results.length ?? 0;
+
+  return (
+    <aside className="relative min-h-[720px] border-t border-ink-900/8 bg-white lg:h-screen lg:border-t-0">
+      <button
+        aria-label="Resize inspector"
+        className="absolute -left-3 top-1/2 z-10 hidden h-12 w-6 -translate-y-1/2 cursor-col-resize items-center justify-center rounded-full border border-ink-900/10 bg-white text-ink-400 shadow-pane hover:text-ink-900 lg:flex"
+        onPointerDown={onResizeStart}
+        type="button"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+
+      <div className="divide-y divide-ink-900/8">
+        <InspectorAccordionSection
+          active={openPanels.includes("progress")}
+          id="progress"
+          maxHeightClass="max-h-[36vh]"
+          onOpen={() => onTogglePanel("progress")}
+          summary={health?.status === "ok" ? "backend ready" : "connecting"}
+          title="Progress"
+        >
+          <ProgressSteps
+            activeRun={activeRun}
+            health={health}
+            nextStep={nextStep}
+            selectedLab={selectedLab}
+          />
+        </InspectorAccordionSection>
+
+        <InspectorAccordionSection
+          active={openPanels.includes("results")}
+          id="results"
+          maxHeightClass="max-h-[34vh]"
+          onOpen={() => onTogglePanel("results")}
+          summary={`${toolCount} tools / ${literatureCount} papers`}
+          title="Results"
+        >
+          <MetricRow label="Workspace run" value={activeRun?.status ?? "Not started"} />
+          <MetricRow label="Tool calls" value={String(toolCount)} />
+          <MetricRow label="Literature" value={String(literatureCount)} />
+          <MetricRow label="Files" value={artifactLoading ? "Loading" : String(files.length)} />
+          {activeRun?.run_id ? <MetricRow label="Run id" value={truncate(activeRun.run_id, 18)} /> : null}
+          {artifactError ? <p className="mt-3 text-sm text-red-700">{artifactError}</p> : null}
+        </InspectorAccordionSection>
+
+        <InspectorAccordionSection
+          active={openPanels.includes("files")}
+          id="files"
+          maxHeightClass="max-h-[54vh]"
+          onOpen={() => onTogglePanel("files")}
+          summary={artifactLoading ? "loading" : `${files.length} files`}
+          title="Files"
+        >
+          {files.length === 0 ? (
+            <p className="py-8 text-center text-sm text-ink-500">Workspace files will appear here after approval starts a run.</p>
+          ) : (
+            <div className="space-y-2">
+              {files.map((file) => (
+                <div
+                  key={file.id}
+                  className={cx(
+                    "rounded-md border bg-white p-2 text-sm",
+                    selectedFile?.id === file.id ? "border-beacon-500/35 bg-beacon-50" : "border-ink-900/8 bg-white hover:bg-ink-900/[0.02]"
+                  )}
+                >
+                  <div className="flex items-start gap-2">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-ink-400" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{file.name}</p>
+                      <p className="mt-0.5 text-xs text-ink-500">
+                        {[file.kind, file.sizeLabel, fileOwnerLabel(activeRun, file)].filter(Boolean).join(" / ")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-ink-900/10 bg-white px-2 py-1.5 text-xs text-ink-600 hover:bg-ink-900/[0.03]"
+                      onClick={() => onSelectFile(file.id)}
+                      type="button"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      View
+                    </button>
+                    <button
+                      aria-label={`Open ${file.name} in a new tab`}
+                      className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-ink-900/10 bg-white text-ink-500 hover:bg-ink-900/[0.03] hover:text-ink-900"
+                      onClick={() => onOpenFileInNewTab(file)}
+                      title="Open in new tab"
+                      type="button"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {activeRun?.lab_events?.length ? (
+                <LabProvenancePanel activeRun={activeRun} files={files} onOpenFile={onSelectFile} />
+              ) : null}
+            </div>
+          )}
+        </InspectorAccordionSection>
+
+        <InspectorAccordionSection
+          active={openPanels.includes("tools")}
+          maxHeightClass="max-h-[44vh]"
+          onOpen={() => onTogglePanel("tools")}
+          summary={`${toolCount + literatureCount} records`}
+          title="Tool calls & literature"
+        >
+          <ToolAndLiteraturePanel activeRun={activeRun} />
+        </InspectorAccordionSection>
+      </div>
+    </aside>
+  );
+}
+function InspectorAccordionSection({
+  active,
+  children,
+  id,
+  maxHeightClass,
+  onOpen,
+  summary,
+  title,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  id?: string;
+  maxHeightClass: string;
+  onOpen: () => void;
+  summary: string;
+  title: string;
+}) {
+  return (
+    <section id={id}>
+      <button
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-ink-900/[0.025]"
+        onClick={onOpen}
+        type="button"
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          {active ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+          <span className="truncate text-sm font-medium">{title}</span>
+        </span>
+        <span className="shrink-0 truncate text-xs text-ink-500">{summary}</span>
+      </button>
+      {active ? (
+        <div className={cx("overflow-y-auto border-t border-beacon-500/30 bg-parchment-50/45 p-4", maxHeightClass)}>
+          {children}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function FilePreview({
+  file,
+  maxHeightClass,
+  onOpenInNewTab,
+}: {
+  file: ViewFile | null;
+  maxHeightClass: string;
+  onOpenInNewTab?: () => void;
+}) {
+  if (!file) {
+    return <p className="py-8 text-center text-sm text-ink-500">Select a file after a workspace run.</p>;
+  }
+
+  return (
+    <div>
+      <div className="flex items-start justify-between gap-3 rounded-md border border-ink-900/8 bg-white p-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{file.name}</p>
+          <p className="mt-1 text-xs text-ink-500">{file.kind} / {file.sizeLabel}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {onOpenInNewTab ? (
+            <button
+              aria-label="Open file preview in a new tab"
+              className="grid h-8 w-8 place-items-center rounded-md border border-ink-900/10 text-ink-500 hover:bg-ink-900/[0.03] hover:text-ink-900"
+              onClick={onOpenInNewTab}
+              title="Open file preview in a new tab"
+              type="button"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {file.preview ? (
+        <pre className={cx("mt-3 overflow-auto whitespace-pre-wrap rounded-md border border-ink-900/10 bg-obsidian-300 p-3 text-xs leading-5 text-parchment-50", maxHeightClass)}>
+          {file.preview}
+          {file.truncated ? "\n\n[Preview truncated by artifacts endpoint.]" : ""}
+        </pre>
       ) : (
-        <ul className="mt-2 max-h-36 space-y-1 overflow-auto font-mono text-xs leading-5 text-black/65">
-          {files.map((file) => (
-            <li key={file} className="break-all">
-              {file}
-            </li>
-          ))}
-        </ul>
+        <p className="mt-3 rounded-md border border-ink-900/8 bg-white p-3 text-sm leading-6 text-ink-500">
+          This file path came from the run summary. A preview will appear here when the artifacts endpoint returns file content for it.
+        </p>
       )}
     </div>
   );
 }
 
-function PayloadBlock({ label, value }: { label: string; value: unknown }) {
+function ExpandedFileViewer({
+  file,
+  onClose,
+  onOpenInNewTab,
+}: {
+  file: ViewFile | null;
+  onClose: () => void;
+  onOpenInNewTab: () => void;
+}) {
   return (
-    <div className="min-w-0">
-      <div className="font-mono text-[11px] uppercase tracking-normal text-black/40">
-        {label}
+    <div className="fixed inset-0 z-50 bg-ink-900/35 p-4 backdrop-blur-sm">
+      <div className="mx-auto flex h-full max-w-6xl flex-col rounded-xl border border-ink-900/10 bg-white shadow-lift">
+        <div className="flex items-center justify-between gap-3 border-b border-ink-900/8 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.14em] text-ink-500">File reader</p>
+            <h2 className="truncate text-lg font-medium">{file?.name ?? "No file selected"}</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className="inline-flex items-center gap-2 rounded-full border border-ink-900/10 px-3 py-2 text-sm text-ink-600 hover:bg-ink-900/[0.03] hover:text-ink-900"
+              onClick={onOpenInNewTab}
+              type="button"
+            >
+              <ExternalLink className="h-4 w-4" />
+              New tab
+            </button>
+            <button
+              className="inline-flex items-center gap-2 rounded-full border border-ink-900/10 px-3 py-2 text-sm text-ink-600 hover:bg-ink-900/[0.03] hover:text-ink-900"
+              onClick={onClose}
+              type="button"
+            >
+              <Minimize2 className="h-4 w-4" />
+              Close
+            </button>
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto p-4">
+          <FilePreview file={file} maxHeightClass="max-h-none min-h-[65vh]" />
+        </div>
       </div>
-      <pre className="mt-1 max-h-44 min-w-0 overflow-auto whitespace-pre-wrap break-words rounded-md bg-[#171715] p-3 font-mono text-[11px] leading-relaxed text-[#f4f2ea]">
-        {formatPayload(value)}
+    </div>
+  );
+}
+
+function LabProvenancePanel({
+  activeRun,
+  files,
+  onOpenFile,
+}: {
+  activeRun: WorkRun;
+  files: ViewFile[];
+  onOpenFile: (id: string) => void;
+}) {
+  const events = activeRun.lab_events ?? [];
+  if (events.length === 0) return null;
+
+  return (
+    <div className="mt-4 border-t border-ink-900/8 pt-3">
+      <p className="mb-2 text-xs uppercase tracking-[0.14em] text-ink-500">Lab provenance</p>
+      <div className="space-y-2">
+        {events.map((event, index) => (
+          <div key={`${event.lab_name}-${event.action}-${index}`} className="rounded-md border border-ink-900/8 bg-white p-3 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{event.lab_name}</p>
+                <p className="mt-0.5 text-xs uppercase tracking-[0.1em] text-ink-500">{event.action}</p>
+              </div>
+              <span className="shrink-0 rounded-full border border-ink-900/10 px-2 py-0.5 text-[11px] text-ink-500">
+                {event.workstream}
+              </span>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-ink-600">{event.summary}</p>
+            {event.handoff_to ? (
+              <p className="mt-2 text-xs text-ink-500">Handoff to {event.handoff_to}</p>
+            ) : null}
+            {event.files.length > 0 ? (
+              <div className="mt-2 space-y-1">
+                {event.files.slice(0, 4).map((path) => {
+                  const fileId = fileIdForPath(path, files);
+                  return (
+                    <button
+                      key={path}
+                      className="flex w-full items-center gap-2 rounded border border-ink-900/8 px-2 py-1.5 text-left text-xs text-ink-600 hover:bg-ink-900/[0.03] disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!fileId}
+                      onClick={() => fileId && onOpenFile(fileId)}
+                      type="button"
+                    >
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-ink-400" />
+                      <span className="min-w-0 flex-1 truncate">{shortFilePath(path)}</span>
+                    </button>
+                  );
+                })}
+                {event.files.length > 4 ? (
+                  <p className="px-2 text-xs text-ink-400">+{event.files.length - 4} more files</p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RunTraceCard({
+  activeRun,
+  loading,
+}: {
+  activeRun: WorkRun | null;
+  loading: string | null;
+}) {
+  if (!activeRun && loading !== "work") return null;
+
+  return (
+    <AssistantCard>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.14em] text-ink-500">Workspace execution</p>
+          <p className="mt-2 text-base leading-7">
+            {activeRun
+              ? `Workspace ${activeRun.status}. Review the tool calls, literature, and generated files below.`
+              : "Starting the workspace after your approval."}
+          </p>
+        </div>
+        {loading === "work" ? <Loader2 className="mt-1 h-4 w-4 animate-spin text-beacon-700" /> : null}
+      </div>
+
+      {activeRun ? (
+        <div className="mt-4">
+          <ExecutionTraceList activeRun={activeRun} />
+        </div>
+      ) : (
+        <div className="mt-4 rounded-lg border border-ink-900/10 bg-white px-4 py-3 text-sm text-ink-500">
+          Preparing labs, workspace folders, and artifact indexing.
+        </div>
+      )}
+    </AssistantCard>
+  );
+}
+
+function ToolAndLiteraturePanel({ activeRun }: { activeRun: WorkRun | null }) {
+  if (!activeRun) {
+    return <p className="py-8 text-center text-sm text-ink-500">Tool calls and literature appear after a workspace run.</p>;
+  }
+
+  return <ExecutionTraceList activeRun={activeRun} compact />;
+}
+
+function ExecutionTraceList({
+  activeRun,
+  compact,
+}: {
+  activeRun: WorkRun;
+  compact?: boolean;
+}) {
+  const hasTools = activeRun.tool_calls.length > 0;
+  const hasLiterature = activeRun.literature_results.length > 0;
+
+  return (
+    <div className="space-y-2">
+      <TraceMessageRow
+        compact={compact}
+        text={`Run ${activeRun.status}. ${activeRun.tasks_created.length} tasks, ${activeRun.labs_created.length} labs, ${activeRun.generated_files.length + activeRun.data_files.length + activeRun.processed_files.length} files tracked.`}
+      />
+      {hasTools ? (
+        activeRun.tool_calls.map((tool, index) => (
+          <ToolTraceRow key={`${tool.name}-${index}`} compact={compact} index={index} tool={tool} />
+        ))
+      ) : (
+        <TraceEmptyRow text="No backend tool calls were returned for this run." />
+      )}
+      {hasLiterature ? (
+        activeRun.literature_results.map((item, index) => (
+          <LiteratureTraceRow compact={compact} item={item} key={`${item.title}-${index}`} />
+        ))
+      ) : (
+        <TraceEmptyRow text="No literature records were returned for this run." />
+      )}
+      {activeRun.errors.length > 0 ? (
+        <TraceMessageRow
+          compact={compact}
+          tone="error"
+          text={activeRun.errors.join("\n")}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function TraceMessageRow({
+  compact,
+  text,
+  tone = "neutral",
+}: {
+  compact?: boolean;
+  text: string;
+  tone?: "neutral" | "error";
+}) {
+  return (
+    <div className={cx(
+      "flex items-start gap-3 rounded-lg border px-3 py-2 text-sm leading-6",
+      compact ? "text-xs leading-5" : "",
+      tone === "error" ? "border-red-300 bg-red-50 text-red-800" : "border-ink-900/12 bg-white text-ink-700"
+    )}>
+      <MessageSquareText className="mt-1 h-4 w-4 shrink-0 text-ink-500" />
+      <p className="whitespace-pre-wrap">{text}</p>
+    </div>
+  );
+}
+
+function ToolTraceRow({
+  compact,
+  index,
+  tool,
+}: {
+  compact?: boolean;
+  index: number;
+  tool: ToolCallRecord;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const duration = toolDurationLabel(tool);
+  const hasDetails = tool.input !== undefined || tool.output !== undefined;
+
+  return (
+    <div className="rounded-lg border border-ink-900/12 bg-white">
+      <button
+        className={cx(
+          "flex w-full items-center gap-3 px-3 py-2 text-left text-sm",
+          !hasDetails ? "cursor-default" : "hover:bg-ink-900/[0.02]",
+          compact ? "text-xs" : ""
+        )}
+        disabled={!hasDetails}
+        onClick={() => hasDetails && setOpen((current) => !current)}
+        type="button"
+      >
+        <span className="grid h-5 w-5 shrink-0 place-items-center text-ink-500">
+          {tool.name.toLowerCase().includes("code") || tool.name.toLowerCase().includes("query") ? (
+            <Code2 className="h-4 w-4" />
+          ) : (
+            <Wrench className="h-4 w-4" />
+          )}
+        </span>
+        <span className="min-w-0 flex-1 truncate">{tool.name || `Tool call ${index + 1}`}</span>
+        <span className="hidden shrink-0 items-center gap-1 text-xs text-ink-500 sm:inline-flex">
+          <Clock3 className="h-3.5 w-3.5" />
+          {duration}
+        </span>
+        <span className={cx(
+          "shrink-0 rounded-full border px-2 py-0.5 text-[11px]",
+          tool.status === "success" || tool.status === "completed"
+            ? "border-green-700/20 text-green-700"
+            : tool.status === "error" || tool.status === "failed"
+              ? "border-red-700/20 text-red-700"
+              : "border-ink-900/10 text-ink-500"
+        )}>
+          {tool.status || "recorded"}
+        </span>
+        {hasDetails ? (
+          open ? <ChevronDown className="h-4 w-4 shrink-0 text-ink-500" /> : <ChevronRight className="h-4 w-4 shrink-0 text-ink-500" />
+        ) : null}
+      </button>
+      {open ? (
+        <div className="border-t border-ink-900/8 bg-parchment-50/55 p-3">
+          {tool.input !== undefined ? <TraceJsonBlock label="Input" value={tool.input} /> : null}
+          {tool.output !== undefined ? <TraceJsonBlock label="Output" value={tool.output} /> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function LiteratureTraceRow({
+  compact,
+  item,
+}: {
+  compact?: boolean;
+  item: LiteratureResult;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const meta = [item.journal, item.year, item.pmid ? `PMID ${item.pmid}` : null]
+    .filter(Boolean)
+    .join(" / ");
+
+  return (
+    <div className="rounded-lg border border-ink-900/12 bg-white">
+      <button
+        className={cx(
+          "flex w-full items-center gap-3 px-3 py-2 text-left text-sm",
+          compact ? "text-xs" : ""
+        )}
+        onClick={() => setOpen((current) => !current)}
+        type="button"
+      >
+        <BookOpen className="h-4 w-4 shrink-0 text-ink-500" />
+        <span className="min-w-0 flex-1 truncate">{item.title}</span>
+        <span className="hidden shrink-0 text-xs text-ink-500 md:inline">{meta || "Literature"}</span>
+        {open ? <ChevronDown className="h-4 w-4 shrink-0 text-ink-500" /> : <ChevronRight className="h-4 w-4 shrink-0 text-ink-500" />}
+      </button>
+      {open ? (
+        <div className="space-y-2 border-t border-ink-900/8 bg-parchment-50/55 p-3 text-xs leading-5 text-ink-600">
+          {meta ? <p>{meta}</p> : null}
+          {item.authors ? <p>{item.authors}</p> : null}
+          {item.abstract ? <p className="whitespace-pre-wrap">{item.abstract}</p> : null}
+          {item.url ? <p className="break-all">{item.url}</p> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function TraceJsonBlock({ label, value }: { label: string; value: unknown }) {
+  return (
+    <div className="mb-3 last:mb-0">
+      <p className="mb-1 text-xs uppercase tracking-[0.12em] text-ink-500">{label}</p>
+      <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-md border border-ink-900/10 bg-obsidian-300 p-3 text-xs leading-5 text-parchment-50">
+        {formatJsonValue(value)}
       </pre>
     </div>
   );
 }
 
-function labTone(workstream: Workstream) {
-  if (workstream === "computational" || workstream === "data") {
-    return "border-blue-700/20 bg-blue-50";
-  }
-  if (workstream === "experimental") {
-    return "border-emerald-700/20 bg-emerald-50";
-  }
-  if (workstream === "review") {
-    return "border-violet-700/20 bg-violet-50";
-  }
-  return "border-slate-700/20 bg-slate-50";
-}
-
-function stripLeadingNumber(item: string) {
-  return item.replace(/^\s*\d+[\).\s-]+/, "");
-}
-
-function Panel({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
+function TraceEmptyRow({ text }: { text: string }) {
   return (
-    <section className="min-w-0 overflow-hidden rounded-lg border border-black/10 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex items-center gap-2 text-sm font-medium">
-        {icon}
-        {title}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-black/10 bg-[#fafaf7] p-3">
-      <dt className="text-xs text-black/50">{label}</dt>
-      <dd className="mt-1 break-words font-mono text-sm">{value}</dd>
+    <div className="rounded-lg border border-dashed border-ink-900/12 bg-white px-3 py-2 text-sm text-ink-500">
+      {text}
     </div>
   );
 }
 
-function StatusPill({
-  label,
-  value,
-  tone,
+function ProgressSteps({
+  activeRun,
+  health,
+  nextStep,
+  selectedLab,
 }: {
-  label: string;
-  value: string;
-  tone: "ok" | "pending";
+  activeRun: WorkRun | null;
+  health: Health | null;
+  nextStep: string;
+  selectedLab: LabPrompt | null;
 }) {
+  const steps = [
+    { label: "Backend", done: health?.status === "ok", detail: health?.model_name ?? "Connecting" },
+    { label: "Lab", done: Boolean(selectedLab), detail: selectedLab?.name ?? "Loading labs" },
+    { label: "Workspace", done: Boolean(activeRun), detail: activeRun?.status ?? "Not started" },
+    { label: "Files", done: Boolean(activeRun?.generated_files.length || activeRun?.data_files.length || activeRun?.processed_files.length), detail: activeRun ? "Artifacts indexed" : "Waiting for workspace" },
+    { label: "Review", done: Boolean(activeRun), detail: activeRun ? "Inspect results and files" : "Not ready" },
+  ];
+
   return (
-    <span
-      className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 ${
-        tone === "ok"
-          ? "border-emerald-700/20 bg-emerald-50 text-emerald-950"
-          : "border-amber-700/20 bg-amber-50 text-amber-950"
-      }`}
-    >
-      <span className="font-medium">{label}</span>
-      <span className="font-mono text-xs">{value}</span>
-    </span>
+    <div>
+      <p className="mb-4 rounded-md border border-ink-900/8 bg-white p-3 text-sm leading-6 text-ink-500">
+        {nextStep}
+      </p>
+      <div className="space-y-3">
+        {steps.map((step) => (
+          <div key={step.label} className="flex gap-3">
+            {step.done ? (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-700" />
+            ) : (
+              <Circle className="mt-0.5 h-4 w-4 shrink-0 text-ink-400" />
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{step.label}</p>
+              <p className="truncate text-xs text-ink-500">{step.detail}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
-function JsonBlock({ value }: { value: unknown }) {
+function MetricRow({ label, value }: { label: string; value: string }) {
   return (
-    <pre className="max-h-[460px] min-w-0 overflow-auto whitespace-pre-wrap break-words rounded-md bg-[#171715] p-4 font-mono text-xs leading-relaxed text-[#f4f2ea]">
-      {JSON.stringify(value, null, 2)}
-    </pre>
+    <div className="flex items-center justify-between border-b border-ink-900/8 py-2 text-sm last:border-b-0">
+      <span className="text-ink-500">{label}</span>
+      <span className="font-medium">{value}</span>
+    </div>
   );
 }
 
-function safeJson(value: string): RunResult {
-  try {
-    return JSON.parse(value) as RunResult;
-  } catch {
-    return { detail: { error: value } };
+function wireMessages(messages: PlannerMessage[]) {
+  return messages.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
+}
+
+function hasClarifications(reply: VriPlannerReply) {
+  return getClarificationItems(reply).length > 0;
+}
+
+function clarificationStatusLabel(reply: VriPlannerReply) {
+  if (reply.answer_quality === "invalid") return "Repair needed";
+  if (reply.missing_information?.length) return "Clarifying objective";
+  const round = reply.clarification_round ?? 1;
+  return `Clarification round ${round}`;
+}
+
+function getClarificationItems(reply: VriPlannerReply): ClarificationItem[] {
+  if (reply.clarification_items?.length) return reply.clarification_items;
+  return reply.clarification_questions.map((question, index) => ({
+    id: `q${index + 1}`,
+    label: `${index + 1}. Clarification`,
+    question,
+    input_type: "free_text",
+    options: [],
+  }));
+}
+
+function fallbackPlanMarkdown(reply: VriPlannerReply) {
+  const labs = reply.proposed_labs.length
+    ? reply.proposed_labs
+        .map((lab) => `- **${lab.name}** (${lab.workstream}): ${lab.rationale}`)
+        .join("\n")
+    : "- No labs proposed.";
+
+  const tasks = [
+    ...reply.computational_work.map((task) => `**Computational** - ${task} _(estimate: 5-15 min)_`),
+    ...reply.experimental_work.map((task) => `**Validation** - ${task} _(estimate: planning only)_`),
+    ...reply.next_actions.map((task) => `**Next action** - ${task} _(estimate: 2-5 min)_`),
+  ];
+
+  const taskLines = tasks.length
+    ? tasks.map((task, index) => `${index + 1}. ${task}`).join("\n")
+    : "1. **Review** - Confirm scope before workspace creation _(estimate: 2 min)_";
+
+  return `## Proposed VRI Plan
+
+### Labs
+${labs}
+
+### Step-by-step tasks
+${taskLines}
+
+### Expected files
+- \`conversation.json\`, \`planner_reply.json\`, \`labs.json\`, and \`tasks.json\`
+- \`literature.json\` and \`literature_queries.json\` when evidence search runs
+- \`requirements.txt\`, generated scripts, data files, processed outputs, and reports when applicable
+
+### Lab handoffs
+- The coordinator creates the run manifests first.
+- Evidence and data labs collect source material.
+- Computational labs create scripts and processed outputs.
+- Review or validation labs inspect the outputs before interpretation.`;
+}
+
+function fileOwnerLabel(activeRun: WorkRun | null, file: ViewFile) {
+  const event = activeRun?.lab_events?.find((item) =>
+    item.files.some((path) => path === file.path || path.endsWith(`/${file.name}`) || file.path.endsWith(path))
+  );
+  return event ? event.lab_name : "";
+}
+
+function fileIdForPath(path: string, files: ViewFile[]) {
+  const file = files.find((item) => item.path === path || path.endsWith(`/${item.name}`) || item.path.endsWith(path));
+  return file?.id ?? "";
+}
+
+function shortFilePath(path: string) {
+  const normalized = path.replaceAll("\\", "/");
+  const marker = "/.vri_workspaces/";
+  const markerIndex = normalized.indexOf(marker);
+  if (markerIndex >= 0) {
+    const parts = normalized.slice(markerIndex + marker.length).split("/");
+    return parts.slice(1).join("/") || parts.join("/");
   }
+  return normalized.split("/").slice(-3).join("/");
+}
+
+function parseSseEvent(block: string): { type: string; data: Record<string, unknown> } | null {
+  const lines = block.split("\n");
+  const eventLine = lines.find((line) => line.startsWith("event:"));
+  const data = lines
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.slice(5).trimStart())
+    .join("\n");
+
+  if (!eventLine || !data) return null;
+  try {
+    return { type: eventLine.slice(6).trim(), data: JSON.parse(data) as Record<string, unknown> };
+  } catch {
+    return null;
+  }
+}
+
+function filePreviewHtml(file: ViewFile) {
+  const content = file.preview || "No preview content returned for this file yet.";
+  return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(file.name)}</title>
+    <style>
+      body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #15130f; background: #f8f5ee; }
+      header { padding: 18px 22px; border-bottom: 1px solid rgba(21, 19, 15, 0.12); background: #fff; position: sticky; top: 0; }
+      h1 { margin: 0; font-size: 18px; font-weight: 650; }
+      p { margin: 6px 0 0; color: rgba(21, 19, 15, 0.62); font-size: 13px; }
+      pre { margin: 22px; padding: 18px; min-height: calc(100vh - 130px); overflow: auto; white-space: pre-wrap; border: 1px solid rgba(21, 19, 15, 0.12); border-radius: 10px; background: #15130f; color: #f8f5ee; line-height: 1.55; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>${escapeHtml(file.name)}</h1>
+      <p>${escapeHtml(file.kind)} / ${escapeHtml(file.sizeLabel)} / ${escapeHtml(file.path)}</p>
+    </header>
+    <pre>${escapeHtml(content)}${file.truncated ? "\n\n[Preview truncated by artifacts endpoint.]" : ""}</pre>
+  </body>
+</html>`;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function readStorage<T>(key: string, fallback: T): T {
@@ -1729,8 +2238,32 @@ function truncate(value: string, max: number) {
   return value.length <= max ? value : `${value.slice(0, max - 3)}...`;
 }
 
-function formatPayload(value: unknown) {
-  if (value === null || value === undefined) return "null";
+function relativeTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const seconds = Math.max(1, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (seconds < 60) return "now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
+function toolDurationLabel(tool: ToolCallRecord) {
+  const started = tool.started_at ? new Date(tool.started_at).getTime() : NaN;
+  const completed = tool.completed_at ? new Date(tool.completed_at).getTime() : NaN;
+  if (Number.isFinite(started) && Number.isFinite(completed) && completed >= started) {
+    const seconds = (completed - started) / 1000;
+    if (seconds < 1) return `${Math.max(1, Math.round(seconds * 1000))}ms`;
+    if (seconds < 10) return `${seconds.toFixed(1)}s`;
+    return `${Math.round(seconds)}s`;
+  }
+  if (tool.status === "running" || tool.status === "queued") return tool.status;
+  return tool.completed_at ? "done" : "recorded";
+}
+
+function formatJsonValue(value: unknown) {
   if (typeof value === "string") return value;
   try {
     return JSON.stringify(value, null, 2);
@@ -1739,18 +2272,12 @@ function formatPayload(value: unknown) {
   }
 }
 
-function groupArtifacts(files: WorkspaceArtifactFile[]) {
-  const order = ["script", "data", "processed", "report", "requirements", "readme", "manifest", "artifact"];
-  return files.reduce<Record<string, WorkspaceArtifactFile[]>>((groups, file) => {
-    const key = file.kind || "artifact";
-    groups[key] = groups[key] ?? [];
-    groups[key].push(file);
-    return groups;
-  }, Object.fromEntries(order.map((key) => [key, []])) as Record<string, WorkspaceArtifactFile[]>);
-}
-
 function formatBytes(value: number) {
   if (value < 1024) return `${value} B`;
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
   return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
 }

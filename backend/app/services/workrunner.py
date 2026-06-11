@@ -211,6 +211,14 @@ def start_research_workspace(
         generated_files.append(str(workspace / "README.md"))
     steps.append({"status": "done", "label": "Wrote workspace README"})
 
+    lab_events = _lab_events_from_run(
+        labs=planner_reply.proposed_labs,
+        tool_calls=tool_calls,
+        generated_files=_dedupe(generated_files),
+        data_files=_dedupe(data_files),
+        processed_files=_dedupe(processed_files),
+    )
+
     return {
         "run_id": run_id,
         "status": "completed" if not errors else "completed_with_errors",
@@ -224,6 +232,7 @@ def start_research_workspace(
         "processed_files": _dedupe(processed_files),
         "labs_created": labs,
         "tasks_created": tasks,
+        "lab_events": lab_events,
         "literature_results": literature,
         "errors": errors,
     }
@@ -356,6 +365,175 @@ def _write_research_scripts(workspace: Path, is_protein_sequence_job: bool) -> l
     files[4].write_text(_scripts_readme(is_protein_sequence_job), encoding="utf-8")
     files[5].write_text("sequence_id,optimal_ph\nexample_uniprot_id,7.0\n", encoding="utf-8")
     return [str(path) for path in files]
+
+
+def _lab_events_from_run(
+    *,
+    labs: list[ProposedLab],
+    tool_calls: list[dict[str, Any]],
+    generated_files: list[str],
+    data_files: list[str],
+    processed_files: list[str],
+) -> list[dict[str, Any]]:
+    coordinator = _lab_for(labs, preferred=("hybrid", "review", "data")) or {
+        "name": "VRI Coordination Lab",
+        "workstream": "hybrid",
+    }
+    evidence_lab = _lab_for(labs, preferred=("review", "data", "computational")) or coordinator
+    compute_lab = _lab_for(labs, preferred=("computational", "data", "hybrid")) or coordinator
+    data_lab = _lab_for(labs, preferred=("data", "computational", "hybrid")) or compute_lab
+    validation_lab = _lab_for(labs, preferred=("experimental", "hybrid")) or coordinator
+
+    events: list[dict[str, Any]] = []
+    events.append(
+        _lab_event(
+            lab=coordinator,
+            action="Plan and manifest",
+            tool="write_workspace_manifests",
+            files=_matching_files(generated_files, ("conversation.json", "planner_reply.json", "labs.json", "tasks.json", "queries.txt")),
+            handoff_to=str(evidence_lab["name"]),
+            summary="Created the run transcript, planner reply, lab roster, task list, and query manifest.",
+        )
+    )
+    events.append(
+        _lab_event(
+            lab=evidence_lab,
+            action="Evidence retrieval",
+            tool="europe_pmc_literature_search",
+            files=_matching_files(generated_files, ("literature.json", "literature_queries.json")),
+            handoff_to=str(compute_lab["name"]),
+            summary="Collected literature records and saved the attempted evidence-search queries.",
+        )
+    )
+    events.append(
+        _lab_event(
+            lab=compute_lab,
+            action="Runtime and scripts",
+            tool="write_run_requirements / generate_research_scripts",
+            files=_matching_files(generated_files, ("requirements.txt", "/scripts/", "scripts/")),
+            handoff_to=str(data_lab["name"]),
+            summary="Prepared the per-run Python requirements and generated reproducible research scripts.",
+        )
+    )
+    if data_files:
+        events.append(
+            _lab_event(
+                lab=data_lab,
+                action="Data acquisition",
+                tool="download_uniprot_sequences",
+                files=data_files,
+                handoff_to=str(compute_lab["name"]),
+                summary="Created raw/source data files for downstream processing.",
+            )
+        )
+    if processed_files:
+        events.append(
+            _lab_event(
+                lab=compute_lab,
+                action="Processing and reporting",
+                tool="process_sequence_features / inspect_processed_dataset",
+                files=processed_files,
+                handoff_to=str(validation_lab["name"]),
+                summary="Created processed analysis outputs and inspection reports.",
+            )
+        )
+    events.append(
+        _lab_event(
+            lab=coordinator,
+            action="Workspace README",
+            tool="write_workspace_readme",
+            files=_matching_files(generated_files, ("README.md",)),
+            handoff_to=None,
+            summary="Wrote the final workspace index so a researcher can audit the run.",
+        )
+    )
+
+    tool_file_events = _events_from_tool_outputs(labs=labs, tool_calls=tool_calls)
+    existing = {(event["tool"], tuple(event["files"])) for event in events}
+    for event in tool_file_events:
+        key = (event["tool"], tuple(event["files"]))
+        if key not in existing:
+            events.append(event)
+            existing.add(key)
+
+    return [event for event in events if event["files"] or event["tool"]]
+
+
+def _events_from_tool_outputs(
+    *,
+    labs: list[ProposedLab],
+    tool_calls: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = []
+    for call in tool_calls:
+        files = _extract_paths(call.get("output"))
+        if not files:
+            continue
+        lab = _lab_for_tool(labs, str(call.get("name", "")))
+        events.append(
+            _lab_event(
+                lab=lab,
+                action=str(call.get("name", "Tool output")),
+                tool=str(call.get("name", "")) or None,
+                files=files,
+                handoff_to=None,
+                summary=f"{lab['name']} produced {len(files)} file{'s' if len(files) != 1 else ''} during this tool call.",
+            )
+        )
+    return events
+
+
+def _lab_for_tool(labs: list[ProposedLab], tool_name: str) -> dict[str, Any]:
+    name = tool_name.lower()
+    if "literature" in name:
+        return _lab_for(labs, preferred=("review", "data", "computational")) or _default_lab("Literature Evidence Lab", "review")
+    if any(token in name for token in ("download", "data")):
+        return _lab_for(labs, preferred=("data", "computational", "hybrid")) or _default_lab("Data Engineering Lab", "data")
+    if any(token in name for token in ("process", "inspect", "script", "pip", "python", "requirements")):
+        return _lab_for(labs, preferred=("computational", "data", "hybrid")) or _default_lab("Computational Biology Lab", "computational")
+    return _lab_for(labs, preferred=("hybrid", "review", "computational")) or _default_lab("VRI Coordination Lab", "hybrid")
+
+
+def _lab_for(labs: list[ProposedLab], *, preferred: tuple[str, ...]) -> dict[str, Any] | None:
+    dumped = [lab.model_dump() for lab in labs]
+    for workstream in preferred:
+        for lab in dumped:
+            if lab.get("workstream") == workstream:
+                return lab
+    return dumped[0] if dumped else None
+
+
+def _default_lab(name: str, workstream: str) -> dict[str, Any]:
+    return {"name": name, "workstream": workstream}
+
+
+def _lab_event(
+    *,
+    lab: dict[str, Any],
+    action: str,
+    tool: str | None,
+    files: list[str],
+    handoff_to: str | None,
+    summary: str,
+) -> dict[str, Any]:
+    return {
+        "lab_name": str(lab.get("name", "VRI Lab")),
+        "workstream": str(lab.get("workstream", "hybrid")),
+        "action": action,
+        "tool": tool,
+        "files": _dedupe(files),
+        "handoff_to": handoff_to,
+        "summary": summary,
+    }
+
+
+def _matching_files(files: list[str], needles: tuple[str, ...]) -> list[str]:
+    matched = []
+    for path in files:
+        normalized = path.replace("\\", "/")
+        if any(needle in normalized for needle in needles):
+            matched.append(path)
+    return _dedupe(matched)
 
 
 def _download_script() -> str:

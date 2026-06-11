@@ -12,6 +12,11 @@ PREVIEW_LIMIT = 24_000
 
 @router.post("/start-work", response_model=StartWorkResponse)
 def start_work(payload: StartWorkRequest) -> dict:
+    if payload.planner_reply.stage not in {"proposal", "confirmed"} or not payload.planner_reply.planning_allowed:
+        raise HTTPException(
+            status_code=400,
+            detail="Workspace can start only from an approved proposal with planning_allowed=true.",
+        )
     try:
         return start_research_workspace(
             messages=payload.messages,

@@ -40,6 +40,17 @@ class OpenAIModelClient:
         content = self._stringify_content(response.content)
         return self._parse_json(content)
 
+    async def stream_text(self, system_prompt: str, user_prompt: str):
+        async for chunk in self.llm.astream(
+            [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=user_prompt),
+            ]
+        ):
+            content = self._stringify_content(chunk.content)
+            if content:
+                yield content
+
     @staticmethod
     def _stringify_content(content: Any) -> str:
         if isinstance(content, str):
