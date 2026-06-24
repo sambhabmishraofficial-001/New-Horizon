@@ -58,9 +58,17 @@ export function RightViewerPane({
     ? activeRun.labs_created
     : plannerReply?.proposed_labs ?? [];
   const isWorking = loading === "work" || artifactLoading;
+  const labDeck = (
+    <LabIdentityDeck
+      activeRun={activeRun}
+      labs={labs}
+      onSelectLab={onSelectLab}
+      selectedLabName={selectedRunLabName}
+    />
+  );
 
   return (
-    <section className="min-h-[720px] border-t border-ink-900/8 bg-parchment-50 p-3 text-ink-900 lg:h-screen lg:min-h-0 lg:overflow-hidden lg:border-l lg:border-t-0">
+    <section className="min-h-[720px] border-t border-ink-900/8 bg-parchment-50 p-3 text-ink-900 lg:h-full lg:min-h-0 lg:overflow-hidden lg:border-l lg:border-t-0">
       <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-lift">
         <header className="shrink-0 border-b border-ink-900/8 px-5 py-4">
           <div className="flex items-start justify-between gap-4">
@@ -99,16 +107,12 @@ export function RightViewerPane({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-          <LabIdentityDeck
-            activeRun={activeRun}
-            labs={labs}
-            onSelectLab={onSelectLab}
-            selectedLabName={selectedRunLabName}
-          />
+          {mode === "plan" ? null : labDeck}
 
           <div
             className={cx(
-              "mt-5 min-h-0 rounded-xl border border-ink-900/8 bg-parchment-50/75 p-4",
+              "min-h-0 rounded-xl border border-ink-900/8 bg-parchment-50/75 p-4",
+              mode === "plan" ? "" : "mt-5",
               mode === "idle" ? "min-h-[300px]" : "min-h-[520px]"
             )}
           >
@@ -144,6 +148,8 @@ export function RightViewerPane({
               <RightIdleSurface />
             )}
           </div>
+
+          {mode === "plan" ? <div className="mt-5">{labDeck}</div> : null}
         </div>
       </div>
     </section>
@@ -661,6 +667,120 @@ function FilePreview({
       )}
     </div>
   );
+}
+
+export function CodeOutputPane({
+  activeRun,
+  files,
+  loading,
+  onOpenFileInNewTab,
+  onSelectFile,
+  plannerReply,
+  selectedFile,
+}: {
+  activeRun: WorkRun | null;
+  files: ViewFile[];
+  loading: string | null;
+  onOpenFileInNewTab: (file: ViewFile | null) => void;
+  onSelectFile: (id: string) => void;
+  plannerReply: VriPlannerReply | null;
+  selectedFile: ViewFile | null;
+}) {
+  const toolCalls = activeRun?.tool_calls ?? [];
+
+  return (
+    <section className="min-h-screen border-t border-ink-900/8 bg-parchment-50 p-3 text-ink-900 lg:h-full lg:min-h-0 lg:overflow-hidden lg:border-t-0">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-lift">
+        <header className="shrink-0 border-b border-ink-900/8 px-5 py-4">
+          <h2 className="text-lg font-medium">Code and textual outputs</h2>
+          <p className="mt-1 text-sm text-ink-500">
+            Inspect generated files, tool outputs, and planner text in one place.
+          </p>
+        </header>
+
+        <div className="grid min-h-0 flex-1 gap-4 overflow-hidden p-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="min-h-0 overflow-y-auto rounded-xl border border-ink-900/8 bg-parchment-50/70 p-3">
+            <p className="text-xs uppercase tracking-[0.14em] text-ink-500">Files</p>
+            {files.length === 0 ? (
+              <p className="mt-3 text-sm text-ink-500">Files appear after workspace execution starts.</p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {files.map((file) => (
+                  <button
+                    className={cx(
+                      "flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm",
+                      selectedFile?.id === file.id
+                        ? "border-beacon-500/40 bg-beacon-50 text-beacon-900"
+                        : "border-ink-900/8 bg-white text-ink-700 hover:bg-ink-900/[0.03]"
+                    )}
+                    key={file.id}
+                    onClick={() => onSelectFile(file.id)}
+                    type="button"
+                  >
+                    <FileText className="h-4 w-4 shrink-0 text-ink-400" />
+                    <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </aside>
+
+          <div className="min-h-0 overflow-y-auto rounded-xl border border-ink-900/8 bg-parchment-50/70 p-4">
+            <div className="rounded-lg border border-ink-900/8 bg-white p-3">
+              <FilePreview
+                file={selectedFile}
+                maxHeightClass="max-h-[42vh] min-h-[240px]"
+                onOpenInNewTab={() => onOpenFileInNewTab(selectedFile)}
+              />
+            </div>
+
+            <div className="mt-4 rounded-lg border border-ink-900/8 bg-white p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-ink-500">Tool outputs</p>
+              {toolCalls.length === 0 ? (
+                <p className="mt-2 text-sm text-ink-500">
+                  {loading === "work"
+                    ? "Tool outputs will appear as execution progresses."
+                    : "No tool output yet. Approve a plan to start a workspace run."}
+                </p>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  {toolCalls.map((call, index) => (
+                    <div className="rounded-md border border-ink-900/8 bg-parchment-50 p-3" key={`${call.name}-${index}`}>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-ink-500">
+                        <span className="font-medium uppercase tracking-[0.12em] text-ink-700">{call.name}</span>
+                        <span>/</span>
+                        <span>{call.status}</span>
+                      </div>
+                      <pre className="mt-2 max-h-52 overflow-auto whitespace-pre-wrap rounded-md border border-ink-900/8 bg-white p-2 text-xs leading-5 text-ink-700">
+                        {stringifyUnknown(call.output ?? call.input ?? "No output payload")}
+                      </pre>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 rounded-lg border border-ink-900/8 bg-white p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-ink-500">Planner text output</p>
+              <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-md border border-ink-900/8 bg-parchment-50 p-3 text-xs leading-5 text-ink-700">
+                {plannerReply?.answer ?? "Ask VRI in Chat view to populate textual output."}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function stringifyUnknown(value: unknown) {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
 }
 
 export function ExpandedFileViewer({

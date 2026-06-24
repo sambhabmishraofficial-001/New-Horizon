@@ -371,7 +371,7 @@ export function LeftWorkbench({
   }, [plannerMessages.length]);
 
   return (
-    <section className="flex min-h-screen min-w-0 flex-col border-b border-ink-900/8 bg-white lg:h-screen lg:min-h-0 lg:overflow-hidden lg:border-b-0 lg:border-r lg:border-ink-900/8" id="planner">
+    <section className="flex min-h-screen min-w-0 flex-col border-b border-ink-900/8 bg-white lg:h-full lg:min-h-0 lg:overflow-hidden lg:border-b-0 lg:border-r lg:border-ink-900/8" id="planner">
       <header className="flex min-h-14 shrink-0 items-center justify-between border-b border-ink-900/8 px-4">
         <div className="min-w-0 text-sm">
           <span className="text-ink-500">VRI Harness</span>

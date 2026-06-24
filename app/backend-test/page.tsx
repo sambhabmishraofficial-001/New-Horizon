@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ActivityRail } from "./components/activity-sidebar";
 import { LeftWorkbench } from "./components/left-workbench";
-import { ExpandedFileViewer, RightViewerPane } from "./components/right-viewer";
+import { CodeOutputPane, ExpandedFileViewer, RightViewerPane } from "./components/right-viewer";
 import { CONVERSATIONS_KEY, WORK_RUNS_KEY, apiBase } from "./constants";
 import type {
   Health,
@@ -29,6 +29,8 @@ import {
   wireMessages,
   writeStorage,
 } from "./utils";
+
+type WorkspaceView = "chat" | "results" | "files";
 
 export default function BackendTestPage() {
   const [health, setHealth] = React.useState<Health | null>(null);
@@ -57,7 +59,11 @@ export default function BackendTestPage() {
     React.useState<InspectorPanel[]>(["progress", "files"]);
   const [expandedFileViewer, setExpandedFileViewer] = React.useState(false);
   const [visibleReplyText, setVisibleReplyText] = React.useState("");
+  const [workspaceView, setWorkspaceView] = React.useState<WorkspaceView>("chat");
   const chatEndRef = React.useRef<HTMLDivElement | null>(null);
+  const startedRunIdRef = React.useRef<string | null>(null);
+  const [readyNoticeRunId, setReadyNoticeRunId] = React.useState<string | null>(null);
+  const [dismissedNoticeRunId, setDismissedNoticeRunId] = React.useState<string | null>(null);
 
   const selectedLab = React.useMemo(
     () => labPrompts.find((lab) => lab.id === selectedLabId) ?? null,
@@ -159,6 +165,7 @@ export default function BackendTestPage() {
     }
 
     let cancelled = false;
+    setWorkspaceArtifacts(null);
     setArtifactLoading(true);
     setArtifactError(null);
     request<WorkspaceArtifacts>(`/v1/workspaces/${activeWorkRun.run_id}/artifacts`)
@@ -195,6 +202,13 @@ export default function BackendTestPage() {
       setOpenInspectorPanels((prev) => [...prev, "files"]);
     }
   }, [openInspectorPanels, viewFiles.length]);
+
+  React.useEffect(() => {
+    if (!activeWorkRun || loading === "work" || artifactLoading) return;
+    if (startedRunIdRef.current !== activeWorkRun.run_id) return;
+    if (workspaceArtifacts?.run_id !== activeWorkRun.run_id && !artifactError) return;
+    setReadyNoticeRunId(activeWorkRun.run_id);
+  }, [activeWorkRun, artifactError, artifactLoading, loading, workspaceArtifacts]);
 
   async function request<T>(path: string, init?: RequestInit) {
     const response = await fetch(`${apiBase}${path}`, {
@@ -399,6 +413,9 @@ export default function BackendTestPage() {
     setViewerModePreference("execution");
     setLoading("work");
     setError(null);
+    startedRunIdRef.current = null;
+    setReadyNoticeRunId(null);
+    setDismissedNoticeRunId(null);
     try {
       const run = await request<WorkRun>("/v1/start-work", {
         method: "POST",
@@ -408,6 +425,7 @@ export default function BackendTestPage() {
           workstream_preference: workstreamPreference,
         }),
       });
+      startedRunIdRef.current = run.run_id;
       setActiveWorkRun(run);
       setSelectedFileId(null);
       setSelectedRunLabName(null);
@@ -430,24 +448,28 @@ export default function BackendTestPage() {
     setSelectedFileId(fileId);
     setSelectedRunLabName(null);
     setViewerModePreference("file");
+    setWorkspaceView("files");
   }
 
   function showPlan() {
     setSelectedFileId(null);
     setSelectedRunLabName(null);
     setViewerModePreference("plan");
+    setWorkspaceView("results");
   }
 
   function selectRunLab(labName: string) {
     setSelectedRunLabName(labName);
     setSelectedFileId(null);
     setViewerModePreference("lab");
+    setWorkspaceView("results");
   }
 
   function showExecution() {
     setSelectedFileId(null);
     setSelectedRunLabName(null);
     setViewerModePreference("execution");
+    setWorkspaceView("results");
   }
 
   function openFileInNewTab(file: ViewFile | null) {
@@ -482,74 +504,208 @@ export default function BackendTestPage() {
               : activeWorkRun
                 ? "execution"
                 : "idle";
-  const viewerGridClass =
-    viewerMode === "idle"
-      ? "lg:grid-cols-[64px_minmax(560px,1fr)_minmax(320px,380px)]"
-      : "lg:grid-cols-[64px_minmax(520px,1fr)_minmax(460px,0.85fr)]";
+  const workspaceStatus = getWorkspaceStatus({
+    activeRun: activeWorkRun,
+    artifactError,
+    artifactLoading,
+    files: viewFiles,
+    health,
+    labPromptCount: labPrompts.length,
+    loading,
+    plannerReply,
+  });
+  const showReadyNotice =
+    Boolean(readyNoticeRunId) && readyNoticeRunId !== dismissedNoticeRunId && loading !== "work";
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-ink-50 text-ink-900 font-marketing lg:h-screen lg:overflow-hidden">
-      <div className={cx("grid min-h-screen grid-cols-1 lg:h-screen lg:min-h-0 lg:overflow-hidden", viewerGridClass)}>
+      <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:min-h-0 lg:grid-cols-[64px_minmax(0,1fr)] lg:overflow-hidden">
         <ActivityRail onRefresh={() => void checkHealth()} />
+        <section className="flex min-h-screen min-w-0 flex-col lg:h-screen lg:min-h-0 lg:overflow-hidden">
+          <header className="shrink-0 border-b border-ink-900/8 bg-white px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Backend test workspace views">
+                <WorkspaceViewButton active={workspaceView === "chat"} onClick={() => setWorkspaceView("chat")}>
+                  Chat
+                </WorkspaceViewButton>
+                <WorkspaceViewButton active={workspaceView === "results"} onClick={() => setWorkspaceView("results")}>
+                  Results
+                </WorkspaceViewButton>
+                <WorkspaceViewButton active={workspaceView === "files"} onClick={() => setWorkspaceView("files")}>
+                  Files
+                </WorkspaceViewButton>
+              </div>
+              <p className="text-sm font-medium text-ink-600">
+                Active: <span className="text-ink-900">{workspaceViewLabel(workspaceView)}</span>
+              </p>
+            </div>
+            <div className="mt-3 rounded-lg border border-ink-900/8 bg-parchment-50 px-3 py-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-2">
+                  <span className={cx("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", workspaceStatus.toneClass)} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-ink-900">{workspaceStatus.label}</p>
+                    <p className="mt-0.5 text-xs leading-5 text-ink-500">
+                      Chat asks questions. Results shows plan, run, and labs. Files shows generated outputs and logs.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  {plannerReply?.planning_allowed ? (
+                    <button
+                      className="rounded-full border border-ink-900/10 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-900/[0.03]"
+                      onClick={showPlan}
+                      type="button"
+                    >
+                      View plan
+                    </button>
+                  ) : null}
+                  {activeWorkRun ? (
+                    <button
+                      className="rounded-full border border-ink-900/10 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-900/[0.03]"
+                      onClick={showExecution}
+                      type="button"
+                    >
+                      View run
+                    </button>
+                  ) : null}
+                  {viewFiles.length ? (
+                    <button
+                      className="rounded-full border border-ink-900/10 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-900/[0.03]"
+                      onClick={() => {
+                        setSelectedFileId((current) => current ?? viewFiles[0]?.id ?? null);
+                        setSelectedRunLabName(null);
+                        setViewerModePreference("file");
+                        setWorkspaceView("files");
+                      }}
+                      type="button"
+                    >
+                      View files
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </header>
 
-        <LeftWorkbench
-          activeRun={activeWorkRun}
-          allowedLabIds={allowedLabIds}
-          artifactError={artifactError}
-          artifactLoading={artifactLoading}
-          chatEndRef={chatEndRef}
-          conversations={savedConversations}
-          error={error}
-          files={viewFiles}
-          labPrompts={labPrompts}
-          health={health}
-          loading={loading}
-          nextStep={nextStep}
-          onAsk={(message?: string) => void askVri(message)}
-          onLoadConversation={loadConversation}
-          onNewConversation={newConversation}
-          onOpenFileInNewTab={openFileInNewTab}
-          onRefresh={() => void checkHealth()}
-          onSelectFile={selectFile}
-          onSelectRunLab={selectRunLab}
-          onShowPlan={showPlan}
-          onUseAllLabs={() => setAllowedLabIds([])}
-          onToggleLab={toggleLab}
-          onTogglePanel={toggleInspectorPanel}
-          openPanels={openInspectorPanels}
-          plannerInput={plannerInput}
-          plannerMessages={renderedMessages}
-          plannerReply={plannerReply}
-          selectedFile={selectedFile}
-          selectedFileId={selectedFileId}
-          selectedLab={selectedLab}
-          setPlannerInput={setPlannerInput}
-          setWorkstreamPreference={setWorkstreamPreference}
-          visibleReplyText={visibleReplyText}
-          workstreamPreference={workstreamPreference}
-          hasWorkspace={Boolean(activeWorkRun)}
-          isReplyRevealing={isReplyRevealing}
-        />
+          {showReadyNotice ? (
+            <section className="shrink-0 border-b border-beacon-900/15 bg-beacon-50 px-4 py-3 text-beacon-950" role="status">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">Workspace results are ready.</p>
+                  <p className="mt-1 text-xs leading-5 text-ink-600">
+                    {viewFiles.length} file{viewFiles.length === 1 ? "" : "s"}, {activeWorkRun?.tool_calls.length ?? 0} tool record{activeWorkRun?.tool_calls.length === 1 ? "" : "s"}, and {activeWorkRun?.literature_results.length ?? 0} literature result{activeWorkRun?.literature_results.length === 1 ? "" : "s"} are available.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className="rounded-full border border-beacon-700 bg-beacon-600 px-3 py-1.5 text-xs font-semibold text-white shadow-glow"
+                    onClick={showExecution}
+                    type="button"
+                  >
+                    Results
+                  </button>
+                  <button
+                    className="rounded-full border border-beacon-700/25 bg-white px-3 py-1.5 text-xs font-semibold text-beacon-900"
+                    onClick={() => {
+                      setSelectedFileId((current) => current ?? viewFiles[0]?.id ?? null);
+                      setSelectedRunLabName(null);
+                      setViewerModePreference("file");
+                      setWorkspaceView("files");
+                    }}
+                    type="button"
+                  >
+                    Files
+                  </button>
+                  <button
+                    className="rounded-full border border-beacon-700/15 px-3 py-1.5 text-xs font-medium text-beacon-900 hover:bg-white/60"
+                    onClick={() => setDismissedNoticeRunId(readyNoticeRunId)}
+                    type="button"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </section>
+          ) : null}
 
-        <RightViewerPane
-          activeRun={activeWorkRun}
-          artifactLoading={artifactLoading}
-          files={viewFiles}
-          loading={loading}
-          mode={viewerMode}
-          onApprove={() => void approveAndStartWork()}
-          onOpenFileInNewTab={openFileInNewTab}
-          onSelectFile={selectFile}
-          onSelectLab={selectRunLab}
-          onShowExecution={showExecution}
-          onShowPlan={showPlan}
-          onRevise={(message?: string) => void askVri(message)}
-          plannerReply={plannerReply}
-          selectedFile={selectedFile}
-          selectedRunLab={selectedRunLab}
-          selectedRunLabName={selectedRunLabName}
-          hasWorkspace={Boolean(activeWorkRun)}
-        />
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {workspaceView === "chat" ? (
+              <LeftWorkbench
+                activeRun={activeWorkRun}
+                allowedLabIds={allowedLabIds}
+                artifactError={artifactError}
+                artifactLoading={artifactLoading}
+                chatEndRef={chatEndRef}
+                conversations={savedConversations}
+                error={error}
+                files={viewFiles}
+                labPrompts={labPrompts}
+                health={health}
+                loading={loading}
+                nextStep={nextStep}
+                onAsk={(message?: string) => void askVri(message)}
+                onLoadConversation={loadConversation}
+                onNewConversation={newConversation}
+                onOpenFileInNewTab={openFileInNewTab}
+                onRefresh={() => void checkHealth()}
+                onSelectFile={selectFile}
+                onSelectRunLab={selectRunLab}
+                onShowPlan={showPlan}
+                onUseAllLabs={() => setAllowedLabIds([])}
+                onToggleLab={toggleLab}
+                onTogglePanel={toggleInspectorPanel}
+                openPanels={openInspectorPanels}
+                plannerInput={plannerInput}
+                plannerMessages={renderedMessages}
+                plannerReply={plannerReply}
+                selectedFile={selectedFile}
+                selectedFileId={selectedFileId}
+                selectedLab={selectedLab}
+                setPlannerInput={setPlannerInput}
+                setWorkstreamPreference={setWorkstreamPreference}
+                visibleReplyText={visibleReplyText}
+                workstreamPreference={workstreamPreference}
+                hasWorkspace={Boolean(activeWorkRun)}
+                isReplyRevealing={isReplyRevealing}
+              />
+            ) : null}
+
+            {workspaceView === "results" ? (
+              <RightViewerPane
+                activeRun={activeWorkRun}
+                artifactLoading={artifactLoading}
+                files={viewFiles}
+                loading={loading}
+                mode={viewerMode}
+                onApprove={() => void approveAndStartWork()}
+                onOpenFileInNewTab={openFileInNewTab}
+                onSelectFile={selectFile}
+                onSelectLab={selectRunLab}
+                onShowExecution={showExecution}
+                onShowPlan={showPlan}
+                onRevise={(message?: string) => void askVri(message)}
+                plannerReply={plannerReply}
+                selectedFile={selectedFile}
+                selectedRunLab={selectedRunLab}
+                selectedRunLabName={selectedRunLabName}
+                hasWorkspace={Boolean(activeWorkRun)}
+              />
+            ) : null}
+
+            {workspaceView === "files" ? (
+              <CodeOutputPane
+                activeRun={activeWorkRun}
+                files={viewFiles}
+                loading={loading}
+                onOpenFileInNewTab={openFileInNewTab}
+                onSelectFile={selectFile}
+                plannerReply={plannerReply}
+                selectedFile={selectedFile}
+              />
+            ) : null}
+          </div>
+        </section>
       </div>
       {expandedFileViewer ? (
         <ExpandedFileViewer
@@ -560,4 +716,87 @@ export default function BackendTestPage() {
       ) : null}
     </main>
   );
+}
+
+function WorkspaceViewButton({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-current={active ? "page" : undefined}
+      role="tab"
+      aria-selected={active}
+      className={cx(
+        "rounded-full border px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-beacon-500/35",
+        active
+          ? "border-beacon-700 bg-beacon-600 text-white shadow-glow"
+          : "border-ink-900/10 bg-white text-ink-600 hover:bg-ink-900/[0.03]"
+      )}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
+function workspaceViewLabel(view: WorkspaceView) {
+  if (view === "results") return "Results";
+  if (view === "files") return "Files";
+  return "Chat";
+}
+
+function getWorkspaceStatus({
+  activeRun,
+  artifactError,
+  artifactLoading,
+  files,
+  health,
+  labPromptCount,
+  loading,
+  plannerReply,
+}: {
+  activeRun: WorkRun | null;
+  artifactError: string | null;
+  artifactLoading: boolean;
+  files: ViewFile[];
+  health: Health | null;
+  labPromptCount: number;
+  loading: string | null;
+  plannerReply: VriPlannerReply | null;
+}) {
+  if (loading === "health") {
+    return { label: "Checking backend health and lab prompts.", toneClass: "animate-pulse bg-beacon-500" };
+  }
+  if (loading === "chat") {
+    return { label: "VRI is responding in Chat.", toneClass: "animate-pulse bg-beacon-500" };
+  }
+  if (loading === "work") {
+    return { label: "Workspace is generating. You can stay here; this bar will update when results are ready.", toneClass: "animate-pulse bg-beacon-500" };
+  }
+  if (artifactLoading) {
+    return { label: "Workspace generated. Loading file previews now.", toneClass: "animate-pulse bg-beacon-500" };
+  }
+  if (artifactError) {
+    return { label: "Workspace generated, but file previews need attention.", toneClass: "bg-amber-500" };
+  }
+  if (activeRun) {
+    return { label: `Workspace ready: ${files.length} file${files.length === 1 ? "" : "s"} available.`, toneClass: "bg-green-500" };
+  }
+  if (plannerReply?.planning_allowed) {
+    return { label: "Plan ready. Open Results to approve or inspect it.", toneClass: "bg-green-500" };
+  }
+  if (plannerReply) {
+    return { label: "Reply ready in Chat.", toneClass: "bg-green-500" };
+  }
+  if (!health || labPromptCount === 0) {
+    return { label: "Connecting to backend and loading lab prompts.", toneClass: "animate-pulse bg-amber-500" };
+  }
+  return { label: "Start in Chat: choose scope, ask a question, then approve a workspace plan.", toneClass: "bg-green-500" };
 }
