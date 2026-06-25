@@ -50,6 +50,7 @@ export default function BackendTestPage() {
   const [plannerInput, setPlannerInput] = React.useState("");
   const [plannerMessages, setPlannerMessages] = React.useState<PlannerMessage[]>([]);
   const [plannerReply, setPlannerReply] = React.useState<VriPlannerReply | null>(null);
+  const [lastPlanReply, setLastPlanReply] = React.useState<VriPlannerReply | null>(null);
   const [loading, setLoading] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [selectedFileId, setSelectedFileId] = React.useState<string | null>(null);
@@ -115,11 +116,16 @@ export default function BackendTestPage() {
     [selectedFileId, viewFiles]
   );
 
+  const activePlanReply = React.useMemo(
+    () => (plannerReply?.planning_allowed ? plannerReply : lastPlanReply),
+    [lastPlanReply, plannerReply]
+  );
+
   const visibleLabs = React.useMemo(
     () => activeWorkRun?.labs_created?.length
       ? activeWorkRun.labs_created
-      : plannerReply?.proposed_labs ?? [],
-    [activeWorkRun, plannerReply]
+      : activePlanReply?.proposed_labs ?? [],
+    [activePlanReply, activeWorkRun]
   );
 
   const selectedRunLab = React.useMemo(() => {
@@ -128,14 +134,15 @@ export default function BackendTestPage() {
   }, [selectedRunLabName, visibleLabs]);
 
   const nextStep = React.useMemo(() => {
+    const statusReply = plannerReply ?? activePlanReply;
     if (loading === "work") return "Starting workspace: creating manifests, lab cards, run files, and artifact index.";
     if (!health || labPrompts.length === 0) return "Wait for backend health and lab prompts.";
-    if (!plannerReply) return "Choose labs in the chat, then ask VRI your research question.";
-    if (plannerReply.stage === "direct_answer") return "Direct answer shown in chat. Ask for a plan only when you want workspace files and lab execution.";
-    if (plannerReply.stage === "clarify") return "Answer the clarification questions directly in chat.";
+    if (!statusReply) return "Choose labs in the chat, then ask VRI your research question.";
+    if (statusReply.stage === "direct_answer") return "Direct answer shown in chat. Ask for a plan only when you want workspace files and lab execution.";
+    if (statusReply.stage === "clarify") return "Answer the clarification questions directly in chat.";
     if (!activeWorkRun) return "Review the proposed labs, then approve the workspace.";
     return "Review workspace files, tool calls, literature, and run output.";
-  }, [activeWorkRun, health, labPrompts.length, loading, plannerReply]);
+  }, [activePlanReply, activeWorkRun, health, labPrompts.length, loading, plannerReply]);
 
   React.useEffect(() => {
     setSavedConversations(readStorage<SavedConversation[]>(CONVERSATIONS_KEY, []));
@@ -282,6 +289,9 @@ export default function BackendTestPage() {
       const conversationId = activeConversationId ?? makeId();
       setActiveConversationId(conversationId);
       setPlannerReply(reply);
+      if (reply.planning_allowed) {
+        setLastPlanReply(reply);
+      }
       setPlannerMessages(updatedMessages);
       setVisibleReplyText((current) => current || reply.answer);
       setViewerModePreference(reply.planning_allowed ? "plan" : "idle");
@@ -372,22 +382,25 @@ export default function BackendTestPage() {
   }
 
   function loadConversation(conversation: SavedConversation) {
+    const planReply = latestPlanReply(conversation.messages, conversation.reply);
     setActiveConversationId(conversation.id);
     setPlannerMessages(conversation.messages);
     setPlannerReply(conversation.reply);
+    setLastPlanReply(planReply);
     setWorkstreamPreference(conversation.workstream_preference);
     setAllowedLabIds(conversation.allowed_lab_ids);
     setPlannerInput("");
     setError(null);
     setSelectedFileId(null);
     setSelectedRunLabName(null);
-    setViewerModePreference(conversation.reply?.planning_allowed ? "plan" : "idle");
+    setViewerModePreference(planReply?.planning_allowed ? "plan" : "idle");
   }
 
   function newConversation() {
     setActiveConversationId(null);
     setPlannerMessages([]);
     setPlannerReply(null);
+    setLastPlanReply(null);
     setPlannerInput("");
     setError(null);
     setSelectedFileId(null);
@@ -407,7 +420,7 @@ export default function BackendTestPage() {
   }
 
   async function approveAndStartWork() {
-    if (!plannerReply || !plannerReply.planning_allowed || plannerMessages.length === 0) return;
+    if (!activePlanReply || !activePlanReply.planning_allowed || plannerMessages.length === 0) return;
     setSelectedFileId(null);
     setSelectedRunLabName(null);
     setViewerModePreference("execution");
@@ -421,7 +434,7 @@ export default function BackendTestPage() {
         method: "POST",
         body: JSON.stringify({
           messages: wireMessages(plannerMessages),
-          planner_reply: plannerReply,
+          planner_reply: activePlanReply,
           workstream_preference: workstreamPreference,
         }),
       });
@@ -495,11 +508,11 @@ export default function BackendTestPage() {
       ? "lab"
       : loading === "work"
         ? "execution"
-        : viewerModePreference === "plan" && plannerReply?.planning_allowed
+        : viewerModePreference === "plan" && activePlanReply?.planning_allowed
           ? "plan"
           : viewerModePreference === "execution" && activeWorkRun
             ? "execution"
-            : plannerReply?.planning_allowed
+            : activePlanReply?.planning_allowed
               ? "plan"
               : activeWorkRun
                 ? "execution"
@@ -512,7 +525,7 @@ export default function BackendTestPage() {
     health,
     labPromptCount: labPrompts.length,
     loading,
-    plannerReply,
+    plannerReply: activePlanReply,
   });
   const showReadyNotice =
     Boolean(readyNoticeRunId) && readyNoticeRunId !== dismissedNoticeRunId && loading !== "work";
@@ -551,7 +564,7 @@ export default function BackendTestPage() {
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
-                  {plannerReply?.planning_allowed ? (
+                  {activePlanReply?.planning_allowed ? (
                     <button
                       className="rounded-full border border-ink-900/10 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-900/[0.03]"
                       onClick={showPlan}
@@ -685,7 +698,7 @@ export default function BackendTestPage() {
                 onShowExecution={showExecution}
                 onShowPlan={showPlan}
                 onRevise={(message?: string) => void askVri(message)}
-                plannerReply={plannerReply}
+                plannerReply={activePlanReply}
                 selectedFile={selectedFile}
                 selectedRunLab={selectedRunLab}
                 selectedRunLabName={selectedRunLabName}
@@ -700,7 +713,7 @@ export default function BackendTestPage() {
                 loading={loading}
                 onOpenFileInNewTab={openFileInNewTab}
                 onSelectFile={selectFile}
-                plannerReply={plannerReply}
+                plannerReply={activePlanReply}
                 selectedFile={selectedFile}
               />
             ) : null}
@@ -716,6 +729,21 @@ export default function BackendTestPage() {
       ) : null}
     </main>
   );
+}
+
+function latestPlanReply(messages: PlannerMessage[], reply: VriPlannerReply | null) {
+  if (reply?.planning_allowed) {
+    return reply;
+  }
+
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const candidate = messages[index]?.reply;
+    if (candidate?.planning_allowed) {
+      return candidate;
+    }
+  }
+
+  return null;
 }
 
 function WorkspaceViewButton({

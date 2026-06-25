@@ -261,14 +261,25 @@ def delegated_plan_markdown(
         f"- **{lab.name}** ({lab.workstream}): {lab.rationale}"
         for lab in proposed_labs
     )
-    task_lines = "\n".join(
+    phase_3_tasks = "\n".join(
         [
-            "1. **Scope lock** _(2-5 min)_ - Record the research question, delegated defaults, stop rules, and selected labs.",
-            "2. **Evidence/data intake** _(10-20 min)_ - Search public sources and datasets first; use user files only if attached later.",
-            "3. **Analysis design** _(10-15 min)_ - Select a reproducible route suited to the field instead of forcing a biology-specific assay or workflow.",
-            "4. **Workspace file creation** _(5-10 min)_ - Create manifests, query files, requirements, and analysis scaffolds after approval.",
-            "5. **Run and review** _(15-45 min)_ - Execute lightweight computational steps, collect artifacts, and route results through review before interpretation.",
-            "6. **Handoff** _(5-10 min)_ - Summarize what each lab produced, which files support it, and what validation remains outside the harness.",
+            "- Choose the main analysis route aligned with the objective and selected workstream.",
+            "- Define reproducible scripts/notebooks and success criteria for each lab contribution.",
+            "- Create result tables/figures and diagnostics for interpretability.",
+        ]
+    )
+    phase_4_tasks = "\n".join(
+        [
+            "- Execute lightweight computational steps in sequence and capture intermediate artifacts.",
+            "- Compare outputs against assumptions, constraints, and stop rules.",
+            "- Record validation caveats and uncertainty notes before interpretation.",
+        ]
+    )
+    phase_5_tasks = "\n".join(
+        [
+            "- Summarize outputs, confidence, and limitations in a report-ready structure.",
+            "- Capture lab-to-lab handoffs and what remains for external validation.",
+            "- Prepare final approval-ready deliverables for the user.",
         ]
     )
     files = "\n".join(
@@ -310,8 +321,53 @@ def delegated_plan_markdown(
 ### Proposed Labs
 {lab_lines}
 
-### Step-by-step Tasks And Time
-{task_lines}
+### Phased Execution Plan
+
+#### Phase 1 - Environment setup and source intake _(estimate: 10-20 min)_
+Objective: lock scope and prepare a reproducible workspace.
+- Record objective, delegated defaults, stop rules, and selected labs in workspace manifests.
+- Confirm source strategy (public evidence/data first; user files if attached).
+- Create initial query and source manifest files.
+Expected files:
+- `conversation.json`
+- `planner_reply.json`
+- `queries.txt`
+Handoff: Evidence Synthesis Lab -> Data and Artifact Lab.
+
+#### Phase 2 - Data cleaning, preprocessing, and quality checks _(estimate: 15-35 min)_
+Objective: transform raw sources into analysis-ready inputs with provenance.
+- Normalize source metadata, identifiers, and file layout.
+- Run schema/quality checks and flag missingness or contradictions.
+- Produce cleaned intermediate artifacts with traceability.
+Expected files:
+- `literature.json` (when search runs)
+- `tasks.json`
+- cleaned/intermediate data artifacts
+Handoff: Data and Artifact Lab -> Mathematical and Computational Modeling Lab.
+
+#### Phase 3 - Modeling and analysis _(estimate: 20-45 min)_
+Objective: run the core computational or domain analysis.
+{phase_3_tasks}
+Expected files:
+- `requirements.txt` and analysis scripts
+- result tables/figures/diagnostics
+Handoff: Mathematical and Computational Modeling Lab -> Domain Specialist Lab.
+
+#### Phase 4 - Validation and review _(estimate: 10-25 min)_
+Objective: test robustness and separate claims from uncertainty.
+{phase_4_tasks}
+Expected files:
+- validation notes
+- review annotations linked to artifacts
+Handoff: Domain Specialist Lab -> Review and Handoff Lab.
+
+#### Phase 5 - Final handoff and deliverables _(estimate: 5-15 min)_
+Objective: deliver a clear, auditable output package.
+{phase_5_tasks}
+Expected files:
+- `report.md` or `report.pdf` scaffold
+- final summary and next-step notes
+Handoff: Review and Handoff Lab -> user.
 
 ### Computational Work
 {computational}
@@ -341,18 +397,9 @@ def fallback_plan_markdown(
         f"- **{lab.name}** ({lab.workstream}, {lab.kind}): {lab.rationale}"
         for lab in proposed_labs
     ) or "- No labs proposed."
-    task_lines = []
-    task_index = 1
-    for task in computational_work:
-        task_lines.append(f"{task_index}. **Computational task** - {task} _(estimate: 5-15 min)_")
-        task_index += 1
-    for task in experimental_work:
-        task_lines.append(f"{task_index}. **Validation task** - {task} _(estimate: planning only)_")
-        task_index += 1
-    for task in next_actions:
-        task_lines.append(f"{task_index}. **Next action** - {task} _(estimate: 2-5 min)_")
-        task_index += 1
-    tasks = "\n".join(task_lines) or "1. **Review** - Confirm scope before workspace creation _(estimate: 2 min)_"
+    phase_3 = "\n".join(f"- {task}" for task in computational_work) or "- Run scoped computational tasks aligned with the objective."
+    phase_4 = "\n".join(f"- {task}" for task in experimental_work) or "- Record validation checks and caveats for review."
+    phase_5 = "\n".join(f"- {task}" for task in next_actions) or "- Confirm final review and execution approval path."
     files = "\n".join(
         [
             "- `conversation.json` and `planner_reply.json`",
@@ -366,8 +413,29 @@ def fallback_plan_markdown(
 ### Labs
 {lab_lines}
 
-### Step-by-step tasks
-{tasks}
+### Phased execution plan
+
+#### Phase 1 - Environment setup and data/source intake _(estimate: 10-20 min)_
+- Lock objective, scope, assumptions, and selected labs.
+- Prepare workspace manifests and source queries.
+Handoff: planner -> evidence/data labs.
+
+#### Phase 2 - Data cleaning and preprocessing _(estimate: 15-35 min)_
+- Normalize sources and file structures.
+- Run quality checks and produce analysis-ready artifacts.
+Handoff: data/artifact labs -> modeling/analysis labs.
+
+#### Phase 3 - Modeling and analysis _(estimate: 20-45 min)_
+{phase_3}
+Handoff: modeling/analysis labs -> domain review.
+
+#### Phase 4 - Validation and review _(estimate: 10-25 min)_
+{phase_4}
+Handoff: domain review -> handoff lab.
+
+#### Phase 5 - Final handoff and deliverables _(estimate: 5-15 min)_
+{phase_5}
+Handoff: handoff lab -> user.
 
 ### Expected files
 {files}

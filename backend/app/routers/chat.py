@@ -77,7 +77,13 @@ Conversation policy:
 - Respect any selected lab constraints. If specific allowed labs are provided, use only those labs unless the user asks to broaden scope.
 - Do not say the labs are created until the user confirms.
 - If the latest user message clearly confirms the proposal, stage must be "confirmed" and you must provide the execution next steps.
-- When proposing, include plan_markdown as clean markdown with: overview, proposed labs, step-by-step tasks, estimated time per step, expected files, and lab handoffs.
+- When proposing, include plan_markdown as clean markdown with explicit phases.
+- Phase format is mandatory: Phase 1, Phase 2, Phase 3, ...
+- Every plan must include at least:
+  - Phase 1: Environment setup and data/source intake
+  - Phase 2: Data cleaning, preprocessing, and quality checks
+  - Later phases for modeling/analysis, validation/review, and final handoff/deliverables.
+- For each phase include: objective, concrete tasks, time estimate, expected files, and handoff.
 - Also return readiness fields: planning_allowed, objective_clear, answer_quality, missing_information, repair_reasons.
 - Avoid generic repeated answers. Use the user's actual goal, constraints, data, organism/disease/system, available assays,
   budget/time constraints, and desired output.
@@ -252,7 +258,7 @@ def _vri_user_prompt(payload: VriChatRequest) -> str:
         '"computational_work":["blue-coded work the user can run here directly"],'
         '"experimental_work":["green-coded wet-lab or validation work to track on top"],'
         '"next_actions":["action"],'
-        '"plan_markdown":"markdown plan with proposed labs, step-by-step tasks, estimates, files, and lab handoffs"'
+        '"plan_markdown":"markdown plan with Phase 1..N sections; each phase must include tasks, estimate, files, and handoff"'
         "}"
     )
     return user_prompt
@@ -319,6 +325,13 @@ def _vri_response_from_result(
 
     plan_markdown = str(result.get("plan_markdown") or "").strip()
     if stage != "clarify" and not plan_markdown:
+        plan_markdown = fallback_plan_markdown(
+            proposed_labs=proposed_labs,
+            computational_work=computational_work,
+            experimental_work=experimental_work,
+            next_actions=next_actions,
+        )
+    if stage != "clarify" and not _has_phase_sections(plan_markdown):
         plan_markdown = fallback_plan_markdown(
             proposed_labs=proposed_labs,
             computational_work=computational_work,
@@ -543,6 +556,11 @@ def _safe_arithmetic(expr: str) -> float | None:
         return float(eval_node(tree))
     except Exception:
         return None
+
+
+def _has_phase_sections(plan_markdown: str) -> bool:
+    text = plan_markdown.lower()
+    return "phase 1" in text and "phase 2" in text
 
 
 def _answer_definition(message: str) -> str | None:
