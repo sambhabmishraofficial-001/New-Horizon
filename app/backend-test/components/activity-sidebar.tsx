@@ -16,9 +16,9 @@ import { cx, relativeTime } from "../utils";
 
 export function ActivityRail({ onRefresh }: { onRefresh: () => void }) {
   return (
-    <aside className="hidden border-r border-ink-900/8 bg-white lg:flex lg:flex-col lg:items-center lg:justify-between lg:py-5">
+    <aside className="hidden border-r border-white/20 bg-white/60 backdrop-blur-xl lg:flex lg:flex-col lg:items-center lg:justify-between lg:py-5">
       <div className="grid gap-5">
-        <div className="grid h-9 w-9 place-items-center rounded-full border border-ink-900/10 bg-ink-900 text-parchment-50">
+        <div className="grid h-9 w-9 place-items-center rounded-full border border-ink-900/10 bg-gradient-ink text-parchment-50 shadow-lift animate-breathe">
           <Sparkles className="h-4 w-4" />
         </div>
         <RailLink active href="#planner" icon={MessageSquareText} label="Planner" />
@@ -28,7 +28,7 @@ export function ActivityRail({ onRefresh }: { onRefresh: () => void }) {
       </div>
       <div className="grid gap-3 text-center text-xs text-ink-500">
         <a className="grid justify-items-center gap-1 hover:text-ink-900" href="#progress">
-          <span className="grid h-8 w-8 place-items-center rounded-full border border-ink-900/10">
+          <span className="grid h-8 w-8 place-items-center rounded-full border border-ink-900/10 transition-all duration-200 hover:scale-110 hover:shadow-glass">
             <PanelRight className="h-4 w-4" />
           </span>
           Run
@@ -51,13 +51,13 @@ function RailLink({
 }) {
   return (
     <a
-      className="grid justify-items-center gap-1 text-[11px] text-ink-500 hover:text-ink-900"
+      className="group grid justify-items-center gap-1 text-[11px] text-ink-500 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:text-ink-900"
       href={href}
     >
       <span
         className={cx(
-          "grid h-9 w-9 place-items-center rounded-full border",
-          active ? "border-beacon-500/40 bg-beacon-50 text-beacon-700" : "border-transparent"
+          "grid h-9 w-9 place-items-center rounded-full border transition-all duration-200 group-hover:scale-110 group-hover:shadow-glass",
+          active ? "border-beacon-500/40 bg-beacon-50 text-beacon-700 shadow-glass animate-glowPulse" : "border-transparent"
         )}
       >
         <Icon className={cx("h-5 w-5", active ? "text-beacon-700" : "text-ink-500")} />
@@ -78,11 +78,11 @@ function RailAction({
 }) {
   return (
     <button
-      className="grid justify-items-center gap-1 text-[11px] text-ink-500 hover:text-ink-900"
+      className="group grid justify-items-center gap-1 text-[11px] text-ink-500 hover:text-ink-900"
       onClick={onClick}
       type="button"
     >
-      <span className="grid h-9 w-9 place-items-center rounded-full border border-transparent">
+      <span className="grid h-9 w-9 place-items-center rounded-full border border-transparent transition-all duration-200 group-hover:scale-110 group-hover:shadow-glass group-hover:bg-white/80">
         <Icon className="h-5 w-5 text-ink-500" />
       </span>
       {label}

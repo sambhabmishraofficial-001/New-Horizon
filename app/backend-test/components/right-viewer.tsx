@@ -69,24 +69,24 @@ export function RightViewerPane({
 
   return (
     <section className="min-h-[720px] border-t border-ink-900/8 bg-parchment-50 p-3 text-ink-900 lg:h-full lg:min-h-0 lg:overflow-hidden lg:border-l lg:border-t-0">
-      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-lift">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/30 bg-white/70 backdrop-blur-xl shadow-glass">
         <header className="shrink-0 border-b border-ink-900/8 px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-md border border-ink-900/10 bg-ink-900 font-mono text-lg text-white shadow-pane">
+                <div className="grid h-10 w-10 place-items-center rounded-xl border border-ink-900/10 bg-gradient-ink font-mono text-lg text-white shadow-lift">
                   V
                 </div>
                 <div>
                   <p className="text-sm font-medium text-ink-900">VRI side viewer</p>
                   <div className="mt-1 flex items-center gap-2 text-sm text-ink-500">
-                    <span className={cx("h-2.5 w-2.5 rounded-full", isWorking ? "animate-pulse bg-beacon-500" : "bg-green-500")} />
+                    <span className={cx("h-2.5 w-2.5 rounded-full", isWorking ? "animate-glowPulse bg-beacon-500" : "bg-green-500 shadow-[0_0_8px_2px_rgba(34,197,94,0.3)]")} />
                     <span>{isWorking ? "Executing task..." : viewerModeLabel(mode)}</span>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="rounded-full border border-ink-900/10 bg-parchment-50 px-3 py-1 text-xs text-ink-500">
+            <div className="rounded-full border border-white/30 bg-white/60 backdrop-blur-sm px-3 py-1 text-xs text-ink-500 shadow-pane">
               {files.length} files
             </div>
           </div>
@@ -170,10 +170,10 @@ function ViewerNavButton({
   return (
     <button
       className={cx(
-        "rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40",
+        "rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40",
         active
-          ? "border-beacon-500/45 bg-beacon-50 text-beacon-900"
-          : "border-ink-900/10 bg-white text-ink-600 hover:bg-ink-900/[0.03]"
+          ? "border-beacon-500/35 bg-beacon-50/80 text-beacon-900 shadow-glass"
+          : "border-ink-900/8 bg-white/80 text-ink-600 hover:bg-white hover:shadow-glass"
       )}
       disabled={disabled}
       onClick={onClick}
@@ -264,8 +264,8 @@ function LabIdentityCard({
   return (
     <button
       className={cx(
-        "relative min-h-56 overflow-hidden rounded-xl border p-4 text-left text-ink-900 shadow-lift transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-beacon-500/35",
-        selected ? "border-beacon-500/45 bg-beacon-50" : "border-black/15 bg-parchment-50"
+        "relative min-h-56 overflow-hidden rounded-xl border p-4 text-left text-ink-900 shadow-glass transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-glass-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-beacon-500/35",
+        selected ? "border-beacon-500/40 bg-beacon-50/80 shadow-beacon-glow" : "border-ink-900/10 bg-white/70 backdrop-blur-sm"
       )}
       onClick={onSelect}
       style={{
@@ -278,7 +278,7 @@ function LabIdentityCard({
       <div className="pointer-events-none absolute inset-y-8 -left-10 w-24 rotate-12 bg-white/50 blur-xl" style={{ animation: `vri-scan ${4.8 + index * 0.3}s ease-in-out ${index * 220}ms infinite` }} />
       <div className="relative z-10 flex h-full flex-col">
         <div className="flex items-start justify-between gap-3">
-          <div className="grid h-14 w-14 place-items-center rounded-lg border border-ink-900/10 bg-white font-mono text-lg font-semibold shadow-pane">
+          <div className="grid h-14 w-14 place-items-center rounded-xl border border-white/40 bg-white/80 backdrop-blur-sm font-mono text-lg font-semibold shadow-glass">
             {initials || "VR"}
           </div>
           <span className={cx(
@@ -402,9 +402,9 @@ function RightFileSurface({
 
 function RightIdleSurface() {
   return (
-    <div className="grid min-h-[300px] place-items-center rounded-xl border border-dashed border-ink-900/12 bg-white text-center text-ink-500">
+    <div className="grid min-h-[300px] place-items-center rounded-2xl border border-dashed border-ink-900/10 bg-white/50 backdrop-blur-sm text-center text-ink-500">
       <div>
-        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-lg border border-ink-900/10 bg-parchment-50 font-mono text-2xl text-ink-700">
+        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl border border-white/30 bg-white/60 backdrop-blur-sm font-mono text-2xl text-ink-700 shadow-glass animate-breathe">
           V
         </div>
         <p className="text-sm">Ask VRI a question or select a file.</p>
@@ -416,7 +416,7 @@ function RightIdleSurface() {
 
 function WorkspaceStartingSurface() {
   return (
-    <div className="grid min-h-[300px] place-items-center rounded-xl border border-beacon-500/20 bg-beacon-50/70 text-center text-beacon-950">
+    <div className="grid min-h-[300px] place-items-center rounded-2xl border border-beacon-500/15 bg-beacon-50/50 backdrop-blur-sm text-center text-beacon-950 animate-fadeInUp">
       <div>
         <Loader2 className="mx-auto h-8 w-8 animate-spin" />
         <p className="mt-4 text-sm font-medium">Starting workspace</p>
@@ -613,7 +613,7 @@ function InspectorAccordionSection({
         <span className="shrink-0 truncate text-xs text-ink-500">{summary}</span>
       </button>
       {active ? (
-        <div className={cx("overflow-y-auto border-t border-beacon-500/30 bg-parchment-50/45 p-4", maxHeightClass)}>
+        <div className={cx("overflow-y-auto border-t border-beacon-500/20 bg-white/40 backdrop-blur-sm p-4", maxHeightClass)}>
           {children}
         </div>
       ) : null}
@@ -690,7 +690,7 @@ export function CodeOutputPane({
 
   return (
     <section className="min-h-screen border-t border-ink-900/8 bg-parchment-50 p-3 text-ink-900 lg:h-full lg:min-h-0 lg:overflow-hidden lg:border-t-0">
-      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-lift">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/30 bg-white/70 backdrop-blur-xl shadow-glass">
         <header className="shrink-0 border-b border-ink-900/8 px-5 py-4">
           <h2 className="text-lg font-medium">Code and textual outputs</h2>
           <p className="mt-1 text-sm text-ink-500">
@@ -793,8 +793,8 @@ export function ExpandedFileViewer({
   onOpenInNewTab: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-ink-900/35 p-4 backdrop-blur-sm">
-      <div className="mx-auto flex h-full max-w-6xl flex-col rounded-xl border border-ink-900/10 bg-white shadow-lift">
+    <div className="fixed inset-0 z-50 bg-ink-900/40 p-4 backdrop-blur-xl">
+      <div className="mx-auto flex h-full max-w-6xl flex-col rounded-2xl border border-white/30 bg-white/90 backdrop-blur-xl shadow-glass animate-scaleIn">
         <div className="flex items-center justify-between gap-3 border-b border-ink-900/8 px-4 py-3">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.14em] text-ink-500">File reader</p>

@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { ActivityRail } from "./components/activity-sidebar";
 import { LeftWorkbench } from "./components/left-workbench";
 import { CodeOutputPane, ExpandedFileViewer, RightViewerPane } from "./components/right-viewer";
+import { Loader2, CheckCircle2, RefreshCw, XCircle, Sparkles } from "lucide-react";
 import { CONVERSATIONS_KEY, WORK_RUNS_KEY, apiBase } from "./constants";
 import type {
   Health,
@@ -531,11 +531,10 @@ export default function BackendTestPage() {
     Boolean(readyNoticeRunId) && readyNoticeRunId !== dismissedNoticeRunId && loading !== "work";
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-ink-50 text-ink-900 font-marketing lg:h-screen lg:overflow-hidden">
-      <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:min-h-0 lg:grid-cols-[64px_minmax(0,1fr)] lg:overflow-hidden">
-        <ActivityRail onRefresh={() => void checkHealth()} />
-        <section className="flex min-h-screen min-w-0 flex-col lg:h-screen lg:min-h-0 lg:overflow-hidden">
-          <header className="shrink-0 border-b border-ink-900/8 bg-white px-4 py-3">
+    <main className="min-h-screen overflow-x-hidden bg-mesh bg-ink-50 text-ink-900 font-marketing lg:h-screen lg:overflow-hidden">
+      <div className="flex min-h-screen flex-col lg:h-screen lg:min-h-0 lg:overflow-hidden">
+        <section className="flex flex-1 min-w-0 flex-col lg:h-full lg:overflow-hidden">
+          <header className="shrink-0 border-b border-white/20 backdrop-blur-xl bg-white/70 px-5 py-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Backend test workspace views">
                 <WorkspaceViewButton active={workspaceView === "chat"} onClick={() => setWorkspaceView("chat")}>
@@ -552,13 +551,55 @@ export default function BackendTestPage() {
                 Active: <span className="text-ink-900">{workspaceViewLabel(workspaceView)}</span>
               </p>
             </div>
-            <div className="mt-3 rounded-lg border border-ink-900/8 bg-parchment-50 px-3 py-2">
+            <div
+              key={workspaceStatus.label}
+              className={cx(
+                "mt-3 rounded-2xl border backdrop-blur-md px-5 py-3.5 shadow-glass transition-all duration-300 animate-scaleIn",
+                workspaceStatus.statusType === "loading" && "border-beacon-200/50 bg-gradient-to-r from-beacon-50/60 via-beacon-100/30 to-beacon-50/60 shadow-[0_0_12px_rgba(59,111,224,0.08)]",
+                workspaceStatus.statusType === "success" && "border-emerald-500/20 bg-gradient-to-r from-emerald-50/70 to-teal-50/40 shadow-[0_0_12px_rgba(18,120,90,0.05)]",
+                workspaceStatus.statusType === "warning" && "border-amber-500/25 bg-gradient-to-r from-amber-50/70 to-yellow-50/40",
+                workspaceStatus.statusType === "error" && "border-rose-500/25 bg-gradient-to-r from-rose-50/70 to-red-50/40 shadow-[0_0_12px_rgba(180,49,95,0.05)]",
+                workspaceStatus.statusType === "info" && "border-white/40 bg-gradient-to-r from-beacon-50/50 to-white/50"
+              )}
+            >
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-2">
-                  <span className={cx("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", workspaceStatus.toneClass)} />
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="mt-0.5 shrink-0">
+                    {workspaceStatus.statusType === "loading" && (
+                      <Loader2 className="h-5 w-5 animate-spin text-beacon-600" />
+                    )}
+                    {workspaceStatus.statusType === "success" && (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600 animate-pulseSoft" />
+                    )}
+                    {workspaceStatus.statusType === "warning" && (
+                      <RefreshCw className="h-5 w-5 text-amber-600 animate-spin" style={{ animationDuration: "3s" }} />
+                    )}
+                    {workspaceStatus.statusType === "error" && (
+                      <XCircle className="h-5 w-5 text-rose-600" />
+                    )}
+                    {workspaceStatus.statusType === "info" && (
+                      <Sparkles className="h-5 w-5 text-beacon-600" />
+                    )}
+                  </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-ink-900">{workspaceStatus.label}</p>
-                    <p className="mt-0.5 text-xs leading-5 text-ink-500">
+                    <p className={cx(
+                      "text-sm font-semibold tracking-tight",
+                      workspaceStatus.statusType === "loading" && "text-beacon-950",
+                      workspaceStatus.statusType === "success" && "text-emerald-950",
+                      workspaceStatus.statusType === "warning" && "text-amber-950",
+                      workspaceStatus.statusType === "error" && "text-rose-950",
+                      workspaceStatus.statusType === "info" && "text-beacon-950"
+                    )}>
+                      {workspaceStatus.label}
+                    </p>
+                    <p className={cx(
+                      "mt-0.5 text-xs leading-5 font-normal",
+                      workspaceStatus.statusType === "loading" && "text-beacon-700/80",
+                      workspaceStatus.statusType === "success" && "text-emerald-800/80",
+                      workspaceStatus.statusType === "warning" && "text-amber-800/80",
+                      workspaceStatus.statusType === "error" && "text-rose-800/80",
+                      workspaceStatus.statusType === "info" && "text-ink-500"
+                    )}>
                       Chat asks questions. Results shows plan, run, and labs. Files shows generated outputs and logs.
                     </p>
                   </div>
@@ -566,7 +607,7 @@ export default function BackendTestPage() {
                 <div className="flex shrink-0 flex-wrap gap-2">
                   {activePlanReply?.planning_allowed ? (
                     <button
-                      className="rounded-full border border-ink-900/10 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-900/[0.03]"
+                      className="rounded-full border border-ink-900/8 bg-white/80 px-3 py-1.5 text-xs font-medium text-ink-700 shadow-pane hover:shadow-glass-hover hover:bg-white transition-all duration-200"
                       onClick={showPlan}
                       type="button"
                     >
@@ -575,7 +616,7 @@ export default function BackendTestPage() {
                   ) : null}
                   {activeWorkRun ? (
                     <button
-                      className="rounded-full border border-ink-900/10 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-900/[0.03]"
+                      className="rounded-full border border-ink-900/8 bg-white/80 px-3 py-1.5 text-xs font-medium text-ink-700 shadow-pane hover:shadow-glass-hover hover:bg-white transition-all duration-200"
                       onClick={showExecution}
                       type="button"
                     >
@@ -584,7 +625,7 @@ export default function BackendTestPage() {
                   ) : null}
                   {viewFiles.length ? (
                     <button
-                      className="rounded-full border border-ink-900/10 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-900/[0.03]"
+                      className="rounded-full border border-ink-900/8 bg-white/80 px-3 py-1.5 text-xs font-medium text-ink-700 shadow-pane hover:shadow-glass-hover hover:bg-white transition-all duration-200"
                       onClick={() => {
                         setSelectedFileId((current) => current ?? viewFiles[0]?.id ?? null);
                         setSelectedRunLabName(null);
@@ -602,7 +643,7 @@ export default function BackendTestPage() {
           </header>
 
           {showReadyNotice ? (
-            <section className="shrink-0 border-b border-beacon-900/15 bg-beacon-50 px-4 py-3 text-beacon-950" role="status">
+            <section className="shrink-0 border-b border-beacon-500/15 bg-beacon-50/80 backdrop-blur-lg px-5 py-4 animate-fadeInDown text-beacon-950" role="status">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold">Workspace results are ready.</p>
@@ -612,7 +653,7 @@ export default function BackendTestPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    className="rounded-full border border-beacon-700 bg-beacon-600 px-3 py-1.5 text-xs font-semibold text-white shadow-glow"
+                    className="rounded-full border border-beacon-700 bg-gradient-beacon px-3 py-1.5 text-xs font-semibold text-white shadow-beacon-glow"
                     onClick={showExecution}
                     type="button"
                   >
@@ -761,10 +802,10 @@ function WorkspaceViewButton({
       role="tab"
       aria-selected={active}
       className={cx(
-        "rounded-full border px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-beacon-500/35",
+        "rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-beacon-500/35",
         active
-          ? "border-beacon-700 bg-beacon-600 text-white shadow-glow"
-          : "border-ink-900/10 bg-white text-ink-600 hover:bg-ink-900/[0.03]"
+          ? "border-beacon-600 bg-gradient-beacon text-white shadow-beacon-glow"
+          : "border-ink-900/8 bg-white/80 text-ink-600 hover:bg-white hover:shadow-glass"
       )}
       onClick={onClick}
       type="button"
@@ -800,31 +841,61 @@ function getWorkspaceStatus({
   plannerReply: VriPlannerReply | null;
 }) {
   if (loading === "health") {
-    return { label: "Checking backend health and lab prompts.", toneClass: "animate-pulse bg-beacon-500" };
+    return {
+      label: "Checking backend health and lab prompts.",
+      statusType: "loading" as const,
+    };
   }
   if (loading === "chat") {
-    return { label: "VRI is responding in Chat.", toneClass: "animate-pulse bg-beacon-500" };
+    return {
+      label: "VRI is responding in Chat.",
+      statusType: "loading" as const,
+    };
   }
   if (loading === "work") {
-    return { label: "Workspace is generating. You can stay here; this bar will update when results are ready.", toneClass: "animate-pulse bg-beacon-500" };
+    return {
+      label: "Workspace is generating. You can stay here; this bar will update when results are ready.",
+      statusType: "loading" as const,
+    };
   }
   if (artifactLoading) {
-    return { label: "Workspace generated. Loading file previews now.", toneClass: "animate-pulse bg-beacon-500" };
+    return {
+      label: "Workspace generated. Loading file previews now.",
+      statusType: "loading" as const,
+    };
   }
   if (artifactError) {
-    return { label: "Workspace generated, but file previews need attention.", toneClass: "bg-amber-500" };
+    return {
+      label: "Workspace generated, but file previews need attention.",
+      statusType: "error" as const,
+    };
   }
   if (activeRun) {
-    return { label: `Workspace ready: ${files.length} file${files.length === 1 ? "" : "s"} available.`, toneClass: "bg-green-500" };
+    return {
+      label: `Workspace ready: ${files.length} file${files.length === 1 ? "" : "s"} available.`,
+      statusType: "success" as const,
+    };
   }
   if (plannerReply?.planning_allowed) {
-    return { label: "Plan ready. Open Results to approve or inspect it.", toneClass: "bg-green-500" };
+    return {
+      label: "Plan ready. Open Results to approve or inspect it.",
+      statusType: "success" as const,
+    };
   }
   if (plannerReply) {
-    return { label: "Reply ready in Chat.", toneClass: "bg-green-500" };
+    return {
+      label: "Reply ready in Chat.",
+      statusType: "success" as const,
+    };
   }
   if (!health || labPromptCount === 0) {
-    return { label: "Connecting to backend and loading lab prompts.", toneClass: "animate-pulse bg-amber-500" };
+    return {
+      label: "Connecting to backend and loading lab prompts.",
+      statusType: "warning" as const,
+    };
   }
-  return { label: "Start in Chat: choose scope, ask a question, then approve a workspace plan.", toneClass: "bg-green-500" };
+  return {
+    label: "Start in Chat: choose scope, ask a question, then approve a workspace plan.",
+    statusType: "info" as const,
+  };
 }

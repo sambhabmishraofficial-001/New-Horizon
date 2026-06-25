@@ -37,7 +37,7 @@ export function ClarificationQuestions({
   }
 
   return (
-    <div className="mt-4 rounded-lg border border-ink-900/8 bg-parchment-50/65 p-3">
+    <div className="mt-4 rounded-2xl border border-white/25 bg-white/50 backdrop-blur-sm p-4 shadow-glass animate-fadeInUp">
       <p className="border-b border-ink-900/8 px-3 py-2 text-xs uppercase tracking-[0.14em] text-ink-500">
         {clarificationStatusLabel(reply)}
       </p>
@@ -58,18 +58,18 @@ export function ClarificationQuestions({
                     <button
                       key={option.label}
                       className={cx(
-                        "flex w-full items-start gap-3 rounded-md border px-3 py-2 text-left transition",
+                        "flex w-full items-start gap-3 rounded-md border px-3 py-2 text-left transition-all duration-200",
                         selected
-                          ? "border-beacon-500/40 bg-beacon-50 text-beacon-900"
-                          : "border-ink-900/8 bg-white hover:bg-ink-900/[0.025]"
+                          ? "border-beacon-500/35 bg-beacon-50/80 text-beacon-900 shadow-glass"
+                          : "border-ink-900/8 bg-white/80 hover:bg-white hover:shadow-glass"
                       )}
                       onClick={() => setAnswers((current) => ({ ...current, [item.id]: answerValue }))}
                       type="button"
                     >
                       <span
                         className={cx(
-                          "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border",
-                          selected ? "border-beacon-600 bg-beacon-100 text-beacon-700" : "border-ink-300"
+                          "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border transition-all duration-200",
+                          selected ? "border-beacon-500 bg-beacon-100 text-beacon-700 shadow-[0_0_6px_1px_rgba(59,111,224,0.25)]" : "border-ink-300"
                         )}
                       >
                         {selected ? <CheckCircle2 className="h-3 w-3" /> : null}
@@ -87,17 +87,17 @@ export function ClarificationQuestions({
             ) : (
               <div className="mt-2 space-y-2">
                 <textarea
-                  className="min-h-24 w-full resize-y rounded-md border border-ink-900/10 bg-white px-3 py-2 text-sm outline-none placeholder:text-ink-400 focus:border-beacon-500/45"
+                  className="min-h-24 w-full resize-y rounded-xl border border-ink-900/8 bg-white/80 px-4 py-3 text-sm outline-none placeholder:text-ink-400 focus:border-beacon-500/45 focus:shadow-glass transition-all duration-200"
                   onChange={(event) => setAnswers((current) => ({ ...current, [item.id]: event.target.value }))}
                   placeholder="Type your answer here, or let VRI choose if you have not decided..."
                   value={answers[item.id] ?? ""}
                 />
                 <button
                   className={cx(
-                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200",
                     answers[item.id] === VRI_DELEGATION_ANSWER
-                      ? "border-beacon-500/40 bg-beacon-50 text-beacon-900"
-                      : "border-ink-900/10 bg-white text-ink-600 hover:bg-ink-900/[0.03]"
+                      ? "border-beacon-500/35 bg-beacon-50/80 text-beacon-900 shadow-glass"
+                      : "border-ink-900/8 bg-white/80 text-ink-600 hover:bg-white hover:shadow-glass"
                   )}
                   onClick={() => setAnswers((current) => ({ ...current, [item.id]: VRI_DELEGATION_ANSWER }))}
                   type="button"
@@ -111,7 +111,7 @@ export function ClarificationQuestions({
         ))}
       </div>
       <button
-        className="mt-1 inline-flex items-center gap-2 rounded-full border border-beacon-700 bg-beacon-600 px-4 py-2 text-sm font-medium text-white shadow-glow disabled:cursor-not-allowed disabled:opacity-45"
+        className="mt-2 inline-flex items-center gap-2 rounded-full border border-beacon-600 bg-gradient-beacon px-4 py-2.5 text-sm font-medium text-white shadow-beacon-glow transition-all duration-200 hover:scale-105 hover:shadow-beacon-glow disabled:cursor-not-allowed disabled:opacity-45"
         disabled={!allAnswered}
         onClick={submitAnswers}
         type="button"

@@ -81,7 +81,7 @@ function LeftControlSections({
   const hasPlan = Boolean(plannerReply?.planning_allowed);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-ink-900/8 bg-parchment-50/70 shadow-pane">
+    <div className="overflow-hidden rounded-2xl border border-white/30 bg-white/50 backdrop-blur-lg shadow-glass">
       <div className="flex items-start justify-between gap-3 border-b border-ink-900/8 px-4 py-4">
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-[0.12em] text-ink-500">Project</p>
@@ -273,7 +273,7 @@ function LeftSection({
 }) {
   return (
     <section className="min-h-0 border-b border-ink-900/8 last:border-b-0">
-      <div className="flex items-center justify-between gap-3 border-b border-ink-900/8 px-4 py-2">
+      <div className="flex items-center justify-between gap-3 border-b border-ink-900/6 bg-gradient-to-r from-transparent via-ink-900/[0.02] to-transparent px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2">
           <ChevronDown className="h-4 w-4 shrink-0" />
           <h2 className="truncate text-sm font-medium">{title}</h2>
@@ -475,7 +475,7 @@ export function LeftWorkbench({
 
       <div className="shrink-0 border-t border-ink-900/8 bg-white px-4 py-4">
         <form
-          className="mx-auto w-full max-w-4xl rounded-xl border border-ink-900/10 bg-white shadow-lift"
+          className="mx-auto w-full max-w-4xl rounded-2xl border border-white/30 bg-white/70 backdrop-blur-lg shadow-glass"
           onSubmit={(event) => {
             event.preventDefault();
             onAsk();
@@ -499,7 +499,7 @@ export function LeftWorkbench({
               <span>{allowedLabIds.length ? `${allowedLabIds.length} starter templates selected` : "VRI can create any needed labs"}</span>
             </div>
             <button
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-beacon-700 bg-beacon-600 px-4 text-sm font-medium text-white shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-beacon-600 bg-gradient-beacon px-4 text-sm font-medium text-white shadow-beacon-glow transition-all duration-200 hover:scale-105 hover:shadow-beacon-glow disabled:cursor-not-allowed disabled:opacity-50"
               disabled={loading === "chat" || plannerInput.trim().length === 0}
               type="submit"
             >
@@ -651,10 +651,10 @@ function LabPickerInChat({
                 <button
                   key={lab.id}
                   className={cx(
-                    "rounded-md border p-3 text-left transition",
+                    "rounded-md border p-3 text-left transition-all duration-200",
                     active
-                      ? "border-beacon-500/40 bg-beacon-50 text-beacon-900"
-                      : "border-ink-900/8 bg-white hover:border-ink-900/20 hover:bg-ink-900/[0.02]"
+                      ? "border-beacon-500/40 bg-beacon-50 text-beacon-900 shadow-glass"
+                      : "border-ink-900/8 bg-white/80 hover:border-ink-900/15 hover:bg-white hover:shadow-glass-hover hover:-translate-y-0.5"
                   )}
                   onClick={() => onToggleLab(lab.id)}
                   type="button"
@@ -717,8 +717,8 @@ function ChatBubble({
         className={cx(
           "max-w-[88%] rounded-lg border px-4 py-3 text-sm leading-6",
           isUser
-            ? "border-ink-900/10 bg-ink-900 text-white"
-            : "border-ink-900/8 bg-white text-ink-900"
+            ? "border-transparent bg-gradient-ink text-white shadow-lift"
+            : "border-white/30 bg-white/70 backdrop-blur-sm text-ink-900 shadow-glass"
         )}
       >
         <p className="whitespace-pre-wrap">{message.content}</p>
@@ -734,7 +734,7 @@ function PendingAssistantCard() {
   return (
     <AssistantCard>
       <div className="flex items-center gap-3">
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-ink-900 text-parchment-50">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-ink text-parchment-50 shadow-lift">
           <Loader2 className="h-4 w-4 animate-spin" />
         </span>
         <div>
@@ -749,7 +749,7 @@ function PendingAssistantCard() {
 function StreamingAssistantCard({ visibleText }: { visibleText: string }) {
   return (
     <div className="flex justify-start">
-      <div className="max-w-[92%] rounded-xl border border-ink-900/8 bg-white px-4 py-3 text-sm leading-6 shadow-pane">
+      <div className="max-w-[92%] rounded-2xl border border-white/30 bg-white/70 backdrop-blur-sm px-5 py-4 text-sm leading-6 shadow-glass">
         <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-ink-500">
           <Bot className="h-3.5 w-3.5" />
           <span>Aletheia</span>
@@ -777,7 +777,7 @@ function AssistantReplyCard({
 }) {
   return (
     <div className="flex justify-start">
-      <div className="max-w-[92%] rounded-xl border border-ink-900/8 bg-white px-4 py-3 text-sm leading-6 shadow-pane">
+      <div className="max-w-[92%] rounded-2xl border border-white/30 bg-white/70 backdrop-blur-sm px-5 py-4 text-sm leading-6 shadow-glass">
         <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-ink-500">
           <Bot className="h-3.5 w-3.5" />
           <span>Aletheia / {reply.stage}</span>
@@ -796,7 +796,7 @@ function AssistantReplyCard({
 }
 
 function AssistantCard({ children }: { children: React.ReactNode }) {
-  return <section className="rounded-xl border border-ink-900/8 bg-parchment-50/70 p-4 shadow-pane">{children}</section>;
+  return <section className="rounded-2xl border border-white/25 bg-white/50 backdrop-blur-sm p-5 shadow-glass animate-fadeInUp">{children}</section>;
 }
 
 export function PlanCard({
@@ -840,7 +840,7 @@ export function PlanCard({
         <p className="text-sm font-medium">Does this plan look good to you?</p>
         <div className="mt-3 space-y-2">
           <button
-            className="flex w-full items-center gap-3 rounded-md border border-beacon-500/40 bg-beacon-50 px-3 py-2 text-left text-sm text-beacon-900 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center gap-3 rounded-xl border border-beacon-500/30 bg-beacon-50/80 px-4 py-3 text-left text-sm text-beacon-900 shadow-glass transition-all duration-200 hover:shadow-beacon-glow hover:bg-beacon-50 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={loading === "work"}
             onClick={onApprove}
             type="button"
@@ -935,7 +935,7 @@ function renderInlineMarkdown(value: string) {
 
 function ErrorCard({ error }: { error: string }) {
   return (
-    <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm leading-6 text-red-800">
+    <div className="rounded-xl border border-red-200 bg-red-50/80 backdrop-blur-sm p-4 text-sm leading-6 text-red-800 shadow-glass animate-fadeInUp">
       {error}
     </div>
   );

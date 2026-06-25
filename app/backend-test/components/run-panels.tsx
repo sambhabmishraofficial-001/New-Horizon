@@ -34,7 +34,7 @@ export function LabProvenancePanel({
       <p className="mb-2 text-xs uppercase tracking-[0.14em] text-ink-500">Lab provenance</p>
       <div className="space-y-2">
         {events.map((event, index) => (
-          <div key={`${event.lab_name}-${event.action}-${index}`} className="rounded-md border border-ink-900/8 bg-white p-3 text-sm">
+          <div key={`${event.lab_name}-${event.action}-${index}`} className="rounded-xl border-l-2 border border-ink-900/8 border-l-beacon-500/50 bg-white/80 backdrop-blur-sm p-4 text-sm shadow-pane transition-all duration-200 hover:shadow-glass">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate font-medium">{event.lab_name}</p>
@@ -98,7 +98,7 @@ export function RunTraceCard({
   if (!activeRun && loading !== "work") return null;
 
   return (
-    <section className="rounded-xl border border-ink-900/8 bg-parchment-50/70 p-4 shadow-pane">
+    <section className="rounded-2xl border border-white/25 bg-white/50 backdrop-blur-sm p-5 shadow-glass animate-fadeInUp">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.14em] text-ink-500">Workspace execution</p>
@@ -186,7 +186,7 @@ function TraceMessageRow({
     <div className={cx(
       "flex items-start gap-3 rounded-lg border px-3 py-2 text-sm leading-6",
       compact ? "text-xs leading-5" : "",
-      tone === "error" ? "border-red-300 bg-red-50 text-red-800" : "border-ink-900/12 bg-white text-ink-700"
+      tone === "error" ? "border-red-300 bg-red-50 text-red-800" : "border-ink-900/8 bg-white/80 text-ink-700 shadow-pane"
     )}>
       <MessageSquareText className="mt-1 h-4 w-4 shrink-0 text-ink-500" />
       <p className="whitespace-pre-wrap">{text}</p>
@@ -208,7 +208,7 @@ function ToolTraceRow({
   const hasDetails = tool.input !== undefined || tool.output !== undefined;
 
   return (
-    <div className="rounded-lg border border-ink-900/12 bg-white">
+    <div className="rounded-xl border border-ink-900/8 bg-white/80 backdrop-blur-sm shadow-pane transition-all duration-200 hover:shadow-glass">
       <button
         className={cx(
           "flex w-full items-center gap-3 px-3 py-2 text-left text-sm",
@@ -246,7 +246,7 @@ function ToolTraceRow({
         ) : null}
       </button>
       {open ? (
-        <div className="border-t border-ink-900/8 bg-parchment-50/55 p-3">
+        <div className="border-t border-ink-900/6 bg-parchment-50/40 backdrop-blur-sm p-4 animate-fadeInUp">
           {tool.input !== undefined ? <TraceJsonBlock label="Input" value={tool.input} /> : null}
           {tool.output !== undefined ? <TraceJsonBlock label="Output" value={tool.output} /> : null}
         </div>
@@ -268,7 +268,7 @@ function LiteratureTraceRow({
     .join(" / ");
 
   return (
-    <div className="rounded-lg border border-ink-900/12 bg-white">
+    <div className="rounded-xl border border-ink-900/8 bg-white/80 backdrop-blur-sm shadow-pane transition-all duration-200 hover:shadow-glass">
       <button
         className={cx(
           "flex w-full items-center gap-3 px-3 py-2 text-left text-sm",
@@ -283,7 +283,7 @@ function LiteratureTraceRow({
         {open ? <ChevronDown className="h-4 w-4 shrink-0 text-ink-500" /> : <ChevronRight className="h-4 w-4 shrink-0 text-ink-500" />}
       </button>
       {open ? (
-        <div className="space-y-2 border-t border-ink-900/8 bg-parchment-50/55 p-3 text-xs leading-5 text-ink-600">
+        <div className="space-y-2 border-t border-ink-900/6 bg-parchment-50/40 backdrop-blur-sm p-4 text-xs leading-5 text-ink-600 animate-fadeInUp">
           {meta ? <p>{meta}</p> : null}
           {item.authors ? <p>{item.authors}</p> : null}
           {item.abstract ? <p className="whitespace-pre-wrap">{item.abstract}</p> : null}
@@ -298,7 +298,7 @@ function TraceJsonBlock({ label, value }: { label: string; value: unknown }) {
   return (
     <div className="mb-3 last:mb-0">
       <p className="mb-1 text-xs uppercase tracking-[0.12em] text-ink-500">{label}</p>
-      <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-md border border-ink-900/10 bg-white p-3 text-xs leading-5 text-ink-800 shadow-pane">
+      <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-lg border border-ink-900/8 bg-white/80 p-3 font-mono text-xs leading-5 text-ink-800 shadow-glass-inset">
         {formatJsonValue(value)}
       </pre>
     </div>
@@ -307,7 +307,7 @@ function TraceJsonBlock({ label, value }: { label: string; value: unknown }) {
 
 function TraceEmptyRow({ text }: { text: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-ink-900/12 bg-white px-3 py-2 text-sm text-ink-500">
+    <div className="rounded-xl border border-dashed border-ink-900/10 bg-white/60 px-3 py-2.5 text-sm text-ink-500">
       {text}
     </div>
   );
@@ -334,12 +334,12 @@ export function ProgressSteps({
 
   return (
     <div>
-      <p className="mb-4 rounded-md border border-ink-900/8 bg-white p-3 text-sm leading-6 text-ink-500">
+      <p className="mb-4 rounded-xl border border-white/30 bg-white/60 backdrop-blur-sm p-4 text-sm leading-6 text-ink-500 shadow-pane">
         {nextStep}
       </p>
       <div className="space-y-3">
         {steps.map((step) => (
-          <div key={step.label} className="flex gap-3">
+          <div key={step.label} className="flex gap-3 transition-all duration-200 hover:bg-ink-900/[0.02] rounded-lg px-2 py-1 -mx-2">
             {step.done ? (
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-700" />
             ) : (
@@ -358,9 +358,9 @@ export function ProgressSteps({
 
 export function MetricRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-ink-900/8 py-2 text-sm last:border-b-0">
+    <div className="flex items-center justify-between border-b border-ink-900/6 py-2.5 text-sm last:border-b-0 transition-colors duration-150 hover:bg-ink-900/[0.02]">
       <span className="text-ink-500">{label}</span>
-      <span className="font-medium">{value}</span>
+      <span className="font-medium font-mono text-ink-800">{value}</span>
     </div>
   );
 }
