@@ -419,35 +419,64 @@ export default function BackendTestPage() {
     selectLab(labId);
   }
 
-  async function approveAndStartWork() {
+  const [masterPlan, setMasterPlan] = React.useState<any>(null);
+  const [phaseStatuses, setPhaseStatuses] = React.useState<any[]>([]);
+
+  async function fetchPhases(planId: string) {
+    try {
+      const statuses = await request<any[]>(`/v1/plans/${planId}/phases`, { method: "GET" });
+      setPhaseStatuses(statuses);
+      return statuses;
+    } catch (err) {
+      console.error("Failed to fetch phases", err);
+      return [];
+    }
+  }
+
+  async function createMasterPlan() {
     if (!activePlanReply || !activePlanReply.planning_allowed || plannerMessages.length === 0) return;
     setSelectedFileId(null);
     setSelectedRunLabName(null);
     setViewerModePreference("execution");
     setLoading("work");
     setError(null);
-    startedRunIdRef.current = null;
-    setReadyNoticeRunId(null);
-    setDismissedNoticeRunId(null);
     try {
-      const run = await request<WorkRun>("/v1/start-work", {
+      const plan = await request<any>("/v1/plans", {
         method: "POST",
-        body: JSON.stringify({
-          messages: wireMessages(plannerMessages),
-          planner_reply: activePlanReply,
-          workstream_preference: workstreamPreference,
-        }),
+        body: JSON.stringify(activePlanReply),
       });
-      startedRunIdRef.current = run.run_id;
-      setActiveWorkRun(run);
-      setSelectedFileId(null);
-      setSelectedRunLabName(null);
-      setViewerModePreference("execution");
-      setWorkRuns((prev) => [run, ...prev].slice(0, 10));
+      setMasterPlan(plan);
+      await fetchPhases(plan.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start VRI work.");
+      setError(err instanceof Error ? err.message : "Failed to create VRI master plan.");
     } finally {
       setLoading(null);
+    }
+  }
+
+  async function startPhase(phaseNumber: number) {
+    if (!masterPlan) return;
+    try {
+      await request(`/v1/plans/${masterPlan.id}/phases/${phaseNumber}/start`, { method: "POST" });
+      // Poll a few times
+      await fetchPhases(masterPlan.id);
+      setTimeout(() => fetchPhases(masterPlan.id), 2000);
+      setTimeout(() => fetchPhases(masterPlan.id), 5000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start phase.");
+    }
+  }
+
+  async function approvePhase(phaseNumber: number, approved: boolean) {
+    if (!masterPlan) return;
+    try {
+      await request(`/v1/plans/${masterPlan.id}/phases/${phaseNumber}/approve`, {
+        method: "POST",
+        body: JSON.stringify({ plan_id: masterPlan.id, phase_number: phaseNumber, user_approved: approved }),
+      });
+      await fetchPhases(masterPlan.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to approve phase.");
     }
   }
 
@@ -552,14 +581,14 @@ export default function BackendTestPage() {
               </p>
             </div>
             <div
-              key={workspaceStatus.label}
+              key={workspaceStatus.statusType + workspaceStatus.label}
               className={cx(
-                "mt-3 rounded-2xl border backdrop-blur-md px-5 py-3.5 shadow-glass transition-all duration-300 animate-scaleIn",
-                workspaceStatus.statusType === "loading" && "border-beacon-200/50 bg-gradient-to-r from-beacon-50/60 via-beacon-100/30 to-beacon-50/60 shadow-[0_0_12px_rgba(59,111,224,0.08)]",
-                workspaceStatus.statusType === "success" && "border-emerald-500/20 bg-gradient-to-r from-emerald-50/70 to-teal-50/40 shadow-[0_0_12px_rgba(18,120,90,0.05)]",
-                workspaceStatus.statusType === "warning" && "border-amber-500/25 bg-gradient-to-r from-amber-50/70 to-yellow-50/40",
-                workspaceStatus.statusType === "error" && "border-rose-500/25 bg-gradient-to-r from-rose-50/70 to-red-50/40 shadow-[0_0_12px_rgba(180,49,95,0.05)]",
-                workspaceStatus.statusType === "info" && "border-white/40 bg-gradient-to-r from-beacon-50/50 to-white/50"
+                "mt-3 rounded-2xl border backdrop-blur-md px-5 py-3.5 shadow-glass transition-all duration-500 ease-out animate-in slide-in-from-top-2 fade-in zoom-in-95",
+                workspaceStatus.statusType === "loading" && "border-beacon-400/50 bg-gradient-to-r from-beacon-50/80 via-beacon-100/60 to-beacon-50/80 shadow-[0_0_20px_rgba(59,111,224,0.2)] animate-pulse",
+                workspaceStatus.statusType === "success" && "border-emerald-500/50 bg-gradient-to-r from-emerald-100/90 to-teal-50/80 shadow-[0_0_30px_rgba(16,185,129,0.3)] transform scale-[1.02]",
+                workspaceStatus.statusType === "warning" && "border-amber-500/50 bg-gradient-to-r from-amber-100/90 to-yellow-50/80 shadow-[0_0_20px_rgba(245,158,11,0.2)]",
+                workspaceStatus.statusType === "error" && "border-rose-500/50 bg-gradient-to-r from-rose-100/90 to-red-50/80 shadow-[0_0_20px_rgba(225,29,72,0.2)] transform scale-[1.01] animate-shake",
+                workspaceStatus.statusType === "info" && "border-white/60 bg-gradient-to-r from-beacon-50/70 to-white/70"
               )}
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -730,20 +759,34 @@ export default function BackendTestPage() {
                 activeRun={activeWorkRun}
                 artifactLoading={artifactLoading}
                 files={viewFiles}
+                hasWorkspace={workspaceArtifacts !== null}
                 loading={loading}
-                mode={viewerMode}
-                onApprove={() => void approveAndStartWork()}
-                onOpenFileInNewTab={openFileInNewTab}
-                onSelectFile={selectFile}
-                onSelectLab={selectRunLab}
-                onShowExecution={showExecution}
-                onShowPlan={showPlan}
-                onRevise={(message?: string) => void askVri(message)}
-                plannerReply={activePlanReply}
+                mode={viewerModePreference}
+                onApprove={createMasterPlan}
+                onOpenFileInNewTab={(file) => {
+                  if (file) window.open(`/api/artifact?path=${encodeURIComponent(file.path)}`, "_blank");
+                }}
+                onRevise={(message) => {
+                  if (message) {
+                    setPlannerInput(message);
+                    setViewerModePreference("idle");
+                  }
+                }}
+                onSelectFile={setSelectedFileId}
+                onSelectLab={(labName) => {
+                  setSelectedRunLabName(labName);
+                  setViewerModePreference("lab");
+                }}
+                onShowExecution={() => setViewerModePreference("execution")}
+                onShowPlan={() => setViewerModePreference("plan")}
+                plannerReply={lastPlanReply}
+                masterPlan={masterPlan}
+                phaseStatuses={phaseStatuses}
+                onStartPhase={startPhase}
+                onApprovePhase={approvePhase}
                 selectedFile={selectedFile}
                 selectedRunLab={selectedRunLab}
                 selectedRunLabName={selectedRunLabName}
-                hasWorkspace={Boolean(activeWorkRun)}
               />
             ) : null}
 

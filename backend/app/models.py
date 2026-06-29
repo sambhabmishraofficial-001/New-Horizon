@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, JSON, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -103,3 +103,61 @@ class Artifact(Base):
 
     investigation: Mapped[Investigation] = relationship(back_populates="artifacts")
     run: Mapped[Run | None] = relationship(back_populates="artifacts")
+
+
+class WorkPlan(Base):
+    """Master plan containing computational and experimental sub-plans."""
+
+    __tablename__ = "work_plans"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    run_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(240), nullable=False)
+    objective: Mapped[str] = mapped_column(Text, nullable=False)
+    master_plan_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    computational_plan_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    experimental_plan_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    resources_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(
+        String(40), nullable=False, default="draft"
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    phases: Mapped[list["WorkPhase"]] = relationship(
+        back_populates="plan",
+        cascade="all, delete-orphan",
+        order_by="WorkPhase.phase_number",
+    )
+
+
+class WorkPhase(Base):
+    """Single phase within a work plan, tracked independently."""
+
+    __tablename__ = "work_phases"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    plan_id: Mapped[str] = mapped_column(
+        ForeignKey("work_plans.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    phase_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    sub_plan_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    title: Mapped[str] = mapped_column(String(240), nullable=False)
+    objective: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    tasks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    expected_outputs_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    actual_outputs_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    verification_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    time_estimate: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    handoff: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(
+        String(40), nullable=False, default="pending"
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    plan: Mapped[WorkPlan] = relationship(back_populates="phases")
+

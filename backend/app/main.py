@@ -10,6 +10,7 @@ from app.routers.chat import router as chat_router
 from app.routers.health import router as health_router
 from app.routers.investigations import router as investigations_router
 from app.routers.work import router as work_router
+from app.routers.phases import router as phases_router
 
 
 settings = get_settings()
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
     app.include_router(chat_router)
     app.include_router(work_router)
     app.include_router(investigations_router)
+    app.include_router(phases_router)
 
     return app
 

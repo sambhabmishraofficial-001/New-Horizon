@@ -176,6 +176,98 @@ class WorkspaceArtifactsResponse(BaseModel):
     files: list[WorkspaceArtifactFile]
 
 
+# --- Master Plan structure ---
+class ResourceItem(BaseModel):
+    category: Literal["reagent", "equipment", "consumable", "software"]
+    name: str
+    specifications: str = ""
+    quantity: str = ""
+    estimated_cost: str = ""
+    safety_notes: str = ""
+
+
+class ExperimentalProtocolStep(BaseModel):
+    step_number: int
+    action: str
+    reagents: list[str] = []
+    concentrations: str = ""
+    duration: str = ""
+    temperature: str = ""
+    notes: str = ""
+
+
+class ExperimentalDesign(BaseModel):
+    hypothesis: str
+    methodology: str
+    sample_size: str = ""
+    replicates: str = ""
+    controls: list[str] = []
+    blinding: str = ""
+    power_analysis: str = ""
+    protocol_steps: list[ExperimentalProtocolStep] = []
+    expected_outcomes: list[str] = []
+
+
+class PlanPhase(BaseModel):
+    phase_number: int
+    title: str
+    sub_plan_type: Literal["computational", "experimental"]
+    objective: str
+    tasks: list[str]
+    expected_outputs: list[str]
+    time_estimate: str = ""
+    handoff: str = ""
+    dependencies: list[int] = []
+
+
+class SubPlan(BaseModel):
+    type: Literal["computational", "experimental"]
+    title: str
+    summary: str
+    phases: list[PlanPhase]
+    experimental_design: ExperimentalDesign | None = None
+
+
+class MasterPlan(BaseModel):
+    title: str
+    objective: str
+    computational_plan: SubPlan
+    experimental_plan: SubPlan
+    resources: list[ResourceItem] = []
+
+
+# --- Phase execution request/response ---
+class PhaseVerification(BaseModel):
+    all_outputs_present: bool
+    missing_outputs: list[str]
+    errors: list[str]
+    auto_passed: bool
+    summary: str
+
+
+class PhaseStatusResponse(BaseModel):
+    phase_number: int
+    title: str
+    sub_plan_type: str
+    status: str
+    tasks: list[str]
+    expected_outputs: list[str]
+    actual_outputs: list[str]
+    verification: PhaseVerification | None = None
+
+
+class StartPhaseRequest(BaseModel):
+    plan_id: str
+    phase_number: int
+
+
+class ApprovePhaseRequest(BaseModel):
+    plan_id: str
+    phase_number: int
+    user_approved: bool = True
+    notes: str = ""
+
+
 class InvestigationCreate(BaseModel):
     objective: str = Field(min_length=3)
     title: str | None = Field(default=None, max_length=240)

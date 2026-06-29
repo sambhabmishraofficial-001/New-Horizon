@@ -12,10 +12,11 @@ import {
   Loader2,
   Minimize2,
 } from "lucide-react";
-import type { Health, InspectorPanel, LabPrompt, ProposedLab, ViewFile, ViewerMode, VriPlannerReply, WorkRun } from "../types";
+import type { Health, InspectorPanel, LabPrompt, MasterPlan, PhaseStatusResponse, ProposedLab, ViewFile, ViewerMode, VriPlannerReply, WorkRun } from "../types";
 import { PlanCard } from "./left-workbench";
 import { LabProvenancePanel, MetricRow, ProgressSteps, RunTraceCard, ToolAndLiteraturePanel } from "./run-panels";
 import { cx, fileOwnerLabel, labEventsForName, labFilesForEvents, truncate } from "../utils";
+import { MasterPlanViewer } from "./master-plan-viewer";
 
 export function RightViewerPane({
   activeRun,
@@ -32,6 +33,10 @@ export function RightViewerPane({
   onShowExecution,
   onShowPlan,
   plannerReply,
+  masterPlan,
+  phaseStatuses,
+  onStartPhase,
+  onApprovePhase,
   selectedFile,
   selectedRunLab,
   selectedRunLabName,
@@ -50,6 +55,10 @@ export function RightViewerPane({
   onShowExecution: () => void;
   onShowPlan: () => void;
   plannerReply: VriPlannerReply | null;
+  masterPlan: MasterPlan | null;
+  phaseStatuses: PhaseStatusResponse[];
+  onStartPhase: (phaseNumber: number) => void;
+  onApprovePhase: (phaseNumber: number, approved: boolean) => void;
   selectedFile: ViewFile | null;
   selectedRunLab: ProposedLab | null;
   selectedRunLabName: string | null;
@@ -127,11 +136,18 @@ export function RightViewerPane({
               />
             ) : mode === "plan" && plannerReply ? (
               <PlanCard
-                hasWorkspace={hasWorkspace}
+                hasWorkspace={hasWorkspace || masterPlan !== null}
                 loading={loading}
                 onApprove={onApprove}
                 onRevise={onRevise}
                 reply={plannerReply}
+              />
+            ) : mode === "execution" && masterPlan ? (
+              <MasterPlanViewer 
+                plan={masterPlan} 
+                phases={phaseStatuses} 
+                onStartPhase={onStartPhase} 
+                onApprovePhase={onApprovePhase} 
               />
             ) : mode === "execution" && activeRun ? (
               <div className="min-h-0 space-y-4">

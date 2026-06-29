@@ -152,3 +152,85 @@ export type ViewFile = {
 
 export type InspectorPanel = "progress" | "results" | "files" | "tools";
 export type ViewerMode = "plan" | "file" | "lab" | "execution" | "idle";
+
+// --- Phased Execution Types ---
+
+export type ResourceItem = {
+  category: "reagent" | "equipment" | "consumable" | "software";
+  name: string;
+  specifications: string;
+  quantity: string;
+  estimated_cost: string;
+  safety_notes: string;
+};
+
+export type ExperimentalProtocolStep = {
+  step_number: number;
+  action: string;
+  reagents: string[];
+  concentrations: string;
+  duration: string;
+  temperature: string;
+  notes: string;
+};
+
+export type ExperimentalDesign = {
+  hypothesis: string;
+  methodology: string;
+  sample_size: string;
+  replicates: string;
+  controls: string[];
+  blinding: string;
+  power_analysis: string;
+  protocol_steps: ExperimentalProtocolStep[];
+  expected_outcomes: string[];
+};
+
+export type PlanPhase = {
+  phase_number: number;
+  title: string;
+  sub_plan_type: "computational" | "experimental";
+  objective: string;
+  tasks: string[];
+  expected_outputs: string[];
+  time_estimate: string;
+  handoff: string;
+  dependencies: number[];
+};
+
+export type SubPlan = {
+  type: "computational" | "experimental";
+  title: string;
+  summary: string;
+  phases: PlanPhase[];
+  experimental_design: ExperimentalDesign | null;
+};
+
+export type MasterPlan = {
+  id: string;
+  run_id: string;
+  title: string;
+  objective: string;
+  computational_plan: SubPlan;
+  experimental_plan: SubPlan;
+  resources: ResourceItem[];
+};
+
+export type PhaseVerification = {
+  all_outputs_present: boolean;
+  missing_outputs: string[];
+  errors: string[];
+  auto_passed: boolean;
+  summary: string;
+};
+
+export type PhaseStatusResponse = {
+  phase_number: number;
+  title: string;
+  sub_plan_type: "computational" | "experimental";
+  status: "pending" | "running" | "completed" | "failed" | "awaiting_approval";
+  tasks: string[];
+  expected_outputs: string[];
+  actual_outputs: string[];
+  verification: PhaseVerification | null;
+};

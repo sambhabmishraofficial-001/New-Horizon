@@ -44,7 +44,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <div className="institute-nav-root ire-workspace app-shell h-screen flex flex-col bg-[var(--ire-bg)] font-marketing not-italic">
             <TopBar onOpenCommand={() => setCmdOpen(true)} />
             <div className="flex flex-1 min-h-0">
-              <InstituteNavSidebar />
               <main
                 className={cn(
                   "flex-1 min-w-0 min-h-0 bg-[var(--ire-surface-muted)]",
