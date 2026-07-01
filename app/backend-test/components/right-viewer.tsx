@@ -212,6 +212,15 @@ function LabIdentityDeck({
   selectedLabName: string | null;
 }) {
   const visibleLabs = labs.slice(0, 6);
+  const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+
+  React.useEffect(() => {
+    if (!selectedLabName) return;
+    const target = cardRefs.current[selectedLabName];
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [selectedLabName]);
+
   if (visibleLabs.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-ink-900/12 bg-parchment-50 p-4 text-sm text-ink-500">
@@ -237,6 +246,9 @@ function LabIdentityDeck({
             <div
               className="relative"
               key={`${lab.name}-${index}`}
+              ref={(node) => {
+                cardRefs.current[lab.name] = node;
+              }}
               style={{ zIndex: selectedLabName === lab.name ? 50 : visibleLabs.length - index }}
             >
               <LabIdentityCard
@@ -291,9 +303,10 @@ function LabIdentityCard({
       className={cx(
         "relative min-h-[27rem] w-[17.5rem] overflow-visible rounded-[1.75rem] border p-5 text-left text-ink-900 shadow-[0_20px_44px_rgba(18,31,52,0.3)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-beacon-500/35",
         selected
-          ? "-translate-y-2 border-cyan-300/95 bg-white shadow-[0_0_0_1px_rgba(255,255,255,0.8),0_0_44px_rgba(86,210,255,0.58),0_36px_74px_rgba(18,31,52,0.5)]"
-          : "border-cyan-200/70 bg-white/92 opacity-85 hover:opacity-100"
+          ? "-translate-y-2 scale-[1.02] border-cyan-300/95 bg-white shadow-[0_0_0_1px_rgba(255,255,255,0.8),0_0_44px_rgba(86,210,255,0.58),0_36px_74px_rgba(18,31,52,0.5)]"
+          : "border-cyan-200/70 bg-white/92 opacity-75 saturate-75 hover:opacity-95"
       )}
+      aria-pressed={selected}
       onClick={onSelect}
       style={{
         "--tilt": tilt,
@@ -315,9 +328,13 @@ function LabIdentityCard({
           <p className="font-mono text-xs tracking-[0.18em]">{initials || "VRI"}</p>
           <span className={cx(
             "rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]",
-            live ? "border-green-300/40 bg-green-400/20 text-green-100" : "border-cyan-300/35 bg-cyan-400/20 text-cyan-100"
+            selected
+              ? "border-cyan-200/70 bg-cyan-300/30 text-cyan-50"
+              : live
+                ? "border-green-300/40 bg-green-400/20 text-green-100"
+                : "border-cyan-300/35 bg-cyan-400/20 text-cyan-100"
           )}>
-            {live ? "active" : "queued"}
+            {selected ? "selected" : live ? "active" : "queued"}
           </span>
         </div>
 

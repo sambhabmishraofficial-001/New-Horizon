@@ -813,6 +813,8 @@ export function PlanCard({
   reply: VriPlannerReply;
 }) {
   const [revision, setRevision] = React.useState("");
+  const computationalLabs = reply.proposed_labs.filter((lab) => lab.workstream === "computational" || lab.workstream === "data" || lab.workstream === "review").length;
+  const experimentalLabs = reply.proposed_labs.filter((lab) => lab.workstream === "experimental" || lab.workstream === "hybrid").length;
 
   function submitRevision() {
     const clean = revision.trim();
@@ -828,6 +830,20 @@ export function PlanCard({
         <p className="mt-2 text-sm leading-6 text-ink-500">
           Review the proposed labs, tasks, estimates, files, and handoffs. Workspace files and analysis only start after you approve it.
         </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.12em]">
+          <span className="rounded-full border border-beacon-300/50 bg-beacon-50 px-2.5 py-1 text-beacon-900">
+            labs {reply.proposed_labs.length}
+          </span>
+          <span className="rounded-full border border-ink-900/12 bg-white px-2.5 py-1 text-ink-600">
+            comp {computationalLabs}
+          </span>
+          <span className="rounded-full border border-emerald-300/50 bg-emerald-50 px-2.5 py-1 text-emerald-800">
+            exp {experimentalLabs}
+          </span>
+          <span className="rounded-full border border-ink-900/12 bg-white px-2.5 py-1 text-ink-600">
+            tasks {reply.computational_work.length + reply.experimental_work.length}
+          </span>
+        </div>
       </div>
 
       <div className="mt-4 rounded-lg border border-ink-900/10 bg-white p-4">

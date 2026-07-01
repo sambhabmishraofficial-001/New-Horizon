@@ -193,6 +193,15 @@ function SubPlanColumn({
   onStartPhase: (phaseId: string) => void;
   onApprovePhase: (phaseId: string, phaseNumber: number, approved: boolean) => void;
 }) {
+  const orderedPhases = [...phases].sort((a, b) => a.phase_number - b.phase_number);
+  const completedPhaseNumbers = new Set(
+    orderedPhases
+      .filter((phase) => phase.status === "completed")
+      .map((phase) => phase.phase_number)
+  );
+  const completedCount = orderedPhases.filter((phase) => phase.status === "completed").length;
+  const progress = orderedPhases.length > 0 ? Math.round((completedCount / orderedPhases.length) * 100) : 0;
+
   return (
     <div className="flex flex-col rounded-xl border border-ink-900/10 bg-white overflow-hidden shadow-sm">
       <div className="bg-parchment-50 px-5 py-4 border-b border-ink-900/10">
@@ -201,19 +210,35 @@ function SubPlanColumn({
           <h3 className="font-semibold text-ink-900">{subPlan.title}</h3>
         </div>
         <p className="mt-1 text-sm text-ink-500">{subPlan.summary}</p>
+        <div className="mt-3">
+          <div className="mb-1 flex items-center justify-between text-xs text-ink-500">
+            <span>{completedCount}/{orderedPhases.length} phases complete</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-ink-900/10">
+            <div className="h-full rounded-full bg-gradient-to-r from-beacon-500 to-cyan-400" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
       </div>
       <div className="flex-1 p-5 space-y-4">
-        {phases.length === 0 ? (
+        {orderedPhases.length === 0 ? (
           <p className="text-sm text-ink-400 text-center py-4">No phases proposed.</p>
         ) : (
-          phases.map((phase) => (
+          orderedPhases.map((phase) => {
+            const blockedDependencies = (phase.dependencies ?? []).filter((dep) => !completedPhaseNumbers.has(dep));
+            const blocked = phase.status === "pending" && blockedDependencies.length > 0;
+
+            return (
             <PhaseCard
               key={phase.id}
               phase={phase}
+              blocked={blocked}
+              blockedDependencies={blockedDependencies}
               onStart={() => onStartPhase(phase.id)}
               onApprove={(approved) => onApprovePhase(phase.id, phase.phase_number, approved)}
             />
-          ))
+            );
+          })
         )}
       </div>
     </div>
@@ -222,10 +247,14 @@ function SubPlanColumn({
 
 function PhaseCard({
   phase,
+  blocked,
+  blockedDependencies,
   onStart,
   onApprove,
 }: {
   phase: PhaseStatusResponse;
+  blocked: boolean;
+  blockedDependencies: number[];
   onStart: () => void;
   onApprove: (approved: boolean) => void;
 }) {
@@ -252,13 +281,25 @@ function PhaseCard({
         {phase.status === "pending" && (
           <button
             onClick={onStart}
-            className="flex items-center gap-1 rounded-md bg-ink-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-ink-800 transition-colors"
+            className={cx(
+              "flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+              blocked
+                ? "cursor-not-allowed bg-ink-200 text-ink-500"
+                : "bg-ink-900 text-white hover:bg-ink-800"
+            )}
+            disabled={blocked}
           >
-            <PlayCircle className="h-3.5 w-3.5" />
-            Start
+            {blocked ? <Lock className="h-3.5 w-3.5" /> : <PlayCircle className="h-3.5 w-3.5" />}
+            {blocked ? "Blocked" : "Start"}
           </button>
         )}
       </div>
+
+      {blocked && blockedDependencies.length > 0 ? (
+        <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Waiting for phase {blockedDependencies.join(", ")} in this lane.
+        </p>
+      ) : null}
 
       {phase.status === "running" && (
         <div className="mt-4 flex items-center justify-center gap-3 py-2 text-sm text-beacon-700">

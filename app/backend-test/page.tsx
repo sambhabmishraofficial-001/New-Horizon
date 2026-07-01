@@ -601,6 +601,54 @@ export default function BackendTestPage() {
   });
   const showReadyNotice =
     Boolean(readyNoticeRunId) && readyNoticeRunId !== dismissedNoticeRunId && loading !== "work";
+  const statusChips = [
+    {
+      label: "Backend",
+      tone: health?.status === "ok" ? "ok" : "pending",
+      value: health?.status === "ok" ? "ready" : "connecting",
+    },
+    {
+      label: "Labs",
+      tone: labPrompts.length > 0 ? "ok" : "pending",
+      value: labPrompts.length > 0 ? String(labPrompts.length) : "loading",
+    },
+    {
+      label: "Plan",
+      tone: masterPlan ? "ok" : activePlanReply?.planning_allowed ? "info" : "pending",
+      value: masterPlan ? "created" : activePlanReply?.planning_allowed ? "ready" : "none",
+    },
+    {
+      label: "Run",
+      tone: activeWorkRun || masterPlan ? "info" : "pending",
+      value: activeWorkRun?.status ?? (masterPlan ? "phased" : "idle"),
+    },
+    {
+      label: "Artifacts",
+      tone: viewFiles.length > 0 ? "ok" : "pending",
+      value: viewFiles.length > 0 ? String(viewFiles.length) : "none",
+    },
+  ] as const;
+
+  let quickAction:
+    | { label: string; onClick: () => void; style: "primary" | "secondary" }
+    | null = null;
+
+  if (activePlanReply?.planning_allowed && !masterPlan) {
+    quickAction = { label: "Review & Approve Plan", onClick: showPlan, style: "primary" };
+  } else if (masterPlan) {
+    quickAction = { label: "Open Run", onClick: showExecution, style: "primary" };
+  } else if (viewFiles.length > 0) {
+    quickAction = {
+      label: "Open Files",
+      onClick: () => {
+        setSelectedFileId((current) => current ?? viewFiles[0]?.id ?? null);
+        setSelectedRunLabName(null);
+        setViewerModePreference("file");
+        setWorkspaceView("files");
+      },
+      style: "secondary",
+    };
+  }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-mesh bg-ink-50 text-ink-900 font-marketing lg:h-screen lg:overflow-hidden">
@@ -622,6 +670,38 @@ export default function BackendTestPage() {
               <p className="text-sm font-medium text-ink-600">
                 Active: <span className="text-ink-900">{workspaceViewLabel(workspaceView)}</span>
               </p>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-2">
+                {statusChips.map((chip) => (
+                  <span
+                    key={chip.label}
+                    className={cx(
+                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] uppercase tracking-[0.12em]",
+                      chip.tone === "ok" && "border-emerald-300/60 bg-emerald-50 text-emerald-800",
+                      chip.tone === "info" && "border-beacon-300/60 bg-beacon-50 text-beacon-900",
+                      chip.tone === "pending" && "border-ink-900/12 bg-white/80 text-ink-500"
+                    )}
+                  >
+                    <span>{chip.label}</span>
+                    <span className="font-semibold">{chip.value}</span>
+                  </span>
+                ))}
+              </div>
+              {quickAction ? (
+                <button
+                  className={cx(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200",
+                    quickAction.style === "primary"
+                      ? "border border-beacon-700 bg-gradient-beacon text-white shadow-beacon-glow"
+                      : "border border-ink-900/10 bg-white text-ink-700 hover:bg-ink-900/[0.03]"
+                  )}
+                  onClick={quickAction.onClick}
+                  type="button"
+                >
+                  {quickAction.label}
+                </button>
+              ) : null}
             </div>
             <div
               key={workspaceStatus.statusType + workspaceStatus.label}
