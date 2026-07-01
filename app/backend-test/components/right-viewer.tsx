@@ -226,25 +226,34 @@ function LabIdentityDeck({
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-ink-500">Institute labs</p>
           <h2 className="mt-1 text-lg font-medium text-ink-900">Identity cards</h2>
+          <p className="mt-1 text-xs text-ink-500">Stacked ID format. Select a card to open its dossier.</p>
         </div>
         <Boxes className="h-5 w-5 text-ink-400" />
       </div>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {visibleLabs.map((lab, index) => (
-          <LabIdentityCard
-            index={index}
-            key={`${lab.name}-${index}`}
-            lab={lab}
-            live={Boolean(activeRun)}
-            onSelect={() => onSelectLab(lab.name)}
-            selected={selectedLabName === lab.name}
-          />
-        ))}
+      <div className="relative overflow-x-auto pb-4 pt-10">
+        <div className="pointer-events-none absolute left-6 right-6 top-4 h-3 rounded-full bg-gradient-to-r from-ink-950/95 via-ink-900/85 to-ink-950/95" />
+        <div className="mx-auto flex w-max min-w-full items-start gap-4 px-3">
+          {visibleLabs.map((lab, index) => (
+            <div
+              className="relative"
+              key={`${lab.name}-${index}`}
+              style={{ zIndex: selectedLabName === lab.name ? 50 : visibleLabs.length - index }}
+            >
+              <LabIdentityCard
+                index={index}
+                lab={lab}
+                live={Boolean(activeRun)}
+                onSelect={() => onSelectLab(lab.name)}
+                selected={selectedLabName === lab.name}
+              />
+            </div>
+          ))}
+        </div>
       </div>
       <style jsx global>{`
         @keyframes vri-card-float {
-          0%, 100% { transform: translateY(0) rotate(var(--tilt)); box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22); }
-          50% { transform: translateY(-8px) rotate(var(--tilt)); box-shadow: 0 26px 52px rgba(126, 211, 255, 0.20); }
+          0%, 100% { transform: translateY(0) rotate(var(--tilt)); box-shadow: 0 20px 46px rgba(0, 0, 0, 0.22); }
+          50% { transform: translateY(-4px) rotate(var(--tilt)); box-shadow: 0 26px 58px rgba(126, 211, 255, 0.18); }
         }
         @keyframes vri-scan {
           0% { transform: translateX(-120%); opacity: 0; }
@@ -280,36 +289,58 @@ function LabIdentityCard({
   return (
     <button
       className={cx(
-        "relative min-h-56 overflow-hidden rounded-xl border p-4 text-left text-ink-900 shadow-glass transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-glass-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-beacon-500/35",
-        selected ? "border-beacon-500/40 bg-beacon-50/80 shadow-beacon-glow" : "border-ink-900/10 bg-white/70 backdrop-blur-sm"
+        "relative min-h-[27rem] w-[17.5rem] overflow-visible rounded-[1.75rem] border p-5 text-left text-ink-900 shadow-[0_20px_44px_rgba(18,31,52,0.3)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-beacon-500/35",
+        selected
+          ? "-translate-y-2 border-cyan-300/95 bg-white shadow-[0_0_0_1px_rgba(255,255,255,0.8),0_0_44px_rgba(86,210,255,0.58),0_36px_74px_rgba(18,31,52,0.5)]"
+          : "border-cyan-200/70 bg-white/92 opacity-85 hover:opacity-100"
       )}
       onClick={onSelect}
       style={{
         "--tilt": tilt,
-        animation: `vri-card-float ${5 + index * 0.35}s ease-in-out ${index * 120}ms infinite`,
+        animation: `vri-card-float ${5.8 + index * 0.35}s ease-in-out ${index * 120}ms infinite`,
       } as React.CSSProperties}
       type="button"
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-white/80 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-8 -left-10 w-24 rotate-12 bg-white/50 blur-xl" style={{ animation: `vri-scan ${4.8 + index * 0.3}s ease-in-out ${index * 220}ms infinite` }} />
+      <div className="pointer-events-none absolute -top-12 left-1/2 h-12 w-2 -translate-x-1/2 rounded-full bg-gradient-to-b from-ink-900 to-ink-700" />
+      <div className="pointer-events-none absolute -top-2 left-1/2 h-2.5 w-12 -translate-x-1/2 rounded-full bg-ink-950" />
+      <div className="pointer-events-none absolute left-1/2 top-2 h-2.5 w-16 -translate-x-1/2 rounded-full border border-ink-900/40 bg-ink-950/90" />
+      <div className="pointer-events-none absolute inset-x-1 top-1 h-12 rounded-t-[1.5rem] bg-gradient-to-b from-cyan-100/45 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-10 -left-10 w-20 rotate-12 bg-cyan-100/70 blur-xl" style={{ animation: `vri-scan ${4.8 + index * 0.3}s ease-in-out ${index * 220}ms infinite` }} />
+      <div className={cx(
+        "pointer-events-none absolute -bottom-3 left-4 right-4 h-2 rounded-full blur-sm",
+        selected ? "bg-cyan-300/95" : "bg-cyan-200/55"
+      )} />
       <div className="relative z-10 flex h-full flex-col">
-        <div className="flex items-start justify-between gap-3">
-          <div className="grid h-14 w-14 place-items-center rounded-xl border border-white/40 bg-white/80 backdrop-blur-sm font-mono text-lg font-semibold shadow-glass">
-            {initials || "VR"}
-          </div>
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-ink-950 px-3 py-2 text-white">
+          <p className="font-mono text-xs tracking-[0.18em]">{initials || "VRI"}</p>
           <span className={cx(
-            "rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-[0.12em]",
-            live ? "border-green-700/25 bg-green-50 text-green-800" : "border-beacon-700/25 bg-beacon-50 text-beacon-900"
+            "rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]",
+            live ? "border-green-300/40 bg-green-400/20 text-green-100" : "border-cyan-300/35 bg-cyan-400/20 text-cyan-100"
           )}>
-            {live ? "created" : "proposed"}
+            {live ? "active" : "queued"}
           </span>
         </div>
-        <div className="mt-5">
-          <p className="text-xl font-semibold leading-6">{lab.name}</p>
-          <p className="mt-2 text-sm italic text-ink-500">{lab.kind} / {lab.workstream}</p>
+
+        <div className="mt-5 flex items-start gap-3">
+          <div className="grid h-20 w-16 place-items-center rounded-lg border border-ink-900/10 bg-gradient-to-b from-ink-50 to-white shadow-inner">
+            <span className="font-mono text-xl font-semibold text-ink-700">{initials || "VR"}</span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xl font-semibold leading-6 text-ink-900">{lab.name}</p>
+            <p className="mt-1 text-sm font-medium text-ink-700">{lab.kind}</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-ink-500">{lab.workstream} track</p>
+          </div>
         </div>
+
+        <div className="mt-4">
+          <p className="text-sm leading-6 text-ink-600">{lab.rationale || "Lab identity is ready for this workspace."}</p>
+        </div>
+
         <div className="mt-auto border-t border-dashed border-ink-900/20 pt-4">
-          <p className="line-clamp-3 text-sm leading-5 text-ink-600">{lab.rationale || "Lab identity is ready for this workspace."}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-mono text-xl font-semibold tracking-[0.08em] text-ink-900">VRI</p>
+            <span className="rounded-full bg-ink-900 px-3 py-1 text-xs font-medium text-white">View Dossier</span>
+          </div>
         </div>
       </div>
     </button>
