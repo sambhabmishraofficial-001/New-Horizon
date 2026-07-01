@@ -225,6 +225,7 @@ export type PhaseVerification = {
 };
 
 export type PhaseStatusResponse = {
+  id: string;
   phase_number: number;
   title: string;
   sub_plan_type: "computational" | "experimental";

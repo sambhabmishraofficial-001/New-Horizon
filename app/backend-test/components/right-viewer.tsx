@@ -57,8 +57,8 @@ export function RightViewerPane({
   plannerReply: VriPlannerReply | null;
   masterPlan: MasterPlan | null;
   phaseStatuses: PhaseStatusResponse[];
-  onStartPhase: (phaseNumber: number) => void;
-  onApprovePhase: (phaseNumber: number, approved: boolean) => void;
+  onStartPhase: (phaseId: string) => void;
+  onApprovePhase: (phaseId: string, phaseNumber: number, approved: boolean) => void;
   selectedFile: ViewFile | null;
   selectedRunLab: ProposedLab | null;
   selectedRunLabName: string | null;

@@ -24,8 +24,8 @@ export function MasterPlanViewer({
 }: {
   plan: MasterPlan;
   phases: PhaseStatusResponse[];
-  onStartPhase: (phaseNumber: number) => void;
-  onApprovePhase: (phaseNumber: number, approved: boolean) => void;
+  onStartPhase: (phaseId: string) => void;
+  onApprovePhase: (phaseId: string, phaseNumber: number, approved: boolean) => void;
 }) {
   const [expandedDesign, setExpandedDesign] = React.useState(false);
   const [expandedResources, setExpandedResources] = React.useState(false);
@@ -190,8 +190,8 @@ function SubPlanColumn({
   icon: React.ReactNode;
   subPlan: SubPlan;
   phases: PhaseStatusResponse[];
-  onStartPhase: (phaseNumber: number) => void;
-  onApprovePhase: (phaseNumber: number, approved: boolean) => void;
+  onStartPhase: (phaseId: string) => void;
+  onApprovePhase: (phaseId: string, phaseNumber: number, approved: boolean) => void;
 }) {
   return (
     <div className="flex flex-col rounded-xl border border-ink-900/10 bg-white overflow-hidden shadow-sm">
@@ -208,10 +208,10 @@ function SubPlanColumn({
         ) : (
           phases.map((phase) => (
             <PhaseCard
-              key={phase.phase_number}
+              key={phase.id}
               phase={phase}
-              onStart={() => onStartPhase(phase.phase_number)}
-              onApprove={(approved) => onApprovePhase(phase.phase_number, approved)}
+              onStart={() => onStartPhase(phase.id)}
+              onApprove={(approved) => onApprovePhase(phase.id, phase.phase_number, approved)}
             />
           ))
         )}
@@ -229,8 +229,6 @@ function PhaseCard({
   onStart: () => void;
   onApprove: (approved: boolean) => void;
 }) {
-  const isLocked = phase.status === "locked" || (!phase.status && phase.phase_number > 1); // Simplification, relies on backend status
-  
   return (
     <div className={cx(
       "rounded-lg border p-4 transition-all duration-200",

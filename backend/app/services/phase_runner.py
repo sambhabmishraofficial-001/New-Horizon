@@ -8,13 +8,13 @@ from sqlalchemy.orm import Session
 from app.models import WorkPhase, WorkPlan
 from app.schemas import PhaseVerification
 
-async def run_phase(db: Session, plan_id: str, phase_number: int) -> dict[str, Any]:
+async def run_phase(db: Session, plan_id: str, phase_id: str) -> dict[str, Any]:
     phase = db.query(WorkPhase).filter(
-        WorkPhase.plan_id == plan_id, WorkPhase.phase_number == phase_number
+        WorkPhase.plan_id == plan_id, WorkPhase.id == phase_id
     ).first()
     
     if not phase:
-        raise ValueError(f"Phase {phase_number} not found in plan {plan_id}")
+        raise ValueError(f"Phase {phase_id} not found in plan {plan_id}")
         
     plan = db.query(WorkPlan).filter(WorkPlan.id == plan_id).first()
     run_id = plan.run_id or plan_id  # Fallback to plan_id if run_id not set yet

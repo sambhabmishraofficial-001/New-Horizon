@@ -236,6 +236,11 @@ class MasterPlan(BaseModel):
     resources: list[ResourceItem] = []
 
 
+class MasterPlanResponse(MasterPlan):
+    id: str
+    run_id: str
+
+
 # --- Phase execution request/response ---
 class PhaseVerification(BaseModel):
     all_outputs_present: bool
@@ -246,6 +251,7 @@ class PhaseVerification(BaseModel):
 
 
 class PhaseStatusResponse(BaseModel):
+    id: str
     phase_number: int
     title: str
     sub_plan_type: str
@@ -263,7 +269,7 @@ class StartPhaseRequest(BaseModel):
 
 class ApprovePhaseRequest(BaseModel):
     plan_id: str
-    phase_number: int
+    phase_number: int | None = None
     user_approved: bool = True
     notes: str = ""
 

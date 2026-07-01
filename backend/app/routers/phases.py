@@ -1,19 +1,19 @@
 from typing import Any
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.db import get_db
-from app.models import WorkPhase, WorkPlan, Run
+from app.models import WorkPhase, WorkPlan
 from app.schemas import (
     ApprovePhaseRequest,
     MasterPlan,
+    MasterPlanResponse,
     PhaseStatusResponse,
     PhaseVerification,
     ResourceItem,
-    StartPhaseRequest,
     VriChatResponse,
 )
 from app.services.plan_generator import generate_master_plan
@@ -22,7 +22,7 @@ from app.services.phase_runner import run_phase
 router = APIRouter(prefix="/v1", tags=["phases"])
 
 
-@router.post("/plans", response_model=MasterPlan)
+@router.post("/plans", response_model=MasterPlanResponse)
 async def create_plan(
     planner_reply: VriChatResponse,
     db: Session = Depends(get_db),
@@ -80,7 +80,7 @@ async def create_plan(
     return res
 
 
-@router.get("/plans/{plan_id}", response_model=MasterPlan)
+@router.get("/plans/{plan_id}", response_model=MasterPlanResponse)
 def get_plan(plan_id: str, db: Session = Depends(get_db)) -> Any:
     db_plan = db.query(WorkPlan).filter(WorkPlan.id == plan_id).first()
     if not db_plan:
@@ -94,9 +94,15 @@ def get_plan(plan_id: str, db: Session = Depends(get_db)) -> Any:
 
 @router.get("/plans/{plan_id}/phases", response_model=list[PhaseStatusResponse])
 def list_phases(plan_id: str, db: Session = Depends(get_db)) -> Any:
-    phases = db.query(WorkPhase).filter(WorkPhase.plan_id == plan_id).order_by(WorkPhase.phase_number).all()
+    phases = (
+        db.query(WorkPhase)
+        .filter(WorkPhase.plan_id == plan_id)
+        .order_by(WorkPhase.sub_plan_type, WorkPhase.phase_number)
+        .all()
+    )
     return [
         PhaseStatusResponse(
+            id=p.id,
             phase_number=p.phase_number,
             title=p.title,
             sub_plan_type=p.sub_plan_type,
@@ -110,51 +116,72 @@ def list_phases(plan_id: str, db: Session = Depends(get_db)) -> Any:
     ]
 
 
-@router.post("/plans/{plan_id}/phases/{phase_number}/start")
+def _resolve_phase(db: Session, plan_id: str, phase_ref: str) -> WorkPhase:
+    phase = db.query(WorkPhase).filter(WorkPhase.plan_id == plan_id, WorkPhase.id == phase_ref).first()
+    if phase:
+        return phase
+
+    if phase_ref.isdigit():
+        phase_number = int(phase_ref)
+        matches = (
+            db.query(WorkPhase)
+            .filter(WorkPhase.plan_id == plan_id, WorkPhase.phase_number == phase_number)
+            .order_by(WorkPhase.sub_plan_type, WorkPhase.id)
+            .all()
+        )
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Phase number {phase_number} is ambiguous for this plan. "
+                    "Use the phase id from GET /v1/plans/{plan_id}/phases."
+                ),
+            )
+
+    raise HTTPException(status_code=404, detail="Phase not found")
+
+
+@router.post("/plans/{plan_id}/phases/{phase_ref}/start")
 async def start_phase(
-    plan_id: str, 
-    phase_number: int,
-    background_tasks: BackgroundTasks,
+    plan_id: str,
+    phase_ref: str,
     db: Session = Depends(get_db)
 ) -> dict:
-    phase = db.query(WorkPhase).filter(
-        WorkPhase.plan_id == plan_id, WorkPhase.phase_number == phase_number
-    ).first()
-    
-    if not phase:
-        raise HTTPException(status_code=404, detail="Phase not found")
-        
+    phase = _resolve_phase(db, plan_id, phase_ref)
+
     if phase.status in {"running", "completed", "awaiting_approval"}:
         raise HTTPException(status_code=400, detail=f"Phase is currently {phase.status}")
-        
+
     # Check dependencies
     for dep in phase.dependencies_json:
-        dep_phase = db.query(WorkPhase).filter(
-            WorkPhase.plan_id == plan_id, WorkPhase.phase_number == dep
-        ).first()
+        dep_phase = (
+            db.query(WorkPhase)
+            .filter(
+                WorkPhase.plan_id == plan_id,
+                WorkPhase.sub_plan_type == phase.sub_plan_type,
+                WorkPhase.phase_number == dep,
+            )
+            .first()
+        )
         if dep_phase and dep_phase.status != "completed":
             raise HTTPException(status_code=400, detail=f"Dependency phase {dep} is not completed")
-            
+
     phase.status = "running"
     db.commit()
-    
-    # We could run this in background, but for simplicity we run it inline or spawn
-    # background_tasks.add_task(run_phase, db, plan_id, phase_number)
-    await run_phase(db, plan_id, phase_number)
-    
+
+    await run_phase(db, plan_id, phase.id)
+
     return {"message": "Phase started"}
 
 
-@router.get("/plans/{plan_id}/phases/{phase_number}/status", response_model=PhaseStatusResponse)
-def get_phase_status(plan_id: str, phase_number: int, db: Session = Depends(get_db)) -> Any:
-    p = db.query(WorkPhase).filter(
-        WorkPhase.plan_id == plan_id, WorkPhase.phase_number == phase_number
-    ).first()
-    
-    if not p:
-        raise HTTPException(status_code=404, detail="Phase not found")
-        
+@router.get("/plans/{plan_id}/phases/{phase_ref}/status", response_model=PhaseStatusResponse)
+def get_phase_status(plan_id: str, phase_ref: str, db: Session = Depends(get_db)) -> Any:
+    p = _resolve_phase(db, plan_id, phase_ref)
+
     return PhaseStatusResponse(
+        id=p.id,
         phase_number=p.phase_number,
         title=p.title,
         sub_plan_type=p.sub_plan_type,
@@ -166,26 +193,21 @@ def get_phase_status(plan_id: str, phase_number: int, db: Session = Depends(get_
     )
 
 
-@router.post("/plans/{plan_id}/phases/{phase_number}/approve")
+@router.post("/plans/{plan_id}/phases/{phase_ref}/approve")
 def approve_phase(
-    plan_id: str, 
-    phase_number: int,
+    plan_id: str,
+    phase_ref: str,
     payload: ApprovePhaseRequest,
     db: Session = Depends(get_db)
 ) -> dict:
-    phase = db.query(WorkPhase).filter(
-        WorkPhase.plan_id == plan_id, WorkPhase.phase_number == phase_number
-    ).first()
-    
-    if not phase:
-        raise HTTPException(status_code=404, detail="Phase not found")
-        
+    phase = _resolve_phase(db, plan_id, phase_ref)
+
     if phase.status != "awaiting_approval":
         raise HTTPException(status_code=400, detail="Phase is not awaiting approval")
-        
+
     phase.status = "completed" if payload.user_approved else "failed"
     db.commit()
-    
+
     return {"message": f"Phase marked as {phase.status}"}
 
 

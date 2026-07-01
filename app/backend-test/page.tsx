@@ -454,10 +454,10 @@ export default function BackendTestPage() {
     }
   }
 
-  async function startPhase(phaseNumber: number) {
+  async function startPhase(phaseId: string) {
     if (!masterPlan) return;
     try {
-      await request(`/v1/plans/${masterPlan.id}/phases/${phaseNumber}/start`, { method: "POST" });
+      await request(`/v1/plans/${masterPlan.id}/phases/${phaseId}/start`, { method: "POST" });
       // Poll a few times
       await fetchPhases(masterPlan.id);
       setTimeout(() => fetchPhases(masterPlan.id), 2000);
@@ -467,10 +467,10 @@ export default function BackendTestPage() {
     }
   }
 
-  async function approvePhase(phaseNumber: number, approved: boolean) {
+  async function approvePhase(phaseId: string, phaseNumber: number, approved: boolean) {
     if (!masterPlan) return;
     try {
-      await request(`/v1/plans/${masterPlan.id}/phases/${phaseNumber}/approve`, {
+      await request(`/v1/plans/${masterPlan.id}/phases/${phaseId}/approve`, {
         method: "POST",
         body: JSON.stringify({ plan_id: masterPlan.id, phase_number: phaseNumber, user_approved: approved }),
       });
