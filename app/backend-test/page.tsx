@@ -9,6 +9,7 @@ import type {
   Health,
   InspectorPanel,
   LabPrompt,
+  PhaseStatusResponse,
   PlannerMessage,
   SavedConversation,
   ViewFile,
@@ -56,6 +57,8 @@ export default function BackendTestPage() {
   const [selectedFileId, setSelectedFileId] = React.useState<string | null>(null);
   const [selectedRunLabName, setSelectedRunLabName] = React.useState<string | null>(null);
   const [viewerModePreference, setViewerModePreference] = React.useState<ViewerMode>("idle");
+  const [masterPlan, setMasterPlan] = React.useState<any>(null);
+  const [phaseStatuses, setPhaseStatuses] = React.useState<PhaseStatusResponse[]>([]);
   const [openInspectorPanels, setOpenInspectorPanels] =
     React.useState<InspectorPanel[]>(["progress", "files"]);
   const [expandedFileViewer, setExpandedFileViewer] = React.useState(false);
@@ -165,7 +168,8 @@ export default function BackendTestPage() {
   }, []);
 
   React.useEffect(() => {
-    if (!activeWorkRun) {
+    const artifactRunId = activeWorkRun?.run_id ?? masterPlan?.run_id;
+    if (!artifactRunId) {
       setWorkspaceArtifacts(null);
       setArtifactError(null);
       return;
@@ -175,7 +179,7 @@ export default function BackendTestPage() {
     setWorkspaceArtifacts(null);
     setArtifactLoading(true);
     setArtifactError(null);
-    request<WorkspaceArtifacts>(`/v1/workspaces/${activeWorkRun.run_id}/artifacts`)
+    request<WorkspaceArtifacts>(`/v1/workspaces/${artifactRunId}/artifacts`)
       .then((payload) => {
         if (!cancelled) setWorkspaceArtifacts(payload);
       })
@@ -192,7 +196,7 @@ export default function BackendTestPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeWorkRun]);
+  }, [activeWorkRun, masterPlan]);
 
   React.useEffect(() => {
     if (selectedFileId && !viewFiles.some((file) => file.id === selectedFileId)) {
@@ -419,12 +423,9 @@ export default function BackendTestPage() {
     selectLab(labId);
   }
 
-  const [masterPlan, setMasterPlan] = React.useState<any>(null);
-  const [phaseStatuses, setPhaseStatuses] = React.useState<any[]>([]);
-
   async function fetchPhases(planId: string) {
     try {
-      const statuses = await request<any[]>(`/v1/plans/${planId}/phases`, { method: "GET" });
+      const statuses = await request<PhaseStatusResponse[]>(`/v1/plans/${planId}/phases`, { method: "GET" });
       setPhaseStatuses(statuses);
       return statuses;
     } catch (err) {
@@ -433,11 +434,30 @@ export default function BackendTestPage() {
     }
   }
 
+  function nextRunnablePhase(statuses: PhaseStatusResponse[]) {
+    const completed = new Set(
+      statuses
+        .filter((phase) => phase.status === "completed")
+        .map((phase) => `${phase.sub_plan_type}:${phase.phase_number}`)
+    );
+
+    return statuses
+      .filter((phase) => phase.status === "pending")
+      .sort((a, b) => {
+        if (a.phase_number !== b.phase_number) return a.phase_number - b.phase_number;
+        return a.sub_plan_type.localeCompare(b.sub_plan_type);
+      })
+      .find((phase) =>
+        (phase.dependencies ?? []).every((dep) => completed.has(`${phase.sub_plan_type}:${dep}`))
+      );
+  }
+
   async function createMasterPlan() {
     if (!activePlanReply || !activePlanReply.planning_allowed || plannerMessages.length === 0) return;
     setSelectedFileId(null);
     setSelectedRunLabName(null);
     setViewerModePreference("execution");
+    setWorkspaceView("results");
     setLoading("work");
     setError(null);
     try {
@@ -447,6 +467,11 @@ export default function BackendTestPage() {
       });
       setMasterPlan(plan);
       await fetchPhases(plan.id);
+      if (plan.run_id) {
+        const artifacts = await request<WorkspaceArtifacts>(`/v1/workspaces/${plan.run_id}/artifacts`);
+        setWorkspaceArtifacts(artifacts);
+        setArtifactError(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create VRI master plan.");
     } finally {
@@ -460,6 +485,11 @@ export default function BackendTestPage() {
       await request(`/v1/plans/${masterPlan.id}/phases/${phaseId}/start`, { method: "POST" });
       // Poll a few times
       await fetchPhases(masterPlan.id);
+      if (masterPlan.run_id) {
+        const artifacts = await request<WorkspaceArtifacts>(`/v1/workspaces/${masterPlan.run_id}/artifacts`);
+        setWorkspaceArtifacts(artifacts);
+        setArtifactError(null);
+      }
       setTimeout(() => fetchPhases(masterPlan.id), 2000);
       setTimeout(() => fetchPhases(masterPlan.id), 5000);
     } catch (err) {
@@ -474,7 +504,20 @@ export default function BackendTestPage() {
         method: "POST",
         body: JSON.stringify({ plan_id: masterPlan.id, phase_number: phaseNumber, user_approved: approved }),
       });
-      await fetchPhases(masterPlan.id);
+      setWorkspaceView("results");
+      const statuses = await fetchPhases(masterPlan.id);
+      if (approved) {
+        const nextPhase = nextRunnablePhase(statuses);
+        if (nextPhase) {
+          await request(`/v1/plans/${masterPlan.id}/phases/${nextPhase.id}/start`, { method: "POST" });
+          await fetchPhases(masterPlan.id);
+        }
+      }
+      if (masterPlan.run_id) {
+        const artifacts = await request<WorkspaceArtifacts>(`/v1/workspaces/${masterPlan.run_id}/artifacts`);
+        setWorkspaceArtifacts(artifacts);
+        setArtifactError(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to approve phase.");
     }

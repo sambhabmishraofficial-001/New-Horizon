@@ -256,6 +256,7 @@ class PhaseStatusResponse(BaseModel):
     title: str
     sub_plan_type: str
     status: str
+    dependencies: list[int] = []
     tasks: list[str]
     expected_outputs: list[str]
     actual_outputs: list[str]

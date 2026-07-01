@@ -60,11 +60,30 @@ Category MUST be one of "reagent", "equipment", "consumable", "software".
 async def generate_master_plan(planner_reply: VriChatResponse, settings: Settings) -> MasterPlan:
     comp_labs = []
     exp_labs = []
+
+    def _is_experimental_lab(lab: ProposedLab) -> bool:
+        if lab.workstream in {"experimental", "hybrid"}:
+            return True
+        text = f"{lab.kind} {lab.name} {lab.rationale}".lower()
+        experimental_markers = (
+            "wet",
+            "bench",
+            "assay",
+            "cell",
+            "animal",
+            "clinical",
+            "validation",
+            "experimental",
+            "in vivo",
+            "in vitro",
+        )
+        return any(marker in text for marker in experimental_markers)
+
     for lab in planner_reply.proposed_labs:
-        if lab.workstream in {"computational", "data", "review"}:
-            comp_labs.append(lab)
-        else:
+        if _is_experimental_lab(lab):
             exp_labs.append(lab)
+        else:
+            comp_labs.append(lab)
 
     # Build computational subplan
     comp_phases = []
@@ -110,6 +129,25 @@ async def generate_master_plan(planner_reply: VriChatResponse, settings: Setting
             )
         )
         exp_phase_idx += 1
+
+    if not exp_phases and planner_reply.experimental_work:
+        for item in planner_reply.experimental_work:
+            label = item.strip() or f"Experimental Task {exp_phase_idx}"
+            slug = "_".join(label.lower().split())[:48] or f"experimental_task_{exp_phase_idx}"
+            exp_phases.append(
+                PlanPhase(
+                    phase_number=exp_phase_idx,
+                    title=f"Experimental Validation {exp_phase_idx}",
+                    sub_plan_type="experimental",
+                    objective=label,
+                    tasks=[label],
+                    expected_outputs=[f"{slug}_results.csv"],
+                    time_estimate="Auto-generated",
+                    handoff="To analysis",
+                    dependencies=[exp_phase_idx - 1] if exp_phase_idx > 1 else [],
+                )
+            )
+            exp_phase_idx += 1
 
     # Call LLM for experimental design & resources
     user_prompt = f"""

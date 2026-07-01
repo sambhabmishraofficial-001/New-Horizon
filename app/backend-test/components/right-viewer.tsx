@@ -103,7 +103,7 @@ export function RightViewerPane({
             <ViewerNavButton active={mode === "plan"} disabled={!plannerReply?.planning_allowed} onClick={onShowPlan}>
               Plan
             </ViewerNavButton>
-            <ViewerNavButton active={mode === "execution"} disabled={!activeRun && loading !== "work"} onClick={onShowExecution}>
+            <ViewerNavButton active={mode === "execution"} disabled={!activeRun && !masterPlan && loading !== "work"} onClick={onShowExecution}>
               Run
             </ViewerNavButton>
             <ViewerNavButton active={mode === "lab"} disabled={labs.length === 0} onClick={() => labs[0] ? onSelectLab(labs[0].name) : undefined}>

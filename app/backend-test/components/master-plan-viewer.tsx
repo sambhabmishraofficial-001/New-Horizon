@@ -267,6 +267,38 @@ function PhaseCard({
         </div>
       )}
 
+      <div className="mt-4 space-y-3 border-t border-ink-900/10 pt-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">Expected Outputs</p>
+          {phase.expected_outputs.length === 0 ? (
+            <p className="mt-1 text-xs text-ink-400">No expected output files defined.</p>
+          ) : (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {phase.expected_outputs.map((name) => (
+                <span key={name} className="rounded bg-white px-2 py-1 text-xs text-ink-600 border border-ink-900/10">
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">Generated Outputs</p>
+          {phase.actual_outputs.length === 0 ? (
+            <p className="mt-1 text-xs text-ink-400">No generated files yet. Start this phase to produce outputs.</p>
+          ) : (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {phase.actual_outputs.map((name) => (
+                <span key={name} className="rounded bg-green-50 px-2 py-1 text-xs text-green-700 border border-green-200">
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {phase.status === "awaiting_approval" && phase.verification && (
         <div className="mt-4 space-y-3 border-t border-amber-200 pt-3">
           <div className="rounded-md bg-white p-3 border border-amber-100">

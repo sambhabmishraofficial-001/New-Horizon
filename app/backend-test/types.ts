@@ -230,6 +230,7 @@ export type PhaseStatusResponse = {
   title: string;
   sub_plan_type: "computational" | "experimental";
   status: "pending" | "running" | "completed" | "failed" | "awaiting_approval";
+  dependencies: number[];
   tasks: string[];
   expected_outputs: string[];
   actual_outputs: string[];
