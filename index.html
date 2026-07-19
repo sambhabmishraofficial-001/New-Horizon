@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Horizon</title>
+  <meta name="description" content="New Horizon builds foundation models and virtual research systems to accelerate scientific research and discovery." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    @font-face {
+      font-family: Parabole;
+      src: url("fonts/Parabole.woff2") format("woff2"),
+           url("fonts/Parabole.woff") format("woff");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --bg: #000000;
+      --white: #ffffff;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: "Titillium Web", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .site-banner {
+      position: relative;
+      background: #000000;
+      z-index: 10;
+    }
+
+    .site-banner[hidden] {
+      display: none;
+    }
+
+    .site-banner__link {
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.45rem;
+      min-height: 2.3rem;
+      padding: 0.62rem 2.75rem;
+      font-family: "Titillium Web", Arial, sans-serif;
+      font-size: clamp(0.95rem, 1.6vw, 1.18rem);
+      font-weight: 400;
+      letter-spacing: 0;
+      line-height: 1.55;
+      color: #ffffff;
+      text-decoration: none;
+      text-align: center;
+      transition: opacity 0.35s, color 0.15s;
+    }
+
+    .site-banner__link:hover {
+      color: #ffb347;
+    }
+
+    .site-banner__link svg {
+      flex: none;
+      width: 13px;
+      height: 13px;
+    }
+
+    .site-banner__close {
+      position: absolute;
+      top: 50%;
+      right: 0.65rem;
+      transform: translateY(-50%);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #ffffff;
+      cursor: pointer;
+      transition: color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .site-banner__close:hover {
+      color: #ffb347;
+      opacity: 0.85;
+    }
+
+    .site-banner__close svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .site-banner__rainbow {
+      height: 2px;
+      background: #ffb347;
+    }
+
+    .art {
+      position: relative;
+      display: block;
+      width: 100%;
+      line-height: 0;
+    }
+
+    .art img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .site-legal {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 2;
+      color: #ffffff;
+      font-family: "Titillium Web", Arial, sans-serif;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+    }
+
+    .site-legal__inner {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 1.25rem 1.25rem 1.35rem;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      font-size: 0.9rem;
+      font-weight: 400;
+      letter-spacing: 0;
+      line-height: 1.4;
+      pointer-events: none;
+    }
+
+    .site-legal__inner p {
+      margin: 0;
+      color: #ffffff;
+    }
+
+    .site-legal__nav {
+      display: flex;
+      align-items: center;
+      gap: 0.95rem;
+      pointer-events: auto;
+    }
+
+    .site-legal__nav a {
+      color: #ffffff;
+      text-decoration: none;
+      transition: color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .site-legal__nav a:hover {
+      color: #ffb347;
+    }
+
+    .site-legal__nav svg {
+      display: block;
+      width: 14px;
+      height: 14px;
+    }
+
+    @media (min-width: 640px) {
+      .site-legal__inner {
+        padding: 1.35rem 1.75rem 1.5rem;
+      }
+    }
+
+    .mid {
+      flex: 1 0 auto;
+      display: flex;
+      align-items: center;
+      background: var(--bg);
+      padding: clamp(5rem, 14vw, 9rem) clamp(1.75rem, 8vw, 7rem);
+    }
+
+    .mid-inner {
+      width: 100%;
+      max-width: 72rem;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      column-gap: clamp(2rem, 10vw, 8rem);
+    }
+
+    .logo {
+      width: clamp(3rem, 7.5vw, 5rem);
+      height: auto;
+      display: block;
+    }
+
+    .copy {
+      justify-self: end;
+      width: 100%;
+      max-width: 28rem;
+    }
+
+    .copy h1 {
+      font-family: Parabole, ui-serif, serif;
+      font-size: clamp(2.25rem, 4.5vw, 3.25rem);
+      font-weight: 400;
+      letter-spacing: -0.04em;
+      line-height: 1.06;
+      margin-bottom: 1.15rem;
+      color: var(--white);
+    }
+
+    .brand-tm {
+      display: inline-block;
+      margin-left: 0.12em;
+      font-family: "Titillium Web", Arial, sans-serif;
+      font-size: 0.42em;
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: 0;
+      vertical-align: super;
+      position: relative;
+      top: -0.15em;
+    }
+
+    .copy p {
+      font-family: "Titillium Web", Arial, sans-serif;
+      font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+      font-weight: 400;
+      line-height: 1.55;
+      letter-spacing: 0;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .outline-button {
+      --brand: #ffb347;
+      --brand-dark: #f59e0b;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      min-height: 40px;
+      margin-top: 1.75rem;
+      padding: 9px 20px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #0f0f0e;
+      font-family: "Titillium Web", Arial, sans-serif;
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: 0;
+      white-space: nowrap;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .outline-button::before,
+    .outline-button::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      background: var(--brand);
+      transition: background 0.2s ease;
+    }
+
+    .outline-button::before {
+      top: 0;
+      left: 0;
+      width: 85%;
+      height: 92%;
+    }
+
+    .outline-button::after {
+      right: 0;
+      bottom: 0;
+      width: 85%;
+      height: 92%;
+    }
+
+    .outline-button:hover::before,
+    .outline-button:hover::after {
+      background: var(--brand-dark);
+    }
+
+    .outline-button__label {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .outline-button__chevron {
+      position: relative;
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      overflow: hidden;
+      vertical-align: middle;
+    }
+
+    .outline-button__chevron-track {
+      display: flex;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .outline-button:hover .outline-button__chevron-track {
+      transform: translateX(0);
+    }
+
+    .outline-button__chevron svg {
+      width: 14px;
+      height: 14px;
+      flex: none;
+    }
+
+    @media (max-width: 720px) {
+      .mid {
+        padding: 4.5rem 1.5rem;
+      }
+
+      .mid-inner {
+        grid-template-columns: 1fr;
+        row-gap: 3.25rem;
+      }
+
+      .copy {
+        justify-self: start;
+        max-width: 32rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="site-banner" id="site-banner">
+    <a class="site-banner__link" href="/login/">
+      Announcing the first Autonomous Virtual Research Institute
+      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </a>
+    <button class="site-banner__close" type="button" aria-label="Dismiss announcement">
+      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+      </svg>
+    </button>
+    <div class="site-banner__rainbow" aria-hidden="true"></div>
+  </div>
+
+  <header class="art">
+    <img
+      src="assets/header-sunset.png"
+      alt=""
+      width="3840"
+      height="1648"
+      fetchpriority="high"
+    />
+  </header>
+
+  <main class="mid">
+    <div class="mid-inner">
+      <img class="logo" src="assets/logo.png" alt="New Horizon" width="341" height="360" />
+
+      <div class="copy">
+        <h1>New Horizon<span class="brand-tm" aria-label="Registered">®</span></h1>
+        <p>
+          We are a frontier research lab dedicated to building foundation models and virtual research systems to accelerate scientific research and discovery.
+        </p>
+        <a class="outline-button" href="/waitlist/">
+          <span class="outline-button__label">
+            Join Waitlist
+            <span class="outline-button__chevron" aria-hidden="true">
+              <span class="outline-button__chevron-track">
+                <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4.75 9.125L7.875 6L4.75 2.875" stroke="currentColor" stroke-linecap="square"></path></svg>
+                <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4.75 9.125L7.875 6L4.75 2.875" stroke="currentColor" stroke-linecap="square"></path></svg>
+              </span>
+            </span>
+          </span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="art">
+    <img
+      src="assets/footer-flora.png"
+      alt=""
+      width="3840"
+      height="1648"
+      loading="lazy"
+    />
+    <div class="site-legal">
+      <div class="site-legal__inner">
+        <p>© 2026 New Horizon. Accelerating scientific discovery.</p>
+        <nav class="site-legal__nav" aria-label="Social and contact">
+          <a href="https://x.com/" target="_blank" rel="noreferrer" aria-label="New Horizon on X">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25h6.83l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+          </a>
+          <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer" aria-label="New Horizon on LinkedIn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"></path></svg>
+          </a>
+          <a href="mailto:contact@newhorizon.dev">contact@newhorizon.dev</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const banner = document.getElementById("site-banner");
+      if (!banner) return;
+      localStorage.removeItem("nh-banner-dismissed");
+      sessionStorage.removeItem("nh-banner-dismissed");
+      banner.hidden = false;
+      banner.querySelector(".site-banner__close")?.addEventListener("click", () => {
+        banner.hidden = true;
+      });
+    })();
+  </script>
+</body>
+</html>

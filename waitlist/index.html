@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join Waitlist | New Horizon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    @font-face {
+      font-family: Parabole;
+      src: url("../fonts/Parabole.woff2") format("woff2"),
+           url("../fonts/Parabole.woff") format("woff");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      background: #000;
+      color: #fff;
+      font-family: "Titillium Web", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 28rem;
+    }
+
+    a.back {
+      display: inline-block;
+      margin-bottom: 2rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.95rem;
+      text-decoration: none;
+    }
+
+    a.back:hover { color: #fff; }
+
+    h1 {
+      font-family: Parabole, ui-serif, serif;
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      font-weight: 400;
+      letter-spacing: -0.04em;
+      line-height: 1.06;
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      font-size: 1.05rem;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.82);
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    input {
+      width: 100%;
+      margin-bottom: 1.25rem;
+      padding: 0.85rem 0;
+      border: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+      background: transparent;
+      color: #fff;
+      font: 400 1.05rem/1.2 "Titillium Web", Arial, sans-serif;
+      outline: none;
+    }
+
+    input:focus {
+      border-bottom-color: #ffb347;
+    }
+
+    button {
+      --brand: #ffb347;
+      --brand-dark: #f59e0b;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      margin-top: 0.5rem;
+      padding: 9px 20px;
+      border: 0;
+      background: transparent;
+      color: #0f0f0e;
+      font: 400 17px/1.2 "Titillium Web", Arial, sans-serif;
+      cursor: pointer;
+    }
+
+    button::before,
+    button::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      background: var(--brand);
+      transition: background 0.2s ease;
+    }
+
+    button::before {
+      top: 0;
+      left: 0;
+      width: 85%;
+      height: 92%;
+    }
+
+    button::after {
+      right: 0;
+      bottom: 0;
+      width: 85%;
+      height: 92%;
+    }
+
+    button:hover::before,
+    button:hover::after {
+      background: var(--brand-dark);
+    }
+
+    button span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .ok {
+      display: none;
+      margin-top: 1.5rem;
+      color: #ffb347;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .ok.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="/">← Back to New Horizon</a>
+    <h1>Join the waitlist</h1>
+    <p>Get early access to New Horizon research systems and updates.</p>
+    <form id="waitlist-form">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required autocomplete="email" placeholder="you@lab.org" />
+      <button type="submit"><span>Join Waitlist</span></button>
+    </form>
+    <p class="ok" id="ok" role="status">You’re on the list. We’ll be in touch.</p>
+  </div>
+  <script>
+    document.getElementById("waitlist-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      e.target.hidden = true;
+      document.getElementById("ok").classList.add("show");
+    });
+  </script>
+</body>
+</html>
