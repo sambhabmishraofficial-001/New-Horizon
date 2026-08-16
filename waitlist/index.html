@@ -145,6 +145,13 @@
     }
 
     .ok.show { display: block; }
+
+    .waitlist-error {
+      margin-top: 1rem;
+      color: #fca5a5;
+      font-size: 0.98rem;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -152,19 +159,27 @@
     <a class="back" href="/">← Back to New Horizon</a>
     <h1>Join the waitlist</h1>
     <p>Get early access to New Horizon research systems and updates.</p>
-    <form id="waitlist-form">
+    <form
+      id="waitlist-form"
+      action="https://formsubmit.co/bccfd942e618b1c6cd5ff9186682ecaa"
+      method="POST"
+    >
+      <input type="hidden" name="_subject" value="New Horizon waitlist" />
+      <input type="hidden" name="_template" value="box" />
+      <input type="hidden" name="_next" value="" />
+      <input type="hidden" name="source" value="waitlist" />
+      <input
+        type="hidden"
+        name="_autoresponse"
+        value="Thanks for joining the New Horizon waitlist. There’s nothing to log into yet — we’ll email you when the Virtual Research Institute opens."
+      />
       <label for="email">Email</label>
       <input id="email" name="email" type="email" required autocomplete="email" placeholder="you@lab.org" />
       <button type="submit"><span>Join Waitlist</span></button>
     </form>
     <p class="ok" id="ok" role="status">You’re on the list. We’ll be in touch.</p>
+    <p class="waitlist-error" id="waitlist-error" hidden></p>
   </div>
-  <script>
-    document.getElementById("waitlist-form").addEventListener("submit", (e) => {
-      e.preventDefault();
-      e.target.hidden = true;
-      document.getElementById("ok").classList.add("show");
-    });
-  </script>
+  <script src="form.js"></script>
 </body>
 </html>

@@ -197,7 +197,7 @@ body.login-page {
 }
 
 .login-card h1 {
-  margin: 0 0 24px;
+  margin: 0 0 0.75rem;
   font-family: Parabole, ui-serif, serif;
   font-size: clamp(1.4rem, 2.4vw, 2rem);
   font-weight: 400;
@@ -207,42 +207,114 @@ body.login-page {
   text-shadow: none;
 }
 
-.login-providers {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
+.login-lead {
+  max-width: 32rem;
+  margin: 0 0 1.75rem;
+  font-size: clamp(1.05rem, 1.6vw, 1.18rem);
+  font-weight: 400;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
 }
 
-.login-provider {
+.login-waitlist {
+  width: 100%;
+  max-width: 28rem;
+  text-align: left;
+}
+
+.login-waitlist label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.login-waitlist input[type="email"] {
+  width: 100%;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 0;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: #fff;
+  font: 400 1.05rem/1.2 "Titillium Web", Arial, sans-serif;
+  outline: none;
+}
+
+.login-waitlist input[type="email"]:focus {
+  border-bottom-color: #ffb347;
+}
+
+.login-waitlist button {
+  --brand: #ffb347;
+  --brand-dark: #f59e0b;
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  padding: 0;
+  min-height: 40px;
+  margin-top: 0.5rem;
+  padding: 9px 20px;
   border: 0;
-  border-radius: 999px;
-  background: #fff;
-  color: #24292f;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
-  cursor: default;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  background: transparent;
+  color: #0f0f0e;
+  font: 400 17px/1.2 "Titillium Web", Arial, sans-serif;
+  cursor: pointer;
 }
 
-.login-provider:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+.login-waitlist button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
-.login-provider svg {
-  width: 24px;
-  height: 24px;
+.login-waitlist button::before,
+.login-waitlist button::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  background: var(--brand);
+  transition: background 0.2s ease;
 }
 
-.login-provider svg.google {
-  width: 22px;
-  height: 22px;
+.login-waitlist button::before {
+  top: 0;
+  left: 0;
+  width: 85%;
+  height: 92%;
+}
+
+.login-waitlist button::after {
+  right: 0;
+  bottom: 0;
+  width: 85%;
+  height: 92%;
+}
+
+.login-waitlist button:hover::before,
+.login-waitlist button:hover::after {
+  background: var(--brand-dark);
+}
+
+.login-waitlist button span {
+  position: relative;
+  z-index: 1;
+}
+
+.ok {
+  display: none;
+  margin-top: 1.5rem;
+  color: #ffb347;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.ok.show { display: block; }
+
+.waitlist-error {
+  margin-top: 1rem;
+  color: #fca5a5;
+  font-size: 0.98rem;
+  line-height: 1.5;
 }
 
 .login-info-panel {

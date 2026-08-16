@@ -8,6 +8,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="preload" href="fonts/Parabole.woff2" as="font" type="font/woff2" crossorigin />
+  <link
+    rel="preload"
+    as="image"
+    type="image/webp"
+    href="assets/header-sunset-1920.webp"
+    imagesrcset="assets/header-sunset-1280.webp 1280w, assets/header-sunset-1920.webp 1920w, assets/header-sunset-2560.webp 2560w"
+    imagesizes="100vw"
+    fetchpriority="high"
+  />
   <style>
     @font-face {
       font-family: Parabole;
@@ -381,17 +391,20 @@
 
   <header class="art">
     <img
-      src="assets/header-sunset.png"
+      src="assets/header-sunset-1920.webp"
+      srcset="assets/header-sunset-1280.webp 1280w, assets/header-sunset-1920.webp 1920w, assets/header-sunset-2560.webp 2560w"
+      sizes="100vw"
       alt=""
       width="3840"
       height="1648"
       fetchpriority="high"
+      decoding="async"
     />
   </header>
 
   <main class="mid">
     <div class="mid-inner">
-      <img class="logo" src="assets/logo.png" alt="New Horizon" width="341" height="360" />
+      <img class="logo" src="assets/logo.webp" alt="New Horizon" width="341" height="360" decoding="async" />
 
       <div class="copy">
         <h1>New Horizon<span class="brand-tm" aria-label="Registered">®</span></h1>
@@ -415,11 +428,14 @@
 
   <footer class="art">
     <img
-      src="assets/footer-flora.png"
+      src="assets/footer-flora-1920.webp"
+      srcset="assets/footer-flora-1280.webp 1280w, assets/footer-flora-1920.webp 1920w, assets/footer-flora-2560.webp 2560w"
+      sizes="100vw"
       alt=""
       width="3840"
       height="1648"
       loading="lazy"
+      decoding="async"
     />
     <div class="site-legal">
       <div class="site-legal__inner">
